@@ -1,0 +1,42 @@
+[submodule "vendor/src/github.com/goadesign/goa"]
+	path = vendor/src/github.com/goadesign/goa
+	url = https://github.com/goadesign/goa.git
+[submodule "vendor/src/github.com/armon/go-metrics"]
+	path = vendor/src/github.com/armon/go-metrics
+	url = https://github.com/armon/go-metrics.git
+[submodule "vendor/src/github.com/DataDog/datadog-go"]
+	path = vendor/src/github.com/DataDog/datadog-go
+	url = https://github.com/DataDog/datadog-go.git
+[submodule "vendor/src/github.com/dimfeld/httptreemux"]
+	path = vendor/src/github.com/dimfeld/httptreemux
+	url = https://github.com/dimfeld/httptreemux.git
+[submodule "vendor/src/github.com/dimfeld/httppath"]
+	path = vendor/src/github.com/dimfeld/httppath
+	url = https://github.com/dimfeld/httppath
+[submodule "vendor/src/github.com/satori/go.uuid"]
+	path = vendor/src/github.com/satori/go.uuid
+	url = https://github.com/satori/go.uuid.git
+[submodule "vendor/src/golang.org/x/net"]
+	path = vendor/src/golang.org/x/net
+	url = https://go.googlesource.com/net
+[submodule "vendor/src/github.com/dgrijalva/jwt-go"]
+	path = vendor/src/github.com/dgrijalva/jwt-go
+	url = https://github.com/dgrijalva/jwt-go.git
+[submodule "vendor/src/github.com/manveru/faker"]
+	path = vendor/src/github.com/manveru/faker
+	url = https://github.com/manveru/faker.git
+[submodule "vendor/src/github.com/zach-klippenstein/goregen"]
+	path = vendor/src/github.com/zach-klippenstein/goregen
+	url = https://github.com/zach-klippenstein/goregen.git
+[submodule "vendor/src/github.com/lsegal/gucumber"]
+	path = vendor/src/github.com/lsegal/gucumber
+	url = https://github.com/lsegal/gucumber.git
+[submodule "vendor/src/github.com/shiena/ansicolor"]
+	path = vendor/src/github.com/shiena/ansicolor
+	url = https://github.com/shiena/ansicolor.git
+[submodule "vendor/src/github.com/spf13/cobra"]
+	path = vendor/src/github.com/spf13/cobra
+	url = https://github.com/spf13/cobra.git
+[submodule "vendor/src/github.com/spf13/pflag"]
+	path = vendor/src/github.com/spf13/pflag
+	url = https://github.com/spf13/pflag.git
