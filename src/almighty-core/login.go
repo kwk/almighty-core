@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"github.com/almighty/almighty-core/app"
+	"almighty-core/app"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/goadesign/goa"
 )

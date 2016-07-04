@@ -3,7 +3,7 @@ package test
 import (
 	"bytes"
 	"fmt"
-	"github.com/almighty/almighty-core/app"
+	"almighty-core/app"
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/goatest"
 	"golang.org/x/net/context"

@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/almighty/almighty-core/client"
-	"github.com/almighty/almighty-core/tool/cli"
+	"almighty-core/client"
+	"almighty-core/tool/cli"
 	goaclient "github.com/goadesign/goa/client"
 	"github.com/spf13/cobra"
 	"net/http"
