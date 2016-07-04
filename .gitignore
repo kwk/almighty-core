@@ -4,3 +4,7 @@
 /.vscode
 /.project
 /debug
+
+# Don't version artifact dirs
+/bin
+/pkg
