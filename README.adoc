@@ -1,14 +1,56 @@
 == ALMighty Core
 
-image:https://goreportcard.com/badge/github.com/almighty/almighty-core[Go Report Card, link="https://goreportcard.com/report/github.com/almighty/almighty-core"] 
+image:https://goreportcard.com/badge/github.com/almighty/almighty-core[Go Report Card, link="https://goreportcard.com/report/github.com/almighty/almighty-core"]
 image:https://godoc.org/github.com/almighty/almighty-core?status.png[GoDoc,link="https://godoc.org/github.com/almighty/almighty-core"]
 
-Assuming you have Go installed and configured (have $GOPATH setup) here is how to build.
+=== Build almighty-core from source
 
-Checking out the code:
+Assuming you have git and Go installed and configured (have `GOPATH` set up),
+here is how to build.
+
+To allow for reproducible builds in Go one must ensure that all dependencies are
+fetched in an exact version. There are several solutions out there like `godeps`
+for example that require a project to be checked out in some `GOPATH`. Most of
+these so called _vendoring_ solutions also demand that you rewrite the import
+paths of your dependencies.
+
+We've chosen the `gb` tool to overcome these requirements and to be able to have
+multiple copies of the same projects in different versions without messing with
+any `GOPATH`. See link:https://getgb.io/rationale/[here for a full rationale].
+link:https://www.youtube.com/watch?v=c3dW80eO88I[This video] also gives a good
+overview on `gb`.
+
+To get the `gb` tool, you must go and get it:
 
 ----
-git clone https://github.com/almighty/almighty-core $GOPATH/src/github.com/almighty/almighty-core
+$ go get -u github.com/constabulary/gb/...
+----
+
+This should be the only thing that needs to be installed in the `GOPATH` for
+this project to compile.
+
+Find more documentation on the available `gb` commands
+link:https://godoc.org/github.com/constabulary/gb/cmd/gb[here].
+
+Create a project directory somewhere *outside* of your `GOPATH` and checkout
+the code:
+
+----
+$ mkdir ~/dev
+$ cd ~/dev
+$ git clone https://github.com/almighty/almighty-core
+$ cd almighty-core
+----
+
+Notice, that we have checked out the code to `~/dev/almighty-core` which in no
+way conforms to the standard Go source layout.
+
+Now, fetch all of our vendored dependencies located in
+`~/dev/almighty-core/vendor/src`:
+
+----
+$ git submodule init
+$ git submodule update
 ----
 
 Fetch necessary dependencies:

@@ -32,6 +32,7 @@ $(BINARY_CLIENT): $(SOURCES)
 	cd ${CLIENT_DIR} && go build -o ../../${BINARY_CLIENT}
 
 deps:
+	go get -u github.com/constabulary/gb/...
 	go get -u github.com/tools/godep
 	go get -u github.com/jteeuwen/go-bindata/...
 	go get -u github.com/elazarl/go-bindata-assetfs/...
@@ -55,3 +56,7 @@ dev:
 	go get github.com/pilu/fresh
 	docker-compose up
 	fresh
+
+.PHONY: test
+test:
+	gb test -v
