@@ -34,8 +34,9 @@ try {
     }
 
     // Determine git revision ID
-    sh 'git rev-parse HEAD > GIT_COMMIT'
-    shortCommit = readFile('GIT_COMMIT').take(6)
+    //sh 'git rev-parse HEAD > GIT_COMMIT'
+    //shortCommit = readFile('GIT_COMMIT').take(6)
+    shortCommit = "abcd"
 
     stage 'Create docker builder image'
     def builderImageTag = "almighty-core-builder-image:${env.BRANCH_NAME}-${shortCommit}-${env.BUILD_NUMBER}"
