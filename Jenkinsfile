@@ -38,7 +38,7 @@ try {
     def builderImage = docker.build(builderImageTag, builderImageDir)
 
     stage 'Build with builder container'
-    builderImage.withRun {
+    builderImage.withRun {c ->
       // Setup GOPATH
       def currentDir = pwd()
       def GOPATH = "${currentDir}/go"
@@ -65,18 +65,25 @@ try {
         sh 'make test-unit'
         // TODO: (kwk) a cleanup stage?
       }
+
+      sh "docker logs ${c.id}"
     }
   } // end of node {}
 } catch (exc) {
   def w = new StringWriter()
   exc.printStackTrace(new PrintWriter(w))
 
-  String recipient = 'kkleine@redhat.com'
-  mail subject: "${env.JOB_NAME} (${env.BUILD_NUMBER}) failed",
+  emailext subject: "${env.JOB_NAME} (${env.BUILD_NUMBER}) failed",
     body: "It appears that ${env.BUILD_URL} is failing, somebody should do something about that",
-    to: recipient,
-    replyTo: recipient,
-    from: 'noreply@localhost'
+    to: 'kkleine@redhat.com',
+    recipientProviders: [
+      // Sends email to all the people who caused a change in the change set:
+      [$class: 'DevelopersRecipientProvider'],
+      // Sends email to the user who initiated the build:
+      [$class: 'RequesterRecipientProvider']
+    ],
+    replyTo: 'noreply@localhost',
+    attachLog: true
 
   throw err
 }
