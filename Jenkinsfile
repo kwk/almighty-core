@@ -3,98 +3,88 @@
 // Pipeline documentation: https://jenkins.io/doc/pipeline/
 // Groovy syntax reference: http://groovy-lang.org/syntax.html
 
-// Node executes on 64bit linux only
-//node('unix && 64bit') {
-node {
+// Only keep the 10 most recent builds
+properties([
+  [ $class: 'BuildDiscarderProperty',
+    strategy: [ $class: 'LogRotator', numToKeepStr: '10'] ]
+])
 
-  //def err = null
-  //currentBuild.result = FAILURE
+try {
+  def PACKAGE_NAME = 'github.com/almighty/almighty-core'
 
-  // try {
-
+  // Node executes on 64bit linux only
+  // node('unix && 64bit') {
+  node {
     // no longer needed if node ('linux && 64bit') was used...
     if (!isUnix()) {
-        error "This file can only run on unix-like systems."
+      error "This file can only run on unix-like systems."
     }
 
-    def PACKAGE_NAME = 'github.com/almighty/almighty-core'
-
     stage 'Checkout from SCM'
+    def checkoutDir = "go/src/${PACKAGE_NAME}"
+    sh "mkdir -pv ${checkoutDir}"
+    dir ("${checkoutDir}") {
+      checkout scm
+    }
 
-      def checkoutDir = "go/src/${PACKAGE_NAME}"
-      sh "mkdir -pv ${checkoutDir}"
-
-      dir ("${checkoutDir}") {
-        checkout scm
-      }
-
+    // TODO: (kwk) determine version
     def v = version()
     echo "Version is ${v}"
 
     stage 'Create builder image'
-
-      def builderImageTag = "almighty-core-builder-image:" + env.BRANCH_NAME + "-" + env.BUILD_NUMBER
-      // Path to where to find the builder's "Dockerfile"
-      def builderImageDir = "jenkins/docker/builder"
-      def builderImage = docker.build(builderImageTag, builderImageDir)
+    def builderImageTag = "almighty-core-builder-image:" + env.BRANCH_NAME + "-" + env.BUILD_NUMBER
+    // Path to where to find the builder's "Dockerfile"
+    def builderImageDir = "jenkins/docker/builder"
+    def builderImage = docker.build(builderImageTag, builderImageDir)
 
     stage 'Build with builder container'
+    builderImage.withRun {
+      // Setup GOPATH
+      def currentDir = pwd()
+      def GOPATH = "${currentDir}/go"
+      def PACKAGE_PATH = "${GOPATH}/src/${PACKAGE_NAME}"
+      sh "mkdir -pv ${PACKAGE_PATH}"
+      sh "mkdir -pv ${GOPATH}/bin"
+      sh "mkdir -pv ${GOPATH}/pkg"
 
-      builderImage.withRun {
-        // Setup GOPATH
-        def currentDir = pwd()
-        def GOPATH = "${currentDir}/go"
-        def PACKAGE_PATH = "${GOPATH}/src/${PACKAGE_NAME}"
-        sh "mkdir -pv ${PACKAGE_PATH}"
-        sh "mkdir -pv ${GOPATH}/bin"
-        sh "mkdir -pv ${GOPATH}/pkg"
+      sh 'cat /etc/redhat-release'
+      sh 'go version'
+      sh 'git --version'
+      sh 'hg --version'
+      sh 'glide --version'
 
-        sh 'cat /etc/redhat-release'
-        sh 'go version'
-        sh 'git --version'
-        sh 'hg --version'
-        sh 'glide --version'
-
-        dir ("${PACKAGE_PATH}") {
-
-          env.GOPATH = "${GOPATH}"
-
-          stage "fetch dependencies"
-          sh 'make deps'
-
-          stage "generate code"
-          sh 'make generate'
-
-          stage "build"
-          sh 'make build'
-
-          stage "unit tests"
-          sh 'make test-unit'
-        }
-
-        // Add stage inside withRun {} and add a cleanup stage?
+      dir ("${PACKAGE_PATH}") {
+        env.GOPATH = "${GOPATH}"
+        stage "fetch dependencies"
+        sh 'make deps'
+        stage "generate code"
+        sh 'make generate'
+        stage "build"
+        sh 'make build'
+        stage "unit tests"
+        sh 'make test-unit'
+        // TODO: (kwk) a cleanup stage?
       }
+    }
+  } // end of node {}
+} catch (exc) {
+  def w = new StringWriter()
+  exc.printStackTrace(new PrintWriter(w))
 
-    //currentBuild.result = "SUCCESS"
+  String recipient = 'kkleine@redhat.com'
+  mail subject: "${env.JOB_NAME} (${env.BUILD_NUMBER}) failed",
+    body: "It appears that ${env.BUILD_URL} is failing, somebody should do something about that",
+    to: recipient,
+    replyTo: recipient,
+    from: 'noreply@localhost'
 
-  //} catch (e) {
-
-  //  def w = new StringWriter()
-  //  err.printStackTrace(new PrintWriter(w))
-
-  //  mail body: "project build error: ${err}" ,
-  //  from: 'admin@your-jenkins.com',
-  //  replyTo: 'noreply@your-jenkins.com',
-  //  subject: 'project build failed',
-  //  to: 'kkleine@redhat.com'
-
-  //  throw err
-  //}
+  throw err
 }
 
 def version() {
-  sh 'git describe --tags --long > git-describe.out'
-  def vers = readFile('commandResult').trim()
+  //sh 'git describe --tags --long > git-describe.out'
+  //def vers = readFile('commandResult').trim()
+  def vers = "v0.0.1"
 }
 
 // Don't use "input" within a "node"
@@ -104,17 +94,5 @@ def version() {
 // timeout(time:5, unit:'DAYS') {
 //     input message:'Approve deployment?', submitter: 'it-ops'
 // }
-
-// Try catch blocks:
-//
-//     try {
-//         sh 'might fail'
-//         mail subject: 'all well', to: 'admin@somewhere', body: 'All well.'
-//     } catch (e) {
-//         def w = new StringWriter()
-//         e.printStackTrace(new PrintWriter(w))
-//         mail subject: "failed with ${e.message}", to: 'admin@somewhere', body: "Failed: ${w}"
-//         throw e
-//     }
 
 // For headless GUI tests see https://github.com/jenkinsci/workflow-basic-steps-plugin/blob/master/CORE-STEPS.md#build-wrappers
