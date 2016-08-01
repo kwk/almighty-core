@@ -33,12 +33,12 @@ try {
       checkout scm
     }
 
-    // TODO: (kwk) determine version
-    def v = version()
-    echo "Version is ${v}"
+    // Determine git revision ID
+    sh 'git rev-parse HEAD > GIT_COMMIT'
+    shortCommit = readFile('GIT_COMMIT').take(6)
 
     stage 'Create docker builder image'
-    def builderImageTag = "almighty-core-builder-image:" + env.BRANCH_NAME + "-" + env.BUILD_NUMBER
+    def builderImageTag = "almighty-core-builder-image:${env.BRANCH_NAME}-${shortCommit}-${env.BUILD_NUMBER}"
     // Path to where to find the builder's "Dockerfile"
     def builderImageDir = "jenkins/docker/builder"
     def builderImage = docker.build(builderImageTag, builderImageDir)
@@ -75,8 +75,8 @@ try {
 } catch (exc) {
   echo "An error occured. Handling it now."
 
-  def w = new StringWriter()
-  exc.printStackTrace(new PrintWriter(w))
+  //def w = new StringWriter()
+  //exc.printStackTrace(new PrintWriter(w))
 
   emailext subject: "${env.JOB_NAME} (${env.BUILD_NUMBER}) failed",
     body: "It appears that ${env.BUILD_URL} is failing, somebody should do something about that",
@@ -96,7 +96,6 @@ try {
 def version() {
   //sh 'git describe --tags --long > git-describe.out'
   //def vers = readFile('commandResult').trim()
-  def vers = "v0.0.1"
 }
 
 // Don't use "input" within a "node"
