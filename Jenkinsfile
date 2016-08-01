@@ -6,7 +6,7 @@
 // Only keep the 10 most recent builds
 properties([
   [ $class: 'BuildDiscarderProperty',
-    strategy: [ $class: 'LogRotator', numToKeepStr: '10'] ]
+    strategy: [ $class: 'LogRotator', numToKeepStr: '3'] ]
 ])
 
 try {
