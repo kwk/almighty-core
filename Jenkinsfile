@@ -65,12 +65,12 @@ try {
         // TODO: (kwk) a cleanup stage?
       }
 
-      stage "Archive artifacts"
-      step([$class: 'ArtifactArchiver',
-        artifacts: 'alm*',
-        fingerprint: true])
+      //stage "Archive artifacts"
+      //step([$class: 'ArtifactArchiver',
+      //  artifacts: 'alm*',
+      //  fingerprint: true])
 
-      sh "docker logs ${c.id}"
+      // sh "docker logs ${c.id}"
     }
   } // end of node {}
 } catch (exc) {
