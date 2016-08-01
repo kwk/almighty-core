@@ -63,6 +63,8 @@ try {
         sh 'make build'
         stage "unit tests"
         sh 'make test-unit'
+        stage "unit tests"
+        sh 'make test-integration'
         // TODO: (kwk) a cleanup stage?
       }
 
