@@ -25,26 +25,11 @@ node {
       sh "mkdir -pv ${checkoutDir}"
 
       dir ("${checkoutDir}") {
-
         checkout scm
-
-        //checkout([
-        //  $class: 'GitSCM',
-        //  // branches: [[
-        //  //   name: '*/' + env.BRANCH_NAME
-        //  // ]],
-        //  extensions: [
-        //    [$class: 'LocalBranch', localBranch: env.BRANCH_NAME],
-        //    // Delete the contents of the workspace before building,
-        //    // ensuring a fully fresh workspace.
-        //    [$class: 'WipeWorkspace'],
-        //    // Specify a local directory (relative to the workspace root) where
-        //    // the Git repository will be checked out.
-        //    // If left empty, the workspace root itself will be used.
-        //    [$class: 'RelativeTargetDirectory', relativeTargetDir: "${checkoutDir}"]
-        //  ]
-        //])
       }
+
+    def v = version()
+    echo "Version is ${v}"
 
     stage 'Create builder image'
 
@@ -105,6 +90,11 @@ node {
 
   //  throw err
   //}
+}
+
+def version() {
+  sh 'git describe --tags --long > git-describe.out'
+  def vers = readFile('commandResult').trim()
 }
 
 // Don't use "input" within a "node"
