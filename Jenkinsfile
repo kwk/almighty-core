@@ -37,21 +37,11 @@ try {
     def builderImageDir = "jenkins/docker/builder"
     def builderImage = docker.build(builderImageTag, builderImageDir)
 
-    stage 'Build with docker builder container'
     builderImage.withRun {c ->
       // Setup GOPATH
       def currentDir = pwd()
       def GOPATH = "${currentDir}/go"
       def PACKAGE_PATH = "${GOPATH}/src/${PACKAGE_NAME}"
-      sh "mkdir -pv ${PACKAGE_PATH}"
-      sh "mkdir -pv ${GOPATH}/bin"
-      sh "mkdir -pv ${GOPATH}/pkg"
-
-      sh 'cat /etc/redhat-release'
-      sh 'go version'
-      sh 'git --version'
-      sh 'hg --version'
-      sh 'glide --version'
 
       dir ("${PACKAGE_PATH}") {
         env.GOPATH = "${GOPATH}"
