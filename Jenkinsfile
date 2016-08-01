@@ -20,7 +20,7 @@ try {
       error "This file can only run on unix-like systems."
     }
 
-    stage 'Checkout from SCM'
+    stage 'Checkout project from SCM'
     def checkoutDir = "go/src/${PACKAGE_NAME}"
     sh "mkdir -pv ${checkoutDir}"
     dir ("${checkoutDir}") {
@@ -31,13 +31,13 @@ try {
     def v = version()
     echo "Version is ${v}"
 
-    stage 'Create builder image'
+    stage 'Create docker builder image'
     def builderImageTag = "almighty-core-builder-image:" + env.BRANCH_NAME + "-" + env.BUILD_NUMBER
     // Path to where to find the builder's "Dockerfile"
     def builderImageDir = "jenkins/docker/builder"
     def builderImage = docker.build(builderImageTag, builderImageDir)
 
-    stage 'Build with builder container'
+    stage 'Build with docker builder container'
     builderImage.withRun {c ->
       // Setup GOPATH
       def currentDir = pwd()
@@ -55,15 +55,15 @@ try {
 
       dir ("${PACKAGE_PATH}") {
         env.GOPATH = "${GOPATH}"
-        stage "fetch dependencies"
+        stage "Fetch Go package dependencies"
         sh 'make deps'
-        stage "generate code"
+        stage "Generate controllers from Goa design code"
         sh 'make generate'
-        stage "build"
+        stage "Go build"
         sh 'make build'
-        stage "unit tests"
+        stage "Run unit tests"
         sh 'make test-unit'
-        stage "unit tests"
+        stage "Run integration tests"
         sh 'make test-integration'
         // TODO: (kwk) a cleanup stage?
       }
@@ -72,6 +72,8 @@ try {
     }
   } // end of node {}
 } catch (exc) {
+  echo "An error occured. Handling it now."
+
   def w = new StringWriter()
   exc.printStackTrace(new PrintWriter(w))
 
