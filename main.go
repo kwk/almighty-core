@@ -93,12 +93,17 @@ func main() {
 	}
 
 	// Migrate the schema
+	err = migration.Migrate(db)
+	if err != nil {
+		panic(err.Error())
+	}
+
 	ts := models.NewGormTransactionSupport(db)
 	witRepo := models.NewWorkItemTypeRepository(ts)
 	wiRepo := models.NewWorkItemRepository(ts, witRepo)
 
 	if err := transaction.Do(ts, func() error {
-		return migration.Perform(context.Background(), ts.TX(), witRepo)
+		return migration.Perform(context.Background(), db, witRepo)
 	}); err != nil {
 		panic(err.Error())
 	}

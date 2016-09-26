@@ -15,6 +15,7 @@ type GormTransactionSupport struct {
 	db *gorm.DB
 }
 
+// TX returns the transaction object
 func (g *GormTransactionSupport) TX() *gorm.DB {
 	return g.tx
 }
