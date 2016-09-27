@@ -103,7 +103,7 @@ func main() {
 	wiRepo := models.NewWorkItemRepository(ts, witRepo)
 
 	if err := transaction.Do(ts, func() error {
-		return migration.Perform(context.Background(), db, witRepo)
+		return migration.Perform(context.Background(), ts.TX(), witRepo)
 	}); err != nil {
 		panic(err.Error())
 	}
