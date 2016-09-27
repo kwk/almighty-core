@@ -34,29 +34,28 @@ func getCurrentVersion(db *gorm.DB) (int, error) {
 	return v.version, res.Error
 }
 
-// executeSQLFile loads the given fileName from the packaged SQL files and
+// Func defines the type of function that can be part of a migration sequence
+type Func func(tx *gorm.DB) error
+
+// executeSQLFile loads the given filename from the packaged SQL files and
 // executes it on the given database
-func executeSQLFile(db *gorm.DB, fileName string) error {
-	data, err := Asset(fileName)
-	if err != nil {
-		return err
+func executeSQLFile(filename string) Func {
+	return func(db *gorm.DB) error {
+		data, err := Asset(filename)
+		if err != nil {
+			return err
+		}
+		return db.Exec(string(data)).Error
 	}
-	return db.Exec(string(data)).Error
 }
 
 // Migrate executes the required migration of the database on startup
 func Migrate(db *gorm.DB) error {
 
-	type MigrationFunc func(tx *gorm.DB) error
-
-	migrations := [][]MigrationFunc{}
+	migrations := [][]Func{}
 
 	// Version 0
-	migrations = append(migrations, []MigrationFunc{
-		func(db *gorm.DB) error {
-			return executeSQLFile(db, "000-bootstrap.sql")
-		},
-	})
+	migrations = append(migrations, []Func{executeSQLFile("000-bootstrap.sql")})
 
 	// Version N
 	//
@@ -69,14 +68,12 @@ func Migrate(db *gorm.DB) error {
 	// an error that is not nil.
 
 	/*
-		migrations = append(migrations, []MigrationFunc{
+		migrations = append(migrations, []Func{
 			func(db *gorm.DB) error {
 				// Execute random go code
 				return nil
 			},
-			func(db *gorm.DB) error {
-				return executeSQLFile(db, "YOUR_OWN_FILE.sql")
-			},
+			executeSQLFile("YOUR_OWN_FILE.sql"),
 			func(db *gorm.DB) error {
 				// Execute random go code
 				return nil
