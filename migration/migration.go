@@ -34,12 +34,12 @@ func getCurrentVersion(db *gorm.DB) (int, error) {
 	return v.version, res.Error
 }
 
-// Func defines the type of function that can be part of a migration sequence
-type Func func(tx *gorm.DB) error
+// fn defines the type of function that can be part of a migration sequence
+type fn func(tx *gorm.DB) error
 
 // executeSQLFile loads the given filename from the packaged SQL files and
 // executes it on the given database
-func executeSQLFile(filename string) Func {
+func executeSQLFile(filename string) fn {
 	return func(db *gorm.DB) error {
 		data, err := Asset(filename)
 		if err != nil {
@@ -52,10 +52,10 @@ func executeSQLFile(filename string) Func {
 // Migrate executes the required migration of the database on startup
 func Migrate(db *gorm.DB) error {
 
-	migrations := [][]Func{}
+	migrations := [][]fn{}
 
 	// Version 0
-	migrations = append(migrations, []Func{executeSQLFile("000-bootstrap.sql")})
+	migrations = append(migrations, []fn{executeSQLFile("000-bootstrap.sql")})
 
 	// Version N
 	//
