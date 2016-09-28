@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 		panic(fmt.Errorf("Failed to setup the configuration: %s", err.Error()))
 	}
 
-	if _, c := os.LookupEnv(resource.Database); c != false {
+	if _, c := os.LookupEnv(resource.Database); c {
 		db, err = gorm.Open("postgres",
 			fmt.Sprintf("host=%s port=%d user=%s password=%s DB.name=%s sslmode=%s",
 				configuration.GetPostgresHost(),
