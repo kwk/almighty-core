@@ -118,7 +118,7 @@ test-unit: prebuild-check clean-coverage-unit $(COV_PATH_UNIT)
 
 .PHONY: test-integration
 ## Runs the integration tests and produces coverage files for each package.
-test-integration: prebuild-check clean-coverage-integration $(COV_PATH_INTEGRATION)
+test-integration: prebuild-check clean-coverage-integration migrate-database $(COV_PATH_INTEGRATION)
 
 # Downloads docker-compose to tmp/docker-compose if it does not already exist.
 define download-docker-compose
