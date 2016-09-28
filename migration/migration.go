@@ -16,22 +16,26 @@ import (
 // Returning -1 simplifies the logic of the migration process because
 // the next version is always the current version + 1 which results
 // in -1 + 1 = 0 which is exactly what we want as the first version.
-func getCurrentVersion(db *gorm.DB) (int, error) {
+func getCurrentVersion(db *gorm.DB) (int64, error) {
 	if !db.HasTable("version") {
 		return -1, nil
 	}
 
-	res := db.Raw("select max(version) from version")
-	if res.Error != nil {
-		return -1, res.Error
+	rows, err := db.Table("version").Select("max(version) as current").Rows()
+	if err != nil {
+		return -1, err
+	}
+	defer rows.Close()
+
+	var current int64 = -1
+
+	if rows.Next() {
+		if err = rows.Scan(&current); err != nil {
+			return -1, err
+		}
 	}
 
-	type VersionResult struct {
-		version int
-	}
-	var v VersionResult
-	res.Scan(&v)
-	return v.version, res.Error
+	return current, nil
 }
 
 // fn defines the type of function that can be part of a migration sequence
@@ -86,7 +90,7 @@ func Migrate(db *gorm.DB) error {
 
 	ts := models.NewGormTransactionSupport(db)
 	var err error
-	for nextVersion := 0; nextVersion < len(migrations) && err == nil; nextVersion++ {
+	for nextVersion := int64(0); nextVersion < int64(len(migrations)) && err == nil; nextVersion++ {
 
 		err = transaction.Do(ts, func() error {
 			// Determine current version and adjust the outmost loop
@@ -96,7 +100,7 @@ func Migrate(db *gorm.DB) error {
 				return err
 			}
 			nextVersion = currentVersion + 1
-			if nextVersion >= len(migrations) {
+			if nextVersion >= int64(len(migrations)) {
 				// No further updates to apply (this is NOT an error)
 				return nil
 			}
@@ -123,7 +127,6 @@ func Migrate(db *gorm.DB) error {
 	}
 
 	return err
-
 }
 
 // Perform executes the required migration of the database on startup
