@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -9,8 +10,10 @@ import (
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/app/test"
 	"github.com/almighty/almighty-core/configuration"
+	"github.com/almighty/almighty-core/migration"
 	"github.com/almighty/almighty-core/models"
 	"github.com/almighty/almighty-core/resource"
+	"github.com/almighty/almighty-core/transaction"
 	"github.com/goadesign/goa"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
@@ -62,6 +65,13 @@ func (s *WorkItemTypeSuite) SetupSuite() {
 	assert.NotNil(s.T(), svc)
 	s.typeCtrl = NewWorkitemtypeController(svc, s.witRepo, s.ts)
 	assert.NotNil(s.T(), s.typeCtrl)
+
+	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
+	if err := transaction.Do(s.ts, func() error {
+		return migration.Populate(context.Background(), s.ts.TX(), s.witRepo)
+	}); err != nil {
+		panic(err.Error())
+	}
 }
 
 // The TearDownSuite method will run after all the tests in the suite have been run

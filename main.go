@@ -110,8 +110,9 @@ func main() {
 	witRepo := models.NewWorkItemTypeRepository(ts)
 	wiRepo := models.NewWorkItemRepository(ts, witRepo)
 
+	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
 	if err := transaction.Do(ts, func() error {
-		return migration.Perform(context.Background(), ts.TX(), witRepo)
+		return migration.Populate(context.Background(), ts.TX(), witRepo)
 	}); err != nil {
 		panic(err.Error())
 	}

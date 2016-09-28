@@ -129,8 +129,8 @@ func Migrate(db *gorm.DB) error {
 	return err
 }
 
-// Perform executes the required migration of the database on startup
-func Perform(ctx context.Context, db *gorm.DB, witr models.WorkItemTypeRepository) error {
+// Populate makes sure the database is populated with the correct types (e.g. system.bug etc.)
+func Populate(ctx context.Context, db *gorm.DB, witr models.WorkItemTypeRepository) error {
 	// FIXME: Need to add this conditionally
 	// q := `ALTER TABLE "tracker_queries" ADD CONSTRAINT "tracker_fk" FOREIGN KEY ("tracker") REFERENCES "trackers" ON DELETE CASCADE`
 	// db.Exec(q)
