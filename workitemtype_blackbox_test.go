@@ -46,11 +46,12 @@ func (s *WorkItemTypeSuite) SetupSuite() {
 	}
 
 	s.db, err = gorm.Open("postgres",
-		fmt.Sprintf("host=%s port=%d user=%s password=%s sslmode=%s",
+		fmt.Sprintf("host=%s port=%d user=%s password=%s DB.name=%s sslmode=%s",
 			configuration.GetPostgresHost(),
 			configuration.GetPostgresPort(),
 			configuration.GetPostgresUser(),
 			configuration.GetPostgresPassword(),
+			configuration.GetPostgresDatabase(),
 			configuration.GetPostgresSSLMode(),
 		))
 

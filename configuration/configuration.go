@@ -62,6 +62,7 @@ const (
 	varPostgresHost                 = "postgres.host"
 	varPostgresPort                 = "postgres.port"
 	varPostgresUser                 = "postgres.user"
+	varPostgresDatabase             = "postgres.database"
 	varPostgresPassword             = "postgres.password"
 	varPostgresSSLMode              = "postgres.sslmode"
 	varPostgresConnectionMaxRetries = "postgres.connection.maxretries"
@@ -78,6 +79,7 @@ func setConfigDefaults() {
 	viper.SetDefault(varPostgresHost, "localhost")
 	viper.SetDefault(varPostgresPort, 5432)
 	viper.SetDefault(varPostgresUser, "postgres")
+	viper.SetDefault(varPostgresDatabase, "postgres")
 	viper.SetDefault(varPostgresPassword, "mysecretpassword")
 	viper.SetDefault(varPostgresSSLMode, "disable")
 	// The number of times alm server will attempt to open a connection to the database before it gives up
@@ -109,7 +111,12 @@ func GetPostgresUser() string {
 	return viper.GetString(varPostgresUser)
 }
 
-// GetPostgresPassword returns the postgres password as set via config file or environment variable
+// GetPostgresDatabase returns the postgres database as set via default, config file, or environment variable
+func GetPostgresDatabase() string {
+	return viper.GetString(varPostgresDatabase)
+}
+
+// GetPostgresPassword returns the postgres password as set via default, config file, or environment variable
 func GetPostgresPassword() string {
 	return viper.GetString(varPostgresPassword)
 }
