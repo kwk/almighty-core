@@ -67,10 +67,12 @@ func (s *WorkItemTypeSuite) SetupSuite() {
 	assert.NotNil(s.T(), s.typeCtrl)
 
 	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
-	if err := transaction.Do(s.ts, func() error {
-		return migration.Populate(context.Background(), s.ts.TX(), s.witRepo)
-	}); err != nil {
-		panic(err.Error())
+	if configuration.GetPostgresPopulateOnlineTypes() {
+		if err := transaction.Do(s.ts, func() error {
+			return migration.Populate(context.Background(), s.ts.TX(), s.witRepo)
+		}); err != nil {
+			panic(err.Error())
+		}
 	}
 }
 

@@ -45,13 +45,15 @@ func TestMain(m *testing.M) {
 		defer DB.Close()
 
 		// Make sure the database is populated with the correct types (e.g. system.bug etc.)
-		ts := models.NewGormTransactionSupport(DB)
-		witRepo := models.NewWorkItemTypeRepository(ts)
+		if configuration.GetPostgresPopulateOnlineTypes() {
+			ts := models.NewGormTransactionSupport(DB)
+			witRepo := models.NewWorkItemTypeRepository(ts)
 
-		if err := transaction.Do(ts, func() error {
-			return migration.Populate(context.Background(), ts.TX(), witRepo)
-		}); err != nil {
-			panic(err.Error())
+			if err := transaction.Do(ts, func() error {
+				return migration.Populate(context.Background(), ts.TX(), witRepo)
+			}); err != nil {
+				panic(err.Error())
+			}
 		}
 
 		// RemoteWorkItemScheduler now available for all other test cases

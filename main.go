@@ -111,10 +111,12 @@ func main() {
 	wiRepo := models.NewWorkItemRepository(ts, witRepo)
 
 	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
-	if err := transaction.Do(ts, func() error {
-		return migration.Populate(context.Background(), ts.TX(), witRepo)
-	}); err != nil {
-		panic(err.Error())
+	if configuration.GetPostgresPopulateOnlineTypes() {
+		if err := transaction.Do(ts, func() error {
+			return migration.Populate(context.Background(), ts.TX(), witRepo)
+		}); err != nil {
+			panic(err.Error())
+		}
 	}
 
 	// Scheduler to fetch and import remote tracker items
