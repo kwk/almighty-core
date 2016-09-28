@@ -34,12 +34,6 @@ func TestMain(m *testing.M) {
 			panic("Failed to connect database: " + err.Error())
 		}
 		defer db.Close()
-		// Migrate the schema
-		db.AutoMigrate(
-			&Tracker{},
-			&TrackerQuery{},
-			&TrackerItem{})
-		db.Model(&TrackerQuery{}).AddForeignKey("tracker_id", "trackers(id)", "RESTRICT", "RESTRICT")
 	}
 	os.Exit(m.Run())
 }
