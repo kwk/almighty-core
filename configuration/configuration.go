@@ -96,17 +96,17 @@ func setConfigDefaults() {
 	viper.SetDefault(varDeveloperModeEnabled, false)
 }
 
-// GetPostgresHost returns the postgres host as set via config file or environment variable
+// GetPostgresHost returns the postgres host as set via default, config file, or environment variable
 func GetPostgresHost() string {
 	return viper.GetString(varPostgresHost)
 }
 
-// GetPostgresPort returns the postgres port as set via config file or environment variable
+// GetPostgresPort returns the postgres port as set via default, config file, or environment variable
 func GetPostgresPort() int64 {
 	return viper.GetInt64(varPostgresPort)
 }
 
-// GetPostgresUser returns the postgres user as set via config file or environment variable
+// GetPostgresUser returns the postgres user as set via default, config file, or environment variable
 func GetPostgresUser() string {
 	return viper.GetString(varPostgresUser)
 }
@@ -121,31 +121,31 @@ func GetPostgresPassword() string {
 	return viper.GetString(varPostgresPassword)
 }
 
-// GetPostgresSSLMode returns the postgres sslmode as set via config file or environment variable
+// GetPostgresSSLMode returns the postgres sslmode as set via default, config file, or environment variable
 func GetPostgresSSLMode() string {
 	return viper.GetString(varPostgresSSLMode)
 }
 
-// GetPostgresConnectionMaxRetries returns the number of times (as set via config file or
-// environment variable) alm server will attempt to open a connection to the database before it gives up
+// GetPostgresConnectionMaxRetries returns the number of times (as set via default, config file, or environment variable)
+// alm server will attempt to open a connection to the database before it gives up
 func GetPostgresConnectionMaxRetries() int {
 	return viper.GetInt(varPostgresConnectionMaxRetries)
 }
 
-// GetPostgresConnectionRetrySleep returns the number of seconds (as set via config file or
-// environment variable) to wait before trying to connect again
+// GetPostgresConnectionRetrySleep returns the number of seconds (as set via default, config file, or environment variable)
+// to wait before trying to connect again
 func GetPostgresConnectionRetrySleep() time.Duration {
 	return viper.GetDuration(varPostgresConnectionRetrySleep)
 }
 
-// GetHTTPAddress returns the HTTP address (as set via config file or environment variable)
+// GetHTTPAddress returns the HTTP address (as set via default, config file, or environment variable)
 // that the alm server binds to (e.g. "0.0.0.0:8080")
 func GetHTTPAddress() string {
 	return viper.GetString(varHTTPAddress)
 }
 
-// IsPostgresDeveloperModeEnabled returns if development related features (as set via config file or
-// environment variable, e.g. token generation endpoint are enabled
+// IsPostgresDeveloperModeEnabled returns if development related features (as set via default, config file, or environment variable),
+// e.g. token generation endpoint are enabled
 func IsPostgresDeveloperModeEnabled() bool {
 	return viper.GetBool(varDeveloperModeEnabled)
 }
