@@ -169,6 +169,11 @@ generate: prebuild-check $(DESIGNS) $(GOAGEN_BIN) $(GO_BINDATA_ASSETFS_BIN) $(GO
 	$(GOAGEN_BIN) gen -d ${PACKAGE_NAME}/${DESIGN_DIR} --pkg-path=github.com/goadesign/gorma
 	PATH="$$PATH:$(EXTRA_PATH)" $(GO_BINDATA_ASSETFS_BIN) -debug assets/...
 
+.PHONY: migrate-database
+## Compiles the server and runs the database migration with it
+migrate-database: $(BINARY_SERVER_BIN)
+	$(BINARY_SERVER_BIN) -migrateDatabase
+
 .PHONY: dev
 dev: prebuild-check $(FRESH_BIN)
 	docker-compose up -d db
