@@ -57,6 +57,9 @@ func Migrate(db *gorm.DB) error {
 	// Version 0
 	migrations = append(migrations, []fn{executeSQLFile("000-bootstrap.sql")})
 
+	// Version 1
+	migrations = append(migrations, []fn{executeSQLFile("001-common.sql")})
+
 	// Version N
 	//
 	// In order to add an upgrade, simply append an array of MigrationFunc to the
