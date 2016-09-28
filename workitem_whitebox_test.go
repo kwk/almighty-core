@@ -6,15 +6,11 @@ import (
 	"testing"
 
 	"github.com/almighty/almighty-core/configuration"
-	"github.com/almighty/almighty-core/migration"
-	"github.com/almighty/almighty-core/models"
 	"github.com/almighty/almighty-core/remoteworkitem"
 	"github.com/almighty/almighty-core/resource"
-	"github.com/almighty/almighty-core/transaction"
 	"github.com/goadesign/goa"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 )
 
 var DB *gorm.DB
@@ -43,15 +39,7 @@ func TestMain(m *testing.M) {
 			panic("Failed to connect database: " + err.Error())
 		}
 		defer DB.Close()
-		// Migrate the schema
-		ts := models.NewGormTransactionSupport(DB)
-		witRepo := models.NewWorkItemTypeRepository(ts)
 
-		if err := transaction.Do(ts, func() error {
-			return migration.Perform(context.Background(), ts.TX(), witRepo)
-		}); err != nil {
-			panic(err.Error())
-		}
 		// RemoteWorkItemScheduler now available for all other test cases
 		rwiScheduler = remoteworkitem.NewScheduler(DB)
 	}
