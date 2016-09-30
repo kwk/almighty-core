@@ -12,8 +12,6 @@ postgres.sslmode: disable
 postgres.connection.maxretries: 50
 # Duration to wait before trying to connect again
 postgres.connection.retrysleep: 1s
-# Whether you want to create the common work item types such as system.bug, system.feature, ...
-postgres.populateonlinetypes: true
 
 #------------------------
 # HTTP configuration
@@ -27,3 +25,6 @@ http.address: 0.0.0.0:8080
 
 # Enable development related features, e.g. token generation endpoint
 developer.mode.enabled: false
+
+# Whether you want to create the common work item types such as system.bug, system.feature, ...
+populate.commontypes: true

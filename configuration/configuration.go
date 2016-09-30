@@ -67,7 +67,7 @@ const (
 	varPostgresSSLMode              = "postgres.sslmode"
 	varPostgresConnectionMaxRetries = "postgres.connection.maxretries"
 	varPostgresConnectionRetrySleep = "postgres.connection.retrysleep"
-	varPostgresPopulateOnlineTypes  = "postgres.populateonlinetypes"
+	varPopulateCommonTypes          = "populate.commontypes"
 	varHTTPAddress                  = "http.address"
 	varDeveloperModeEnabled         = "developer.mode.enabled"
 )
@@ -87,15 +87,20 @@ func setConfigDefaults() {
 	viper.SetDefault(varPostgresConnectionMaxRetries, 50)
 	// Number of seconds to wait before trying to connect again
 	viper.SetDefault(varPostgresConnectionRetrySleep, time.Duration(time.Second))
-	viper.SetDefault(varPostgresPopulateOnlineTypes, true)
 
 	//-----
 	// HTTP
 	//-----
 	viper.SetDefault(varHTTPAddress, "0.0.0.0:8080")
 
+	//-----
+	// Misc
+	//-----
+
 	// Enable development related features, e.g. token generation endpoint
 	viper.SetDefault(varDeveloperModeEnabled, false)
+
+	viper.SetDefault(varPopulateCommonTypes, true)
 }
 
 // GetPostgresHost returns the postgres host as set via default, config file, or environment variable
@@ -140,10 +145,10 @@ func GetPostgresConnectionRetrySleep() time.Duration {
 	return viper.GetDuration(varPostgresConnectionRetrySleep)
 }
 
-// GetPostgresPopulateOnlineTypes returns true if the (as set via default, config file, or environment variable)
+// GetPopulateCommonTypes returns true if the (as set via default, config file, or environment variable)
 // the common work item types such as system.bug or system.feature shall be created.
-func GetPostgresPopulateOnlineTypes() bool {
-	return viper.GetBool(varPostgresPopulateOnlineTypes)
+func GetPopulateCommonTypes() bool {
+	return viper.GetBool(varPopulateCommonTypes)
 }
 
 // GetHTTPAddress returns the HTTP address (as set via default, config file, or environment variable)

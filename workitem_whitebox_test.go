@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 		defer DB.Close()
 
 		// Make sure the database is populated with the correct types (e.g. system.bug etc.)
-		if configuration.GetPostgresPopulateOnlineTypes() {
+		if configuration.GetPopulateCommonTypes() {
 			ts := models.NewGormTransactionSupport(DB)
 			witRepo := models.NewWorkItemTypeRepository(ts)
 
