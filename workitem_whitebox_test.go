@@ -50,7 +50,7 @@ func TestMain(m *testing.M) {
 			witRepo := models.NewWorkItemTypeRepository(ts)
 
 			if err := transaction.Do(ts, func() error {
-				return migration.Populate(context.Background(), ts.TX(), witRepo)
+				return migration.PopulateCommonTypes(context.Background(), ts.TX(), witRepo)
 			}); err != nil {
 				panic(err.Error())
 			}

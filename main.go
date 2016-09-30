@@ -113,7 +113,7 @@ func main() {
 	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
 	if configuration.GetPopulateCommonTypes() {
 		if err := transaction.Do(ts, func() error {
-			return migration.Populate(context.Background(), ts.TX(), witRepo)
+			return migration.PopulateCommonTypes(context.Background(), ts.TX(), witRepo)
 		}); err != nil {
 			panic(err.Error())
 		}
