@@ -56,7 +56,7 @@ func TestConcurrentMigrations(t *testing.T) {
 		defer wg.Done()
 		err := Migrate(db1)
 		if err != nil {
-			panic(err.Error())
+			t.Error(err.Error())
 		}
 	}()
 	wg.Add(1)
@@ -64,7 +64,7 @@ func TestConcurrentMigrations(t *testing.T) {
 		defer wg.Done()
 		err := Migrate(db2)
 		if err != nil {
-			panic(err.Error())
+			t.Error(err.Error())
 		}
 	}()
 	wg.Wait()
