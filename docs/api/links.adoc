@@ -249,7 +249,6 @@ their appropriate calls to endpoints.
 |HEAD
 |api/link/<linkid>
 |===
-----
 
 ... More to come here in detail ...
 
