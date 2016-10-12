@@ -1,0 +1,295 @@
+= Work item links: Design, Storage and REST API
+:author: Konrad Kleine
+:toc:
+:toc-placement!:
+:toc-title:Table of Contents
+:toclevels: 4
+:sectnums:
+:experimental:
+
+This document describes the what <<link,work item links>> and <<link-types,work
+item link types>> are, and how you can manipulate them via the various REST
+endpoints.
+
+We also explain the reasons we for why we chose the layout as it is planned or
+already implemented. This might involve a deep-dive into the way we store work
+item <<link-typs,link types>> and <<link,links>> in our PostgreSQL database.
+
+toc::[]
+
+[[introduction]]
+== Introduction and terminology
+
+A work item has different fields depending on its work item type. The work item
+types can be defined by an administrator.
+
+Depending on the a project's needs and the chosen workflow, an administrator can
+setup various work item types like for instance _epic_, _user-story_, _task_,
+and so forth. Those work items alone don't make much sense as long as they are
+not associated in a meaningful manner. For example, an _epic_ can have many
+_user-stories_ as children, which in turn can have one to many _tasks_. But a
+_user-story_ probably isn't going to have an _epic_ as a child. A work item of a
+type _bug_ might block another bug or is a duplicate of another bug.
+
+We call these associations between work items <<link,links>>.
+
+[[terminology]]
+=== Terminology
+
+The following subsections list important terms when talking about work
+item links. 
+
+[[link]]
+==== link
+A link describes a _bidrectional_ relationship between two work items. That
+means there's a defined <<source,source>> work item and a <<target,target>> work
+item in a link. Their work item type is relevant. This allows us to create a
+parent-child relationship among work items, like the one between an _epic_ and a
+_user-story_, like we've explained in the above paragraph.
+
+To realize this concept of a relationship between a source and a target in the
+underlying storage, we will have to define a <<link-type,link type>>.
+
+[[link-type]]
+==== link type
+A link type defines what work item types can be linked together and how their
+relationship can be described.
+
+[[source]]
+===== source
+The source defines where the relationship between two work items starts.
+Associated with the source is the type of work item that can be used as the
+source. Read more about this in <<storage-of-link-types>>.
+
+
+[[target]]
+===== target
+The target defines where the relationship between two work items ends.
+Associated with the target is the type of work item that can be used as the
+target. Read more about this in <<storage-of-link-types>>.
+
+[[storage-of-link-types]]
+== Storage of link types
+
+A <<link-type,link type>> needs to have an `ID` field for easy referencing. A
+`name` like i.e. `"blocker"` and `description` like `"prevents a bug from being
+closed by another bug"` makes also sense. But at the very least we must also
+specify the work item types for the <<source,source>> and the <<target,target>>.
+
+Since a bidirectional relationship can be viewed from the <<source,source>> or
+the <<target,target>>, it helps to specify words for each direction. Let's say,
+
+> a bug B1 _blocks_ a bug B2.
+
+If we put it the other way around,
+
+> bug B2 _is blocked_ by B1.
+
+We decided to include these words (_blocks_, and _blocked by_) in the
+<<link-type,link type>>.
+
+NOTE: We srongly believe that it helps us with internationalization (_i18n_) in
+the long run to have english words for a relationship. With this information we
+have enough information to generate output for a tool like
+link:https://en.wikipedia.org/wiki/Gettext[gettext] or
+link:https://poedit.net/[Poedit]. But for now the relationship texts just have a
+descriptive purpose.
+
+[[example-link-type-storage-layout]]
+.Example of link type storage layout
+|===
+| ID| Name | Description | Source work item type | Source relation | Target work item type | Target relation
+
+|0
+| epic-user-story-link 
+|An epic can be the parent of a user story.
+|system.epic
+|parent
+|system.user-story
+|child
+
+|1
+| user-story-task-link 
+|Tasks can be associated with a user story.
+|system.user-story
+|parent
+|system.task
+|child
+
+|2
+| bug-blocker 
+|The source bug shall prevent the target bug from being closed.
+|system.bug
+|blocks
+|system.bug
+|blocked by
+|===
+
+[[storage-of-links]]
+== Storage of links
+
+Storing a work item <<link,link>> is straight forward, now that we've layed out the <<link-type,link types>>.
+
+[[example-link-storage-layout]]
+.Example of link storage layout
+|===
+| ID| LinkTypeID | SourceWorkItemID | TargetWorkItemID
+
+|0
+|2
+|42
+|333
+|===
+
+In the table <<example-link-storage-layout>> we store a <<link,link>> between
+the source work item with ID `42` and the target work item with ID `333`. Note
+that `LinkTypeID` is `2`, hence <<link-type,link type>> is of type `bug-blocker`
+(See table <<example-link-type-storage-layout>>) and the linked work items are
+bugs.
+
+In other words we store the link that _bug 42_ blocks _bug 333_.
+
+[[link-validation]]
+=== Link validation
+
+On creation of a new <<link>> we must validate that the two work items to be
+linked can actually be linked. That means, a <<link-type,link type>> must exist
+that has the proper <<source>> and <<target>> work items types specified.
+
+[[rest-interface]]
+== REST interface
+
+The REST interface for work item <<link,links>> lives under its own HTTP endpoint.
+
+When we started the discussion on this topic we planned the REST endpoint to
+live under the `api/workitems/<id>/links` endpoint. At first sight, it might make
+sense to have `api/workitems/42/links` to query all <<link,links>> for the work
+item with ID `42`. But on second thought, this endpoint schema doesn't allow you
+to formulate a query for all blocked bugs because you always have a to have a
+work item ID inside of the URL.
+
+When we decided if <<link,links>> shall live under the REST endpoint `api/links`
+or `api/workitems/links`, the latter endpoint made more sense at first because
+it underlines that a <<link,link>> is meant for work items. But the downside is
+that we cannot have a work item with an ID called `links` because that would be
+addressed with `api/workitems/links`.
+
+Hence, we went with the *`api/links`* and *`api/linktypes`* endpoints.
+
+NOTE: We may implement a convenience endpoint eventually that looks like
+`api/workitems/<id>/links` but it will not be the default way of dealing with
+links for the work item with ID `<id>`.
+
+[[crud]]
+=== Create Read Update Delete (CRUD)
+
+This section deals with the specific endpoints for manipulating work item
+<<link-type,link types>> and work item <<link,links>>.
+
+The table <<crud-matrix>> gives an overview of all the available actions and
+their appropriate calls to endpoints. 
+
+[[crud-matrix]]
+.CRUD matrix
+[cols="^d,^m,^a,^a,^a"]
+|===
+|Action |Method / Endpoint |Params |Example Request |Example response  
+
+//
+// List all link types   
+//
+
+// action
+|Create <<link-type,link type>>
+// method / endpoint
+|POST api/linktypes
+// params
+|n/a
+// example request
+|[source]
+----
+POST 
+Content-type: application/vnd.linktype+json
+
+{
+    "id": "1",
+    "name": "user-story-task-link", 
+    "desc": "Tasks can be associated with a user story.",
+    "src_wit": "system.user-story",
+    "src_rel": "parent",
+    "tgt_wit": "system.task",
+    "tgt_rel": "child"
+}
+----
+// example response
+|[source]
+----
+200 OK
+Content-type: application/vnd.linktypes+json, application/json, text, plain
+
+[{
+    "id": "1",
+    "name": "user-story-task-link", 
+    "desc": "Tasks can be associated with a user story.",
+    "src_wit": "system.user-story",
+    "src_rel": "parent",
+    "tgt_wit": "system.task",
+    "tgt_rel": "child"
+},
+{
+    "id": "2",
+    "name": "bug-blocker", 
+    "desc": "The source bug shall prevent the target bug from being closed.",
+    "src_wit": "system.bug",
+    "src_rel": "blocks",
+    "tgt_wit": "system.bug",
+    "tgt_rel": "blocked by"
+}]
+----
+
+//
+// List all link types   
+//
+
+// action
+|List all <<link-type,link types>>
+// method / endpoint
+|GET api/linktypes
+// params
+|n/a
+// example request
+|n/a
+// example response
+|[source,json]
+----
+200 OK
+Content-type: application/vnd.linktypes+json, application/json, text, plain
+
+[{
+    "id": "1",
+    "name": "user-story-task-link", 
+    "desc": "Tasks can be associated with a user story.",
+    "src_wit": "system.user-story",
+    "src_rel": "parent",
+    "tgt_wit": "system.task",
+    "tgt_rel": "child"
+},
+{
+    "id": "2",
+    "name": "bug-blocker", 
+    "desc": "The source bug shall prevent the target bug from being closed.",
+    "src_wit": "system.bug",
+    "src_rel": "blocks",
+    "tgt_wit": "system.bug",
+    "tgt_rel": "blocked by"
+}]
+----
+|===
+
+[[create-link]]
+==== Create link 
+
+[[open-questions]]
+== Open questions
+
+. Do we want to have <<link-type,link types>> per installation of the system or per project? 
