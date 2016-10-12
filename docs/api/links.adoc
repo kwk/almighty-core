@@ -191,38 +191,71 @@ their appropriate calls to endpoints.
 
 [[crud-matrix]]
 .CRUD matrix
-[cols="^d,^m,^a,^a,^a"]
+[cols="d,d,m,m"]
 |===
-|Action |Method / Endpoint |Params |Example Request |Example response  
+|Resource |Action |Method |Endpoint
 
-//
-// List all link types   
-//
+// Link types
 
-// action
-|Create <<link-type,link type>>
-// method / endpoint
-|POST api/linktypes
-// params
-|n/a
-// example request
-|[source]
+|<<link-type,link type>>
+|Create
+|POST
+|api/linktypes
+
+|<<link-type,link type>>
+|Fetch single
+|GET
+|api/linktypes/<linktypeid>
+
+|<<link-type,link type>>
+|Fetch all
+|GET
+|api/linktypes
+
+|<<link-type,link type>>
+|Update
+|PUT
+|api/linktypes/<linktypeid>
+
+|<<link-type,link type>>
+|Test for existence
+|HEAD
+|api/linktypes/<linktypeid>
+
+// Links
+
+|<<link>>
+|Create
+|POST
+|api/links
+
+|<<link>>
+|Fetch single
+|GET
+|api/link/<linkid>
+
+|<<link>>
+|Fetch all
+|GET
+|api/link
+
+|<<link>>
+|Update
+|PUT
+|api/link/<linkid>
+
+|<<link>>
+|Test for existence
+|HEAD
+|api/link/<linkid>
+|===
 ----
-POST 
-Content-type: application/vnd.linktype+json
 
-{
-    "id": "1",
-    "name": "user-story-task-link", 
-    "desc": "Tasks can be associated with a user story.",
-    "src_wit": "system.user-story",
-    "src_rel": "parent",
-    "tgt_wit": "system.task",
-    "tgt_rel": "child"
-}
-----
-// example response
-|[source]
+... More to come here in detail ...
+
+[[fetch-all-link-types-response]]
+.Fetch all link types response
+[source,json]
 ----
 200 OK
 Content-type: application/vnd.linktypes+json, application/json, text, plain
@@ -247,44 +280,6 @@ Content-type: application/vnd.linktypes+json, application/json, text, plain
 }]
 ----
 
-//
-// List all link types   
-//
-
-// action
-|List all <<link-type,link types>>
-// method / endpoint
-|GET api/linktypes
-// params
-|n/a
-// example request
-|n/a
-// example response
-|[source,json]
-----
-200 OK
-Content-type: application/vnd.linktypes+json, application/json, text, plain
-
-[{
-    "id": "1",
-    "name": "user-story-task-link", 
-    "desc": "Tasks can be associated with a user story.",
-    "src_wit": "system.user-story",
-    "src_rel": "parent",
-    "tgt_wit": "system.task",
-    "tgt_rel": "child"
-},
-{
-    "id": "2",
-    "name": "bug-blocker", 
-    "desc": "The source bug shall prevent the target bug from being closed.",
-    "src_wit": "system.bug",
-    "src_rel": "blocks",
-    "tgt_wit": "system.bug",
-    "tgt_rel": "blocked by"
-}]
-----
-|===
 
 [[create-link]]
 ==== Create link 
