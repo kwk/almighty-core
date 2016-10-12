@@ -232,22 +232,22 @@ their appropriate calls to endpoints.
 |<<link>>
 |Fetch single
 |GET
-|api/link/<linkid>
+|api/links/<linkid>
 
 |<<link>>
 |Fetch all
 |GET
-|api/link
+|api/links
 
 |<<link>>
 |Update
 |PUT
-|api/link/<linkid>
+|api/links/<linkid>
 
 |<<link>>
 |Test for existence
 |HEAD
-|api/link/<linkid>
+|api/links/<linkid>
 |===
 
 ... More to come here in detail ...
