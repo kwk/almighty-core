@@ -71,9 +71,10 @@ security mechanism to prevent the user from breaking the system.
 
 [[source]]
 ==== source
-The source defines where the relationship between two work items starts.
-Associated with the source is the type of work item that can be used as the
-source. Read more about this in <<storage-of-link-types>>.
+The source defines where the relationship between two work items starts. It
+given as a work item ID. The type of work item that can be used as a source is
+defined by the <<source-type>>. Read more about this in
+<<storage-of-link-types>>.
 
 [[source-type]]
 ===== source type
@@ -82,9 +83,9 @@ The <<source>> type specifies the type of work item that can be used as a
 
 [[target]]
 ==== target
-The target defines where the relationship between two work items ends.
-Associated with the target is the type of work item that can be used as the
-target. Read more about this in <<storage-of-link-types>>.
+The target defines where the relationship between two work items ends. It is
+given as a work item ID. The type of work item that can be used as a target is
+defined by the <<target-type>>. Read more about this in <<storage-of-link-types>>.
 
 [[target-type]]
 ===== target type
@@ -151,24 +152,24 @@ Storing a work item <<link,link>> is straight forward, now that we've layed out 
 [[example-link-storage-layout]]
 .Example of link storage layout
 |===
-| ID| LinkTypeID | SourceWorkItemID | TargetWorkItemID
+| ID| <<link-type>> | <<source>> | <<target>>
 | 0| 2| 42| 333
 |===
 
 In the table <<example-link-storage-layout>> we store a <<link,link>> between
-the source work item with ID `42` and the target work item with ID `333`. Note
-that `LinkTypeID` is `2`, hence <<link-type,link type>> is of type `bug-blocker`
-(See table <<example-link-type-storage-layout>>) and the linked work items are
-bugs.
+the <<source>> work item with ID `42` and the <<target>> work item with ID
+`333`. Note that the <<link-type>> is `2`, hence it is a `bug-blocker` (See
+table <<example-link-type-storage-layout>>) and the linked work items are bugs
+(`"system.bug"`).
 
-In other words we store the link that _bug 42_ blocks _bug 333_.
+In other words we store the <<link>> that _bug 42_ blocks _bug 333_.
 
 [[link-validation]]
 === Link validation
 
 On creation of a new <<link>> we must validate that the two work items to be
-linked can actually be linked. That means, a <<link-type,link type>> must exist
-that has the proper <<source>> and <<target>> work items types specified.
+linked can actually be linked. That means, a <<link-type>> must exist that has
+the proper <<source>> and <<target>> work items types specified.
 
 [[rest-interface]]
 == REST interface
