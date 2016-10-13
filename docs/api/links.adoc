@@ -7,6 +7,8 @@
 :sectnums:
 :experimental:
 
+[abstract]
+== Abstract
 This document describes the what <<link,work item links>> and <<link-types,work
 item link types>> are, and how you can manipulate them via the various REST
 endpoints.
@@ -61,12 +63,35 @@ The source defines where the relationship between two work items starts.
 Associated with the source is the type of work item that can be used as the
 source. Read more about this in <<storage-of-link-types>>.
 
+[[source-type]]
+====== source-type
+The <<source>> type specifies the type of work item that can be used as a
+<<source>>.
 
 [[target]]
 ===== target
 The target defines where the relationship between two work items ends.
 Associated with the target is the type of work item that can be used as the
 target. Read more about this in <<storage-of-link-types>>.
+
+[[target-type]]
+====== target-type
+The <<target>> type specifies the type of work item that can be used as a
+<<target>>.
+
+[[forward-name]]
+===== forward name
+The forward oriented path from <<source>> _to_ <<target>> is described with the
+_forward name_. For example, if a bug _blocks_ a user story, the forward name is
+`"blocks"`. See also <<reverse-name>>.
+
+[[reverse-name]]
+===== reverse name
+The backwards oriented path from <<target>> _to_ <<source>> is described with
+the _reverse name_. For example, if a bug _blocks_ a user story, the reverse
+name name is `"blocked by"` as in: a user story is _blocked by_ a bug. See also
+<<forward-name>>.
+
 
 [[storage-of-link-types]]
 == Storage of link types
@@ -96,9 +121,9 @@ link:https://poedit.net/[Poedit]. But for now the relationship texts just have a
 descriptive purpose.
 
 [[example-link-type-storage-layout]]
-.Example of link type storage layout
+.Example of <<link type>> storage layout
 |===
-| ID| Name | Description | Source work item type | Source relation | Target work item type | Target relation
+| ID| Name | Description | <<source-type>> | <<forward-name>> | <<target-type>> | <<reverse-name>>
 
 |0
 | epic-user-story-link 
@@ -263,19 +288,19 @@ Content-type: application/vnd.linktypes+json, application/json, text, plain
     "id": "1",
     "name": "user-story-task-link", 
     "desc": "Tasks can be associated with a user story.",
-    "src_wit": "system.user-story",
-    "src_rel": "parent",
-    "tgt_wit": "system.task",
-    "tgt_rel": "child"
+    "source": "system.user-story",
+    "forwardName": "parent",
+    "target": "system.task",
+    "reverseName": "child"
 },
 {
     "id": "2",
     "name": "bug-blocker", 
     "desc": "The source bug shall prevent the target bug from being closed.",
-    "src_wit": "system.bug",
-    "src_rel": "blocks",
-    "tgt_wit": "system.bug",
-    "tgt_rel": "blocked by"
+    "source": "system.bug",
+    "forwardName": "blocks",
+    "target": "system.bug",
+    "reverseName": "blocked by"
 }]
 ----
 
