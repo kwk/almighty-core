@@ -35,7 +35,7 @@ type _bug_ might block another bug or is a duplicate of another bug.
 
 We call these associations between work items <<link,links>>.
 
-For a full list of terms, see the <<glossary>>.  
+For a full list of terms, see the <<glossary,glossary>>.  
 
 [glossary]
 [[Glossary]]
@@ -60,6 +60,15 @@ underlying storage, we will have to define a <<link-type,link type>>.
 A link type defines what work item types can be linked together and how their
 relationship can be described.
 
+[[link-category]]
+==== link category
+A <<link-type>> can have a category like `"system"`, `"extension"`, or `"user"`.
+
+IMPORTANT: A user can only create, update, or delete, links in the `"user"`
+<<link-category>>. Needless to say that a user can only create, update, or
+delete <<link-type,link types>> with the link category `"user"`. This is a
+security mechanism to prevent the user from breaking the system.
+
 [[source]]
 ==== source
 The source defines where the relationship between two work items starts.
@@ -67,7 +76,7 @@ Associated with the source is the type of work item that can be used as the
 source. Read more about this in <<storage-of-link-types>>.
 
 [[source-type]]
-===== source-type
+===== source type
 The <<source>> type specifies the type of work item that can be used as a
 <<source>>.
 
@@ -78,7 +87,7 @@ Associated with the target is the type of work item that can be used as the
 target. Read more about this in <<storage-of-link-types>>.
 
 [[target-type]]
-===== target-type
+===== target type
 The <<target>> type specifies the type of work item that can be used as a
 <<target>>.
 
@@ -114,43 +123,24 @@ If we put it the other way around,
 > bug B2 _is blocked_ by B1.
 
 We decided to include these words (_blocks_, and _blocked by_) in the
-<<link-type,link type>>.
+<<link-type,link type>> and refer to them as the <<forward-name>> and
+<<reverse-name>>.
 
 NOTE: We srongly believe that it helps us with internationalization (_i18n_) in
-the long run to have english words for a relationship. With this information we
-have enough information to generate output for a tool like
-link:https://en.wikipedia.org/wiki/Gettext[gettext] or
-link:https://poedit.net/[Poedit]. But for now the relationship texts just have a
-descriptive purpose.
+the long run to have english words for the <<forward-name>> and
+<<reverse-name>>. With this information we have enough information to generate
+output for a tool like link:https://en.wikipedia.org/wiki/Gettext[gettext] or
+link:https://poedit.net/[Poedit]. But for now the texts just have a descriptive
+purpose.
 
 [[example-link-type-storage-layout]]
 .Example of <<link type>> storage layout
 |===
-| ID| Name | Description | <<source-type>> | <<forward-name>> | <<target-type>> | <<reverse-name>>
-
-|0
-| epic-user-story-link 
-|An epic can be the parent of a user story.
-|system.epic
-|parent
-|system.user-story
-|child
-
-|1
-| user-story-task-link 
-|Tasks can be associated with a user story.
-|system.user-story
-|parent
-|system.task
-|child
-
-|2
-| bug-blocker 
-|The source bug shall prevent the target bug from being closed.
-|system.bug
-|blocks
-|system.bug
-|blocked by
+| ID| Name | Description | <<source-type>> | <<forward-name>> | <<target-type>> | <<reverse-name>> | <<link-category>>
+| 0| epic-user-story-link | An epic can be the parent of a user story. | system.epic | parent | system.user-story | child | system
+| 1| user-story-task-link | Tasks can be associated with a user story. | system.user-story|parent | system.task | child | system
+| 2| bug-blocker | The source bug shall prevent the target bug from being closed. | system.bug | blocks | system.bug | blocked by | system
+| 3| foo-bar | A <<link-type>> defined by the user | system.foo | ... | system.bar | ... | user
 |===
 
 [[storage-of-links]]
@@ -162,11 +152,7 @@ Storing a work item <<link,link>> is straight forward, now that we've layed out 
 .Example of link storage layout
 |===
 | ID| LinkTypeID | SourceWorkItemID | TargetWorkItemID
-
-|0
-|2
-|42
-|333
+| 0| 2| 42| 333
 |===
 
 In the table <<example-link-storage-layout>> we store a <<link,link>> between
@@ -225,57 +211,19 @@ their appropriate calls to endpoints.
 
 // Link types
 
-|<<link-type,link type>>
-|Create
-|POST
-|api/linktypes
-
-|<<link-type,link type>>
-|Fetch single
-|GET
-|api/linktypes/<linktypeid>
-
-|<<link-type,link type>>
-|Fetch all
-|GET
-|api/linktypes
-
-|<<link-type,link type>>
-|Update
-|PUT
-|api/linktypes/<linktypeid>
-
-|<<link-type,link type>>
-|Test for existence
-|HEAD
-|api/linktypes/<linktypeid>
+| <<link-type,link type>> | Create | POST | api/linktypes
+| <<link-type,link type>> | Fetch single | GET | api/linktypes/<linktypeid>
+| <<link-type,link type>> | Fetch all | GET | api/linktypes 
+| <<link-type,link type>> | Update | PUT | api/linktypes/<linktypeid>
+| <<link-type,link type>> | Test for existence | HEAD | api/linktypes/<linktypeid>
 
 // Links
 
-|<<link>>
-|Create
-|POST
-|api/links
-
-|<<link>>
-|Fetch single
-|GET
-|api/links/<linkid>
-
-|<<link>>
-|Fetch all
-|GET
-|api/links
-
-|<<link>>
-|Update
-|PUT
-|api/links/<linkid>
-
-|<<link>>
-|Test for existence
-|HEAD
-|api/links/<linkid>
+| <<link>> | Create | POST | api/links 
+| <<link>> | Fetch single | GET | api/links/<linkid>
+| <<link>> | Fetch all | GET | api/links 
+| <<link>> | Update | PUT | api/links/<linkid>
+| <<link>> | Test for existence | HEAD | api/links/<linkid>
 |===
 
 ... More to come here in detail ...
