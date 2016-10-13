@@ -142,6 +142,7 @@ purpose.
 | 1| user-story-task-link | Tasks can be associated with a user story. | system.user-story|parent | system.task | child | system
 | 2| bug-blocker | The source bug shall prevent the target bug from being closed. | system.bug | blocks | system.bug | blocked by | system
 | 3| foo-bar | A <<link-type>> defined by the user | system.foo | ... | system.bar | ... | user
+| 4| related | ... | * | related | * | related | user
 |===
 
 [[storage-of-links]]
