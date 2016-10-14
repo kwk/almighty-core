@@ -27,6 +27,11 @@ find . -iname "*.txt" | while read f
 do
   echo -n "TESTING $f..."
 
+  if [ ! -z "$(echo $f | grep "delete")" ]; then
+    echo "IGNORING delete request" 
+    continue
+  fi
+
   cp $f $TEMPFILE
 
   # Strip off the HTTP header from the example
