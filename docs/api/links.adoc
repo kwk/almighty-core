@@ -261,7 +261,7 @@ Accept: application/vnd.api+json
 
 {
   "data": {
-    "id": "0d05bba6-ef28-4032-9c79-0e2954bf76ce",
+    "id": "subsystem_test",
     "type": "linkcategories",
     "attributes": {
       "name": "subsystem_test",
