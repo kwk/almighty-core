@@ -196,11 +196,8 @@ NOTE: We may implement a convenience endpoint eventually that looks like
 `api/workitems/<id>/links` but it will not be the default way of dealing with
 links for the work item with ID `<id>`.
 
-[[crud]]
-=== Create Read Update Delete (CRUD)
-
-This section deals with the specific endpoints for manipulating work item
-<<link-type,link types>> and work item <<link,links>>.
+The following sections deal with the specific endpoints for manipulating all
+defined resources.
 
 The table <<crud-matrix>> gives an overview of all the available actions and
 their appropriate calls to endpoints. 
@@ -211,13 +208,21 @@ their appropriate calls to endpoints.
 |===
 |Resource |Action |Method |Endpoint
 
+// Link categories
+
+| <<link-category>> | <<create-link-category,Create>> | POST | api/linkcategories
+| <<link-category>> | Fetch single | GET | api/linkcategories/<linkcategoryid>
+| <<link-category>> | Fetch all | GET | api/linkcategories 
+| <<link-category>> | Update | PUT | api/linkcategories/<linkcategoryid>
+| <<link-category>> | Test for existence | HEAD | api/linkcategories/<linkcategoryid>
+
 // Link types
 
-| <<link-type,link type>> | Create | POST | api/linktypes
-| <<link-type,link type>> | Fetch single | GET | api/linktypes/<linktypeid>
-| <<link-type,link type>> | Fetch all | GET | api/linktypes 
-| <<link-type,link type>> | Update | PUT | api/linktypes/<linktypeid>
-| <<link-type,link type>> | Test for existence | HEAD | api/linktypes/<linktypeid>
+| <<link-type>> | Create | POST | api/linktypes
+| <<link-type>> | Fetch single | GET | api/linktypes/<linktypeid>
+| <<link-type>> | Fetch all | GET | api/linktypes 
+| <<link-type>> | Update | PUT | api/linktypes/<linktypeid>
+| <<link-type>> | Test for existence | HEAD | api/linktypes/<linktypeid>
 
 // Links
 
@@ -228,35 +233,130 @@ their appropriate calls to endpoints.
 | <<link>> | Test for existence | HEAD | api/links/<linkid>
 |===
 
-... More to come here in detail ...
+TODO: Include links like `/api/links/22/linktype` in order to get the link type
+of link with ID 22
 
-[[fetch-all-link-types-response]]
-.Fetch all link types response
+In general requests and response for CRUD operations are modeled after the
+requests and responses you can find in the JSONAPI section on
+link:http://jsonapi.org/format/#crud[CRUD].
+
+[[create-link-category]]
+=== Create link category
+
+A normal user should not be allowed to create <<link-category,link categories>>.
+This is a task that the system or an extension or plugin to the system should
+only be allowed to execute. 
+
+[[create-link-category-request]]
+==== Request
+
+In order to create a <<link-category>>, for a fictional `'test'` subsystem,
+you would have to request it this way:
+
 [source,json]
 ----
-200 OK
-Content-type: application/vnd.linktypes+json, application/json, text, plain
+POST http://example.com/api/linkcategories/ HTTP/1.1
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
 
-[{
-    "id": "1",
-    "name": "user-story-task-link", 
-    "desc": "Tasks can be associated with a user story.",
-    "source": "system.user-story",
-    "forwardName": "parent",
-    "target": "system.task",
-    "reverseName": "child"
-},
 {
-    "id": "2",
-    "name": "bug-blocker", 
-    "desc": "The source bug shall prevent the target bug from being closed.",
-    "source": "system.bug",
-    "forwardName": "blocks",
-    "target": "system.bug",
-    "reverseName": "blocked by"
-}]
+  "data": {
+    "id": "0d05bba6-ef28-4032-9c79-0e2954bf76ce",
+    "type": "linkcategories",
+    "attributes": {
+      "name": "subsystem_test",
+      "title": "This category is reserved for link types that belong to the 'test' subsystem."
+    }
+  }
+}
 ----
 
+==== Responses
+
+This section contains possible responses for a
+<<create-link-category-request,link category creation request>>.
+
+===== 201 Created
+
+[source,json]
+----
+HTTP/1.1 201 Created
+Location: http://example.com/api/linkcategories/subsystem_test
+Content-Type: application/vnd.api+json
+
+{
+  "data": {
+    "type": "linkcategories",
+    "id": "subsystem_test",
+    "attributes": {
+      "name": "Test",
+      "title": "This category is reserved for link types that belong to the 'test' subsystem."
+    },
+    "links": {
+      "self": "http://example.com/api/linkcategories/subsystem_test"
+    }
+  }
+}
+----
+
+===== 202 Accepted
+
+[, JSONAPI-SPEC]
+""
+If a request to create a resource has been accepted for processing, but the
+processing has not been completed by the time the server responds, the server
+*MUST* return a `202 Accepted status` code.
+""
+
+===== 204 No Content
+
+[, JSONAPI-SPEC]
+""
+If a `POST` request did include a Client-Generated ID and the requested resource
+has been created successfully, the server *MUST* return either a `201 Created`
+status code and response document (as described above) or a `204 No Content`
+status code with no response document.
+""
+
+===== 403 Forbidden
+
+[, JSONAPI-SPEC]
+""
+A server MAY return 403 Forbidden in response to an unsupported request to create a resource.
+""
+
+===== 404 Not Found
+
+[, JSONAPI-SPEC]
+""
+A server MUST return 404 Not Found when processing a request that references a related resource that does not exist.
+""
+
+===== 409 Conflict
+
+[, JSONAPI-SPEC]
+""
+A server *MUST* return `409 Conflict` when processing a `POST` request to create
+a resource with a client-generated ID that already exists.
+
+A server *MUST* return `409 Conflict` when processing a `POST` request in which
+the resource object’s type is not among the type(s) that constitute the
+collection represented by the endpoint.
+
+A server *SHOULD* include error details and provide enough information to
+recognize the source of the conflict.
+""
+===== Other Responses
+
+[, JSONAPI-SPEC]
+""
+A server *MAY* respond with other HTTP status codes.
+
+A server *MAY* include error details with error responses.
+
+A server *MUST* prepare responses, and a client *MUST* interpret responses, in
+accordance with HTTP semantics.
+""
 
 [[create-link]]
 ==== Create link 
@@ -265,3 +365,32 @@ Content-type: application/vnd.linktypes+json, application/json, text, plain
 == Open questions
 
 . Do we want to have <<link-type,link types>> per installation of the system or per project? 
+
+... More to come here in detail ...
+
+// [[fetch-all-link-types-response]]
+// .Fetch all link types response
+// [source,json]
+// ----
+// 200 OK
+// Content-type: application/vnd.linktypes+json, application/json, text, plain
+// 
+// [{
+//     "id": "1",
+//     "name": "user-story-task-link", 
+//     "desc": "Tasks can be associated with a user story.",
+//     "source": "system.user-story",
+//     "forwardName": "parent",
+//     "target": "system.task",
+//     "reverseName": "child"
+// },
+// {
+//     "id": "2",
+//     "name": "bug-blocker", 
+//     "desc": "The source bug shall prevent the target bug from being closed.",
+//     "source": "system.bug",
+//     "forwardName": "blocks",
+//     "target": "system.bug",
+//     "reverseName": "blocked by"
+// }]
+// ----
