@@ -1,0 +1,7 @@
+[[link-category-resource]]
+= Link category resource
+
+include::resource-linkcategories-create.adoc[leveloffset=+1]
+include::resource-linkcategories-read.adoc[leveloffset=+1]
+include::resource-linkcategories-update.adoc[leveloffset=+1]
+include::resource-linkcategories-delete.adoc[leveloffset=+1]
