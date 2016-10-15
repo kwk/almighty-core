@@ -3,7 +3,7 @@
 :author: Konrad Kleine
 :toc: left
 :toc-title:Table of Contents
-:toclevels: 5
+:toclevels: 2
 :sectnums:
 :experimental:
 
@@ -44,8 +44,6 @@ include::part.rest.adoc[]
 include::appendix.adoc[]
 
 include::bibliography.adoc[]
-
-
 
 // [[fetch-all-link-types-response]]
 // .Fetch all link types response

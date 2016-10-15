@@ -1,14 +1,14 @@
-[[update-link-category]]
-= Update link category
+[[update-link-type]]
+= Update link type
 
-[[update-link-category-request]]
+[[update-link-type-request]]
 == Request
 
-In order to update <<link-category>>, execute this request.
+In order to update <<link-type>>, execute this request.
 
 [source,json]
 ----
-include::examples/linkcategories-update-request.txt[]
+include::examples/linktypes-update.req.txt[]
 ----
 
 For more information on updating a resource and not including all attributes, 

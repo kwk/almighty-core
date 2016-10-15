@@ -48,8 +48,8 @@ Storing a work item <<link,link>> is straight forward, now that we've layed out 
 [[example-link-storage-layout]]
 .Example of link storage layout
 |===
-| ID| <<link-type>> | <<source>> | <<target>>
-| 0| 2| 42| 333
+| ID| <<link-type>> | <<source>> | <<target>> | <<link-comment>> 
+| 0| 2| 42| 333 | n/a
 |===
 
 In the table <<example-link-storage-layout>> we store a <<link,link>> between

@@ -1,30 +1,26 @@
-[[create-link-category]]
-= Create link category
+[[create-link-type]]
+= Create link type
 
-A normal user should not be allowed to create <<link-category,link categories>>.
-This is a task that the system or an extension or plugin to the system should
-only be allowed to execute. 
-
-[[create-link-category-request]]
+[[create-link-type-request]]
 == Request
 
-In order to create a <<link-category>>, for a fictional `'test'` subsystem,
-you would have to request it this way:
+In order to create a <<link-type>> in the <<link-category>> `'test'` of a
+fictional subsystem, you would have to request it this way:
 
 [source,json]
 ----
-include::examples/linkcategories-create-request.txt[]
+include::examples/linktypes-create.req.txt[]
 ----
 
 == Responses
 
 This section contains possible responses for a
-<<create-link-category-request,link category creation request>>.
+<<create-link-type-request,link type creation request>>.
 
 link:http://jsonapi.org/format/#crud-creating-responses-201[`201 Created`]::
 [source,json]
 ----
-include::examples/linkcategories-create-response.txt[]
+include::examples/linktypes-create.res.txt[]
 ----
 
 These are also possible return codes:

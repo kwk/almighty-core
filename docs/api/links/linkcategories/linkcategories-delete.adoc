@@ -8,7 +8,7 @@ In order to delete <<link-category>>, execute this request.
 
 [source]
 ----
-include::examples/linkcategories-delete-request.txt[]
+include::examples/linkcategories-delete.req.txt[]
 ----
 
 == Responses

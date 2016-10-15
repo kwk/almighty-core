@@ -16,7 +16,11 @@ it underlines that a <<link,link>> is meant for work items. But the downside is
 that we cannot have a work item with an ID called `links` because that would be
 addressed with `api/workitems/links`.
 
-Hence, we went with the *`api/links`* and *`api/linktypes`* endpoints.
+Hence, we went with these endpoints:
+
+* `api/links`
+* `api/linktypes`
+* `api/linkcategories`
 
 NOTE: We may implement a convenience endpoint eventually that looks like
 `api/workitems/<id>/links` but it will not be the default way of dealing with
@@ -39,18 +43,16 @@ The endpoints satisfy the JSON API specification [jsonapi-spec].
 // Link categories
 
 | <<link-category>> | <<create-link-category,Create>> | POST | api/linkcategories
-| <<link-category>> | <<read-link-category-request,Fetch single>> | GET | api/linkcategories/<linkcategoryid>
+| <<link-category>> | <<read-link-category,Fetch single>> | GET | api/linkcategories/<linkcategoryid>
 | <<link-category>> | Fetch all | GET | api/linkcategories 
 | <<link-category>> | <<update-link-category,Update>> | PUT | api/linkcategories/<linkcategoryid>
-| <<link-category>> | Test for existence | HEAD | api/linkcategories/<linkcategoryid>
 
 // Link types
 
-| <<link-type>> | Create | POST | api/linktypes
-| <<link-type>> | Fetch single | GET | api/linktypes/<linktypeid>
+| <<link-type>> | <<create-link-type,Create>> | POST | api/linktypes
+| <<link-type>> | <<read-link-type,Fetch single>> | GET | api/linktypes/<linktypeid>
 | <<link-type>> | Fetch all | GET | api/linktypes 
 | <<link-type>> | Update | PUT | api/linktypes/<linktypeid>
-| <<link-type>> | Test for existence | HEAD | api/linktypes/<linktypeid>
 
 // Links
 
@@ -58,14 +60,15 @@ The endpoints satisfy the JSON API specification [jsonapi-spec].
 | <<link>> | Fetch single | GET | api/links/<linkid>
 | <<link>> | Fetch all | GET | api/links 
 | <<link>> | Update | PUT | api/links/<linkid>
-| <<link>> | Test for existence | HEAD | api/links/<linkid>
 |===
 
-TODO: Include links like `/api/links/22/linktype` in order to get the link type
+IMPORTANT: TODO: Include links like `/api/links/22/linktype` in order to get the link type
 of link with ID 22
 
 In general requests and response for CRUD operations are modeled after the
 requests and responses you can find in the JSONAPI section on
 link:http://jsonapi.org/format/#crud[CRUD].
 
+
 include::linkcategories/index.adoc[leveloffset=+1]
+include::linktypes/index.adoc[leveloffset=+1]

@@ -23,7 +23,7 @@ function cleanup() {
 }
 trap "cleanup" EXIT
 
-find . -iname "*.txt" | while read f
+find . -iregex ".*\.\(req\|res\)\.txt" | while read f
 do
   echo -n "TESTING $f..."
 

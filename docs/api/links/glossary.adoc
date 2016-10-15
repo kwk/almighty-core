@@ -65,3 +65,12 @@ The backwards oriented path from <<target>> _to_ <<source>> is described with
 the _reverse name_. For example, if a bug _blocks_ a user story, the reverse
 name name is `"blocked by"` as in: a user story is _blocked by_ a bug. See also
 <<forward-name>>.
+
+[[link-comment,link comment]]
+link comment::
+A link comment is an optional string field on a <<link>> that allows the creator
+of a <<link>> to further specify the relationship. For example, think of a
+fictional `'test'` subsystem that wants to create a link between one of its
+`test-result` work items and a `pull-request` work item. For convenience, it
+makes sense to specify a string like: `"The code from pull request X passed the
+tests in test Y."`.

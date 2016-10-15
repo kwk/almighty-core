@@ -1,14 +1,14 @@
-[[read-link-category]]
-= Read link category
+[[read-link-type]]
+= Read link type
 
-[[read-link-category-request]]
+[[read-link-type-request]]
 == Request
 
-In order to read a single <<link-category>>, execute this request.
+In order to read a single <<link-type>>, execute this request.
 
 [source]
 ----
-include::examples/linkcategories-read-single-request.get[]
+include::examples/linktypes-read-single.req.get[]
 ----
 
 More information on fetching a resource please take a look at the JSON API
