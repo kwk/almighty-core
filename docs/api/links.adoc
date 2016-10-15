@@ -246,17 +246,11 @@ link:http://jsonapi.org/format/#crud[CRUD].
 
 include::resource-linkcategories.adoc[leveloffset=+1]
 
-[appendix]
-= Appendix
+include::appendix.adoc[]
 
-[[open-questions]]
-=== Open questions
+include::bibliography.adoc[]
 
-. Do we want to have <<link-type,link types>> per installation of the system or per project? 
 
-[bibliography]
-- [[[jsonapi-spec]]] JSON API Specification
-  http://jsonapi.org/format/
 
 // [[fetch-all-link-types-response]]
 // .Fetch all link types response
