@@ -1,7 +1,4 @@
 [appendix]
-= Appendix
-
-[[open-questions]]
-=== Open questions
+= Open questions
 
 . Do we want to have <<link-type,link types>> per installation of the system or per project? 
