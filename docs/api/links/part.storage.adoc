@@ -66,3 +66,6 @@ In other words we store the <<link>> that _bug 42_ blocks _bug 333_.
 On creation of a new <<link>> we must validate that the two work items to be
 linked can actually be linked. That means, a <<link-type>> must exist that has
 the proper <<source>> and <<target>> work items types specified.
+
+IMPORTANT: On the backend side we *MUST NOT* forget to check if we can do
+validation when a work item type changes.

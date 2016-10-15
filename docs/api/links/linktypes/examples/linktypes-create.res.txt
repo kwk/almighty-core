@@ -17,7 +17,11 @@ Content-Type: application/vnd.api+json
     "relationships": {
       "link_category": {
         "meta": { "comment": "See the creation of link categories for what this ID means" },
-        "data": { "type": "link_category", "id": "6c5610be-30b2-4880-9fec-81e4f8e4fd76" }
+        "data": { "type": "link_category", "id": "6c5610be-30b2-4880-9fec-81e4f8e4fd76" },
+        "links": {
+          "self": "http://example.com/api/linktypes/40bbdd3d-8b5d-4fd6-ac90-7236b669af04/relationships/link_category",
+          "related": "http://example.com/api/linktypes/40bbdd3d-8b5d-4fd6-ac90-7236b669af04/link_category"
+        }
       }
     },
     "links": {

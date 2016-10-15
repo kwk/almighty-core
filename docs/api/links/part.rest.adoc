@@ -52,7 +52,7 @@ The endpoints satisfy the JSON API specification [jsonapi-spec].
 | <<link-type>> | <<create-link-type,Create>> | POST | api/linktypes
 | <<link-type>> | <<read-link-type,Fetch single>> | GET | api/linktypes/<linktypeid>
 | <<link-type>> | Fetch all | GET | api/linktypes 
-| <<link-type>> | Update | PUT | api/linktypes/<linktypeid>
+| <<link-type>> | <<update-link-category,Update>> | PUT | api/linktypes/<linktypeid>
 
 // Links
 

@@ -6,6 +6,7 @@
 :toclevels: 2
 :sectnums:
 :experimental:
+:icons: font
 
 [abstract]
 = Abstract
