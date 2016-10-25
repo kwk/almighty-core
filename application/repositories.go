@@ -44,3 +44,12 @@ type TrackerQueryRepository interface {
 type SearchRepository interface {
 	SearchFullText(ctx context.Context, searchStr string, start *int, length *int) ([]*app.WorkItem, uint64, error)
 }
+
+// WorkItemLinkCategoryRepository encapsulates storage & retrieval of work item link categories
+type WorkItemLinkCategoryRepository interface {
+	Create(ctx context.Context, name *string, description *string) (*app.WorkItemLinkCategory, error)
+	Load(ctx context.Context, ID string) (*app.WorkItemLinkCategory, error)
+	List(ctx context.Context) (*app.WorkItemLinkCategoryArray, error)
+	Delete(ctx context.Context, ID string) error
+	Save(ctx context.Context, linkCat app.WorkItemLinkCategory) (*app.WorkItemLinkCategory, error)
+}

@@ -223,3 +223,103 @@ var searchResponse = a.MediaType("application/vnd.search+json", func() {
 		a.Attribute("data")
 	})
 })
+
+//  // JSONAPIAttributesObject see http://jsonapi.org/format/#document-resource-object-attributes
+//  var JSONAPIAttributesObject = a.Type("JSONAPIAttributesObject", func() {
+//  	//a.TypeName("JSONAPIAttributesObject")
+//  	a.Description(`The value of the attributes key MUST be an object (an \"attributes object\").
+//  Members of the attributes object ("attributes") represent information about the resource object in
+//  which it's defined.
+//
+//  Although has-one foreign keys (e.g. author_id) are often stored internally alongside other
+//  information to be represented in a resource object, these keys SHOULD NOT appear as attributes.`)
+//
+//  	a.Attribute("attributes", a.HashOf(D.String, D.Any))
+//  })
+//
+//  // JSONAPIResourceObject2 see http://jsonapi.org/format/#document-resource-objects
+//  var JSONAPIResourceObject2 = a.Type("JSONAPIResourceObject2", func() {
+//  	//a.TypeName("JSONAPIResourceObject2")
+//  	a.Description(`Resource objects appear in a JSON API document to represent resources.`)
+//  	a.Attribute("type", D.String)
+//  	a.Attribute("id", D.UUID, func() {
+//  		a.Metadata("struct:tag:jsonapi", "primary")
+//  	})
+//  	a.Required("type", "id")
+//  })
+//
+//  // JSONAPIResourceObject see http://jsonapi.org/format/#document-resource-objects
+//  func JSONAPIResourceObject(typeName string) func() *D.UserTypeDefinition {
+//  	t := fmt.Sprintf("JSONAPIResourceObject_%s", typeName)
+//  	return func() *D.UserTypeDefinition {
+//  		return a.Type(t, func() {
+//  			//a.TypeName(t)
+//  			a.Description(`Resource objects appear in a JSON API document to represent resources.`)
+//  			a.Attribute("id", D.UUID, func() {
+//  				a.Metadata("struct:tag:jsonapi", fmt.Sprintf("primary,%s", typeName))
+//  			})
+//  			a.Required("id")
+//  		})
+//  	}
+//  }
+//
+//  // JSONAPIMetaObject see http://jsonapi.org/format/#document-meta
+//  var JSONAPIMetaObject = a.Type("JSONAPIMetaObject", func() {
+//  	//a.TypeName("JSONAPIMetaObject")
+//  	a.Description(`Where specified, a meta member can be used to include non-standard meta-information.
+//  The value of each meta member MUST be an object (a "meta object").`)
+//
+//  	a.Attribute("meta", a.HashOf(D.String, D.Any))
+//
+//  	a.Required("meta")
+//  })
+//
+
+// JSONAPIErrors is an array of JSONAPI error objects
+var JSONAPIErrors = a.MediaType("application/vnd.jsonapierrors+json", func() {
+	a.ContentType("application/vnd.api+json")
+	a.TypeName("JSONAPIErrors")
+	a.Description(``)
+	a.Attributes(func() {
+		a.Attribute("errors", ArrayOf(JSONAPIError))
+		a.Required("errors")
+	})
+	a.View("default", func() {
+		a.Attribute("errors")
+		a.Required("errors")
+	})
+})
+
+// WorkItemLinkCategory puts a category on a link between two work items.
+// The category is attached to a work item link type.
+var WorkItemLinkCategory = a.MediaType("application/vnd.work-item-link-category+json", func() {
+	a.ContentType("application/vnd.api+json")
+	a.TypeName("WorkItemLinkCategory")
+	a.Description(`A link type can have a category like "system", "extension", or "user".
+Those categories are handled by this media type.`)
+	a.Attributes(func() {
+		a.Attribute("data", WorkItemLinkCategoryData)
+		a.Required("data")
+	})
+	a.View("default", func() {
+		a.Attribute("data")
+		a.Required("data")
+	})
+})
+
+// WorkItemLinkCategoryArray is a collection of work WorkItemLinkCategoryData objects.
+var WorkItemLinkCategoryArray = a.MediaType("application/vnd.work-item-link-category-array+json", func() {
+	a.ContentType("application/vnd.api+json")
+	a.TypeName("WorkItemLinkCategoryArray")
+	a.Description(`An array of work item link categories`)
+	a.Attributes(func() {
+		a.Attribute("meta", WorkItemLinkCategoryArrayMeta)
+		a.Attribute("data", a.ArrayOf(WorkItemLinkCategory))
+		a.Required("data")
+	})
+	a.View("default", func() {
+		a.Attribute("data")
+		a.Attribute("meta")
+		a.Required("data")
+	})
+})
