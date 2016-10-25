@@ -1,6 +1,10 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/almighty/almighty-core/app"
+)
 
 const (
 	stBadParameterErrorMsg = "Bad value for parameter '%s': '%v'"
@@ -70,3 +74,36 @@ func (err NotFoundError) Error() string {
 func NewNotFoundError(entity string, id string) NotFoundError {
 	return NotFoundError{entity: entity, ID: id}
 }
+
+// JSONAPIErrors is defined here http://jsonapi.org/format/#error-objects
+type JSONAPIErrors struct {
+	app.JSONAPIErrors
+}
+
+// Error returns the JSONAPI errors as a string
+func (err JSONAPIErrors) Error() string {
+	if err.JSONAPIErrors.Errors != nil {
+		res := "ERRORS(S): "
+		for _, e := range err.JSONAPIErrors.Errors {
+			res += fmt.Sprintf("%s: %s\n", e.Title, e.Detail)
+		}
+		return res
+	}
+	return "NO ERROR"
+}
+
+//func AppendJSONAPIError(jerr *JSONAPIErrors, code int, message string) JSONAPIErrors {
+//	if jerr == nil {
+//		jerr := &JSONAPIErrors {
+//			app.JSONAPIErrors {},
+//		}
+//	}
+//	if jerr.JSONAPIErrors.Errors == nil {
+//		jerr.JSONAPIErrors.Errors = []*app.JSONAPIError
+//	}
+//	toAppend:=app.JSONAPIError {
+//
+//	}
+//	append(jerr.JSONAPIErrors.Errors,)
+//	return
+//}

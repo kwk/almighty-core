@@ -75,6 +75,11 @@ func (g *GormBase) SearchItems() application.SearchRepository {
 	return search.NewGormSearchRepository(g.db)
 }
 
+// WorkItemLinkCategories returns a work item link category repository
+func (g *GormBase) WorkItemLinkCategories() application.WorkItemLinkCategoryRepository {
+	return models.NewWorkItemLinkCategoryRepository(g.db)
+}
+
 func (g *GormBase) DB() *gorm.DB {
 	return g.db
 }
