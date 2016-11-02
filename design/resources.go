@@ -433,7 +433,7 @@ var _ = a.Resource("work-item-link-category", func() {
 	})
 
 	a.Action("list", func() {
-		//Security("jwt") // TODO: Add authentication requirement?
+		//a.Security("jwt") // TODO: Add authentication requirement?
 		a.Routing(
 			a.GET(""),
 		)
@@ -445,11 +445,11 @@ var _ = a.Resource("work-item-link-category", func() {
 			a.Media(d.ErrorMedia)
 		})
 		a.Response(d.InternalServerError)
-		//Response(Unauthorized) // TODO: Add authentication requirement?
+		//a.Response(d.Unauthorized) // TODO: Add authentication requirement?
 	})
 
 	a.Action("create", func() {
-		//Security("jwt") // TODO: Add authentication requirement?
+		a.Security("jwt")
 		a.Routing(
 			a.POST(""),
 		)
@@ -462,11 +462,11 @@ var _ = a.Resource("work-item-link-category", func() {
 			a.Media(d.ErrorMedia)
 		})
 		a.Response(d.InternalServerError)
-		//Response(Unauthorized) // TODO: Add authentication requirement?
+		a.Response(d.Unauthorized)
 	})
 
 	a.Action("delete", func() {
-		//Security("jwt") // TODO: Add authentication requirement
+		a.Security("jwt")
 		a.Routing(
 			a.DELETE("/:id"),
 		)
@@ -483,15 +483,14 @@ var _ = a.Resource("work-item-link-category", func() {
 			a.Media(JSONAPIErrors)
 		})
 		a.Response(d.Unauthorized)
-		//Response(Unauthorized) // TODO: Add authentication requirement
 	})
 
 	a.Action("update", func() {
-		//Security("jwt") // TODO: Add authentication requirement
+		a.Security("jwt")
 		a.Routing(
 			a.PUT("/:id"),
 		)
-		a.Description("update the given work item with given id.")
+		a.Description("Update the given work item with given id.")
 		a.Params(func() {
 			a.Param("id", d.String, "id")
 		})
@@ -504,6 +503,6 @@ var _ = a.Resource("work-item-link-category", func() {
 		})
 		a.Response(d.InternalServerError)
 		a.Response(d.NotFound)
-		//Response(Unauthorized) // TODO: Add authentication requirement
+		a.Response(d.Unauthorized)
 	})
 })
