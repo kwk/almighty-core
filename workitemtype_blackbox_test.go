@@ -57,10 +57,9 @@ func (s *WorkItemTypeSuite) SetupSuite() {
 
 	svc := goa.New("WorkItemTypeSuite-Service")
 	assert.NotNil(s.T(), svc)
-	s.typeCtrl = NewWorkitemtypeController(svc, gormapplication.NewGormDB(DB))
+	s.typeCtrl = NewWorkitemtypeController(svc, gormapplication.NewGormDB(s.db))
 	assert.NotNil(s.T(), s.typeCtrl)
 
-	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
 	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
 	if configuration.GetPopulateCommonTypes() {
 		if err := models.Transactional(s.db, func(tx *gorm.DB) error {

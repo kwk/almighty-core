@@ -281,7 +281,7 @@ var JSONAPIErrors = a.MediaType("application/vnd.jsonapierrors+json", func() {
 	a.TypeName("JSONAPIErrors")
 	a.Description(``)
 	a.Attributes(func() {
-		a.Attribute("errors", ArrayOf(JSONAPIError))
+		a.Attribute("errors", a.ArrayOf(JSONAPIError))
 		a.Required("errors")
 	})
 	a.View("default", func() {

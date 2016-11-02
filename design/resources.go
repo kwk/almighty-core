@@ -501,7 +501,7 @@ var _ = a.Resource("work-item-link-category", func() {
 		a.Params(func() {
 			a.Param("id", d.String, "id")
 		})
-		a.Response(OK)
+		a.Response(d.OK)
 		a.Response(d.BadRequest, func() {
 			a.Media(d.ErrorMedia)
 		})

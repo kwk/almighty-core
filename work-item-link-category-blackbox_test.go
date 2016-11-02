@@ -9,6 +9,7 @@ import (
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/app/test"
 	"github.com/almighty/almighty-core/configuration"
+	"github.com/almighty/almighty-core/gormapplication"
 	"github.com/almighty/almighty-core/models"
 	"github.com/almighty/almighty-core/resource"
 	"github.com/goadesign/goa"
@@ -26,8 +27,6 @@ import (
 type WorkItemLinkCategorySuite struct {
 	suite.Suite
 	db          *gorm.DB
-	ts          *models.GormTransactionSupport
-	linkCatRepo *models.GormWorkItemLinkCategoryRepository
 	linkCatCtrl *WorkItemLinkCategoryController
 }
 
@@ -48,11 +47,9 @@ func (s *WorkItemLinkCategorySuite) SetupSuite() {
 		panic("Failed to connect database: " + err.Error())
 	}
 
-	s.ts = models.NewGormTransactionSupport(s.db)
-	s.linkCatRepo = models.NewWorkItemLinkCategoryRepository(s.ts)
 	svc := goa.New("WorkItemLinkCategorySuite-Service")
 	assert.NotNil(s.T(), svc)
-	s.linkCatCtrl = NewWorkItemLinkCategoryController(svc, s.linkCatRepo, s.ts)
+	s.linkCatCtrl = NewWorkItemLinkCategoryController(svc, gormapplication.NewGormDB(DB))
 	assert.NotNil(s.T(), s.linkCatCtrl)
 }
 
