@@ -1,24 +1,51 @@
 package main_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
-	. "github.com/almighty/almighty-core"
+	"github.com/almighty/almighty-core/app"
+	"github.com/almighty/almighty-core/configuration"
+	"github.com/almighty/almighty-core/resource"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/goadesign/goa"
+	"github.com/goadesign/goa/middleware"
+	goajwt "github.com/goadesign/goa/middleware/security/jwt"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
-
 	// the various HTTP endpoints
-	EndpointWorkItems              = "/api/workitems"
-	EndpointWorkItemTypes          = "/api/workitemtypes"
-	EndpointWorkItemLinkCategories = "/api/workitemlinkcategories"
+	endpointWorkItems              = "/api/workitems"
+	endpointWorkItemTypes          = "/api/workitemtypes"
+	endpointWorkItemLinkCategories = "/api/workitemlinkcategories"
 )
 
-// GetExpiredAuthHeader returns a JWT bearer token with an expiration date that lies in the past
-func GetExpiredAuthHeader(t *testing.T, key interface{}) string {
+// Expected strcture of 401 error response
+type errorResponseStruct struct {
+	Id     string
+	Code   string
+	Status int
+	Detail string
+}
+
+// testSecureAPI defines how a Test object is.
+type testSecureAPI struct {
+	method             string
+	url                string
+	expectedStatusCode int    // this will be tested against responseRecorder.Code
+	expectedErrorCode  string // this will be tested only if response body gets unmarshelled into errorResponseStruct
+	payload            *bytes.Buffer
+	jwtToken           string
+}
+
+// getExpiredAuthHeader returns a JWT bearer token with an expiration date that lies in the past
+func getExpiredAuthHeader(t *testing.T, key interface{}) string {
 	token := jwt.New(jwt.SigningMethodRS256)
 	token.Claims = jwt.MapClaims{"exp": float64(time.Now().Unix() - 100)}
 	tokenStr, err := token.SignedString(key)
@@ -28,8 +55,8 @@ func GetExpiredAuthHeader(t *testing.T, key interface{}) string {
 	return fmt.Sprintf("Bearer %s", tokenStr)
 }
 
-// GetMalformedAuthHeader returns a JWT bearer token with the wrong prefix of "Malformed Bearer" instead of just "Bearer"
-func GetMalformedAuthHeader(t *testing.T, key interface{}) string {
+// getMalformedAuthHeader returns a JWT bearer token with the wrong prefix of "Malformed Bearer" instead of just "Bearer"
+func getMalformedAuthHeader(t *testing.T, key interface{}) string {
 	token := jwt.New(jwt.SigningMethodRS256)
 	tokenStr, err := token.SignedString(key)
 	if err != nil {
@@ -38,14 +65,83 @@ func GetMalformedAuthHeader(t *testing.T, key interface{}) string {
 	return fmt.Sprintf("Malformed Bearer %s", tokenStr)
 }
 
-// GetExpiredAuthHeader returns a valid JWT bearer token
-func GetValidAuthHeader(t *testing.T, key interface{}) string {
+// getExpiredAuthHeader returns a valid JWT bearer token
+func getValidAuthHeader(t *testing.T, key interface{}) string {
 	token := jwt.New(jwt.SigningMethodRS256)
 	tokenStr, err := token.SignedString(key)
 	if err != nil {
 		t.Fatal("Could not sign the token ", err)
 	}
 	return fmt.Sprintf("Bearer %s", tokenStr)
+}
+
+// UnauthorizeCreateUpdateDeleteTest will check authorized access to Create/Update/Delete APIs
+func UnauthorizeCreateUpdateDeleteTest(t *testing.T, getDataFunc func(t *testing.T) []testSecureAPI, createServiceFunc func() *goa.Service, mountCtrlFunc func(service *goa.Service) error) {
+	resource.Require(t, resource.Database)
+
+	// This will be modified after merge PR for "Viper Environment configurations"
+	publickey, err := jwt.ParseRSAPublicKeyFromPEM((configuration.GetTokenPublicKey()))
+	if err != nil {
+		t.Fatal("Could not parse Key ", err)
+	}
+	tokenTests := getDataFunc(t)
+
+	for _, testObject := range tokenTests {
+		// Build a request
+		var req *http.Request
+		var err error
+		if testObject.payload == nil {
+			req, err = http.NewRequest(testObject.method, testObject.url, nil)
+		} else {
+			req, err = http.NewRequest(testObject.method, testObject.url, testObject.payload)
+		}
+		// req, err := http.NewRequest(testObject.method, testObject.url, testObject.payload)
+		if err != nil {
+			t.Fatal("could not create a HTTP request")
+		}
+		// Add Authorization Header
+		req.Header.Add("Authorization", testObject.jwtToken)
+
+		rr := httptest.NewRecorder()
+
+		service := createServiceFunc()
+		assert.NotNil(t, service)
+
+		// if error is thrown during request processing, it will be caught by ErrorHandler middleware
+		// this will put error code, status, details in recorder object.
+		// e.g> {"id":"AL6spYb2","code":"jwt_security_error","status":401,"detail":"JWT validation failed: crypto/rsa: verification error"}
+		service.Use(middleware.ErrorHandler(service, true))
+
+		// append a middleware to service. Use appropriate RSA keys
+		jwtMiddleware := goajwt.New(publickey, nil, app.NewJWTSecurity())
+		// Adding middleware via "app" is important
+		// Because it will check the design and accordingly apply the middleware if mentioned in design
+		// But if I use `service.Use(jwtMiddleware)` then middleware is applied for all the requests (without checking design)
+		app.UseJWTMiddleware(service, jwtMiddleware)
+
+		if err := mountCtrlFunc(service); err != nil {
+			t.Fatalf("Failed to mount controller: %s", err.Error())
+		}
+
+		// Hit the service with own request
+		service.Mux.ServeHTTP(rr, req)
+
+		assert.Equal(t, testObject.expectedStatusCode, rr.Code)
+
+		// Below code tries to open Body response which is expected to be a JSON
+		// If could not parse it correctly into errorResponseStruct
+		// Then it gets logged and continue the test loop
+		content := new(errorResponseStruct)
+		err = json.Unmarshal(rr.Body.Bytes(), content)
+		if err != nil {
+			t.Log("Could not parse JSON response: ", rr.Body)
+			// safe to continue because we alread checked rr.Code=required_value
+			continue
+		}
+		// Additional checks for 'more' confirmation
+		assert.Equal(t, testObject.expectedErrorCode, content.Code)
+		assert.Equal(t, testObject.expectedStatusCode, content.Status)
+	}
 }
 
 // The RSADifferentPrivateKeyTest key will be used to sign the token but verification should
