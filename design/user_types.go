@@ -154,7 +154,7 @@ top level of a JSON API document.
 See. also http://jsonapi.org/format/#error-objects.`)
 
 	a.Attribute("id", d.String, "a unique identifier for this particular occurrence of the problem.")
-	a.Attribute("links", HashOf(d.String, JSONAPILink), `a links object containing the following members:
+	a.Attribute("links", a.HashOf(d.String, JSONAPILink), `a links object containing the following members:
 * about: a link that leads to further details about this particular occurrence of the problem.`)
 	a.Attribute("status", d.String, "the HTTP status code applicable to this problem, expressed as a string value.")
 	a.Attribute("code", d.String, "an application-specific error code, expressed as a string value.")
