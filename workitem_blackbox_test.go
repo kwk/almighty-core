@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"testing"
-	"time"
 
 	"encoding/json"
 
@@ -170,34 +169,6 @@ func TestListByFields(t *testing.T) {
 	test.DeleteWorkitemOK(t, nil, nil, controller, wi.ID)
 }
 
-func getExpiredAuthHeader(t *testing.T, key interface{}) string {
-	token := jwt.New(jwt.SigningMethodRS256)
-	token.Claims = jwt.MapClaims{"exp": float64(time.Now().Unix() - 100)}
-	tokenStr, err := token.SignedString(key)
-	if err != nil {
-		t.Fatal("Could not sign the token ", err)
-	}
-	return fmt.Sprintf("Bearer %s", tokenStr)
-}
-
-func getMalformedAuthHeader(t *testing.T, key interface{}) string {
-	token := jwt.New(jwt.SigningMethodRS256)
-	tokenStr, err := token.SignedString(key)
-	if err != nil {
-		t.Fatal("Could not sign the token ", err)
-	}
-	return fmt.Sprintf("Malformed Bearer %s", tokenStr)
-}
-
-func getValidAuthHeader(t *testing.T, key interface{}) string {
-	token := jwt.New(jwt.SigningMethodRS256)
-	tokenStr, err := token.SignedString(key)
-	if err != nil {
-		t.Fatal("Could not sign the token ", err)
-	}
-	return fmt.Sprintf("Bearer %s", tokenStr)
-}
-
 // Expected strcture of 401 error response
 type errorResponseStruct struct {
 	Id     string
@@ -223,105 +194,118 @@ func getWorkItemTestData(t *testing.T) []testSecureAPI {
 	}
 	differentPrivatekey, err := jwt.ParseRSAPrivateKeyFromPEM(([]byte(RSADifferentPrivateKeyTest)))
 
-	createWIPayloadString := bytes.NewBuffer([]byte(`{"type": "system.userstory" ,"fields": { "system.creator": "tmaeder", "system.state": "new", "system.title": "My special story", "system.description": "description" }}`))
+	if err != nil {
+		t.Fatal("Could not parse different private key ", err)
+	}
+
+	createWIPayloadString := bytes.NewBuffer([]byte(`
+		{
+			"type": "system.userstory",
+			"fields": {
+				"system.creator": "tmaeder",
+				"system.state": "new",
+				"system.title": "My special story",
+				"system.description": "description"
+			}
+		}`))
 
 	return []testSecureAPI{
 		// Create Work Item API with different parameters
 		{
-			method:             "POST",
-			url:                "/api/workitems",
-			expectedStatusCode: 401,
+			method:             http.MethodPost,
+			url:                EndpointWorkItems,
+			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWIPayloadString,
-			jwtToken:           getExpiredAuthHeader(t, privatekey),
+			jwtToken:           GetExpiredAuthHeader(t, privatekey),
 		}, {
-			method:             "POST",
-			url:                "/api/workitems",
-			expectedStatusCode: 401,
+			method:             http.MethodPost,
+			url:                EndpointWorkItems,
+			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWIPayloadString,
-			jwtToken:           getMalformedAuthHeader(t, privatekey),
+			jwtToken:           GetMalformedAuthHeader(t, privatekey),
 		}, {
-			method:             "POST",
-			url:                "/api/workitems",
-			expectedStatusCode: 401,
+			method:             http.MethodPost,
+			url:                EndpointWorkItems,
+			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWIPayloadString,
-			jwtToken:           getValidAuthHeader(t, differentPrivatekey),
+			jwtToken:           GetValidAuthHeader(t, differentPrivatekey),
 		}, {
-			method:             "POST",
-			url:                "/api/workitems",
-			expectedStatusCode: 401,
+			method:             http.MethodPost,
+			url:                EndpointWorkItems,
+			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWIPayloadString,
 			jwtToken:           "",
 		},
 		// Update Work Item API with different parameters
 		{
-			method:             "PUT",
-			url:                "/api/workitems/12345",
-			expectedStatusCode: 401,
+			method:             http.MethodPut,
+			url:                EndpointWorkItems + "/12345",
+			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWIPayloadString,
-			jwtToken:           getExpiredAuthHeader(t, privatekey),
+			jwtToken:           GetExpiredAuthHeader(t, privatekey),
 		}, {
-			method:             "PUT",
-			url:                "/api/workitems/12345",
-			expectedStatusCode: 401,
+			method:             http.MethodPut,
+			url:                EndpointWorkItems + "/12345",
+			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWIPayloadString,
-			jwtToken:           getMalformedAuthHeader(t, privatekey),
+			jwtToken:           GetMalformedAuthHeader(t, privatekey),
 		}, {
-			method:             "PUT",
-			url:                "/api/workitems/12345",
-			expectedStatusCode: 401,
+			method:             http.MethodPut,
+			url:                EndpointWorkItems + "/12345",
+			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWIPayloadString,
-			jwtToken:           getValidAuthHeader(t, differentPrivatekey),
+			jwtToken:           GetValidAuthHeader(t, differentPrivatekey),
 		}, {
-			method:             "PUT",
-			url:                "/api/workitems/12345",
-			expectedStatusCode: 401,
+			method:             http.MethodPut,
+			url:                EndpointWorkItems + "/12345",
+			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWIPayloadString,
 			jwtToken:           "",
 		},
 		// Delete Work Item API with different parameters
 		{
-			method:             "DELETE",
-			url:                "/api/workitems/12345",
-			expectedStatusCode: 401,
+			method:             http.MethodDelete,
+			url:                EndpointWorkItems + "/12345",
+			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
-			payload:            createWIPayloadString,
-			jwtToken:           getExpiredAuthHeader(t, privatekey),
+			payload:            nil,
+			jwtToken:           GetExpiredAuthHeader(t, privatekey),
 		}, {
-			method:             "DELETE",
-			url:                "/api/workitems/12345",
-			expectedStatusCode: 401,
+			method:             http.MethodDelete,
+			url:                EndpointWorkItems + "/12345",
+			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
-			payload:            createWIPayloadString,
-			jwtToken:           getMalformedAuthHeader(t, privatekey),
+			payload:            nil,
+			jwtToken:           GetMalformedAuthHeader(t, privatekey),
 		}, {
-			method:             "DELETE",
-			url:                "/api/workitems/12345",
-			expectedStatusCode: 401,
+			method:             http.MethodDelete,
+			url:                EndpointWorkItems + "/12345",
+			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
-			payload:            createWIPayloadString,
-			jwtToken:           getValidAuthHeader(t, differentPrivatekey),
+			payload:            nil,
+			jwtToken:           GetValidAuthHeader(t, differentPrivatekey),
 		}, {
-			method:             "DELETE",
-			url:                "/api/workitems/12345",
-			expectedStatusCode: 401,
+			method:             http.MethodDelete,
+			url:                EndpointWorkItems + "/12345",
+			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
-			payload:            createWIPayloadString,
+			payload:            nil,
 			jwtToken:           "",
 		},
 		// Try fetching a random work Item
 		// We do not have security on GET hence this should return 404 not found
 		{
-			method:             "GET",
-			url:                "/api/workitems/088481764871",
-			expectedStatusCode: 404,
+			method:             http.MethodGet,
+			url:                EndpointWorkItems + "/088481764871",
+			expectedStatusCode: http.StatusNotFound,
 			expectedErrorCode:  "not_found",
 			payload:            nil,
 			jwtToken:           "",
