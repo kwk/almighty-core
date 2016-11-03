@@ -197,14 +197,14 @@ var WorkItemLinkCategoryArrayMeta = a.Type("WorkItemLinkCategoryArrayMeta", func
 	a.Required("totalCount")
 })
 
-// WorkItemLinkCategoryData is the JSONAPI store for all the "attributes" of a work item link category.
+// WorkItemLinkCategoryData is the JSONAPI store for the data of a work item link category.
 var WorkItemLinkCategoryData = a.Type("WorkItemLinkCategoryData", func() {
-	a.Description(`JSONAPI store for all the "attributes" of a work item link category.
-See also JSONAPIAttributesObject see http://jsonapi.org/format/#document-resource-object-attributes`)
+	a.Description(`JSONAPI store the data of a work item link category.
+See also http://jsonapi.org/format/#document-resource-object`)
 	a.Attribute("type", d.String, func() {
 		a.Enum("workitemlinkcategories")
 	})
-	a.Attribute("id", d.String, "ID of link category", func() {
+	a.Attribute("id", d.String, "ID of work item link category", func() {
 		a.Example("6c5610be-30b2-4880-9fec-81e4f8e4fd76")
 	})
 	a.Attribute("attributes", WorkItemLinkCategoryAttributes)
@@ -214,7 +214,7 @@ See also JSONAPIAttributesObject see http://jsonapi.org/format/#document-resourc
 // WorkItemLinkCategoryAttributes is the JSONAPI store for all the "attributes" of a work item link category.
 var WorkItemLinkCategoryAttributes = a.Type("WorkItemLinkCategoryAttributes", func() {
 	a.Description(`JSONAPI store for all the "attributes" of a work item link category.
-See also see http://jsonapi.org/format/#document-resource-object`)
+See also http://jsonapi.org/format/#document-resource-object-attributes`)
 	a.Attribute("name", d.String, "Name of the work item link category (required on creation, optional on update)", func() {
 		a.Example("system")
 	})
@@ -230,4 +230,102 @@ See also see http://jsonapi.org/format/#document-resource-object`)
 	// During creation, the "name" field is required but not during update.
 	// The repository methods need to check for required fields.
 	//a.Required("name")
+})
+
+//#############################################################################
+//
+// 			work item link type
+//
+//#############################################################################
+
+// CreateWorkItemLinkTypePayload defines the structure of work item link type payload in JSONAPI format during creation
+var CreateWorkItemLinkTypePayload = a.Type("CreateWorkItemLinkTypePayload", func() {
+	a.Attribute("data", WorkItemLinkTypeData)
+	a.Required("data")
+})
+
+// UpdateWorkItemLinkTypePayload defines the structure of work item link type payload in JSONAPI format during update
+var UpdateWorkItemLinkTypePayload = a.Type("UpdateWorkItemLinkTypePayload", func() {
+	a.Attribute("data", WorkItemLinkTypeData)
+	a.Required("data")
+})
+
+// WorkItemLinkTypeArrayMeta holds meta information for a work item link type array response
+var WorkItemLinkTypeArrayMeta = a.Type("WorkItemLinkTypeArrayMeta", func() {
+	a.Attribute("totalCount", d.Integer, func() {
+		a.Minimum(0)
+	})
+	a.Required("totalCount")
+})
+
+// WorkItemLinkTypeData is the JSONAPI store for the data of a work item link type..
+var WorkItemLinkTypeData = a.Type("WorkItemLinkTypeData", func() {
+	a.Description(`JSONAPI store for the data of a work item link type.
+See also http://jsonapi.org/format/#document-resource-object`)
+	a.Attribute("type", d.String, func() {
+		a.Enum("workitemlinktype")
+	})
+	a.Attribute("id", d.String, "ID of work item link type", func() {
+		a.Example("40bbdd3d-8b5d-4fd6-ac90-7236b669af04")
+	})
+	a.Attribute("attributes", WorkItemLinkTypeAttributes)
+	a.Required("id", "type", "attributes")
+})
+
+// WorkItemLinkTypeAttributes is the JSONAPI store for all the "attributes" of a work item link type.
+var WorkItemLinkTypeAttributes = a.Type("WorkItemLinkTypeAttributes", func() {
+	a.Description(`JSONAPI store for all the "attributes" of a work item link type.
+See also see http://jsonapi.org/format/#document-resource-object-attributes`)
+	a.Attribute("name", d.String, "Name of the work item link type (required on creation, optional on update)", func() {
+		a.Example("tested-by-link-type")
+	})
+	a.Attribute("description", d.String, "Description of the work item link type (optional)", func() {
+		a.Example("A test work item can 'test' if a the code in a pull request passes the tests.")
+	})
+	a.Attribute("version", d.Integer, "Version for optimistic concurrency control (optional during creating)", func() {
+		a.Example(0)
+	})
+	a.Attribute("source_type", d.String, "The source type specifies the type of work item that can be used as a source.", func() {
+		a.Example("test-workitemtype")
+	})
+	a.Attribute("target_type", d.String, "The target type specifies the type of work item that can be used as a target.", func() {
+		a.Example("pull-request-workitemttype")
+	})
+	a.Attribute("forward_name", d.String, `The forward oriented path from source to target is described with the forward name.
+For example, if a bug blocks a user story, the forward name is "blocks". See also reverse name.`, func() {
+		a.Example("test-workitemtype")
+	})
+	a.Attribute("reverse_name", d.String, `The backwards oriented path from target to source is described with the reverse name.
+For example, if a bug blocks a user story, the reverse name name is "blocked by" as in: a user story is blocked by a bug. See also forward name.`, func() {
+		a.Example("tested by")
+	})
+	a.Attribute("relationships", WorkItemLinkTypeRelationships)
+
+	// IMPORTANT: We cannot require any field here because these "attributes" will be used
+	// during the creation as well as the update of a work item link type.
+	// During creation, the "name" field is required but not during update.
+	// The repository methods need to check for required fields.
+	//a.Required("name")
+})
+
+// WorkItemLinkTypeRelationships is the JSONAPI store for the relationships of a work item link type..
+var WorkItemLinkTypeRelationships = a.Type("WorkItemLinkTypeRelationships", func() {
+	a.Description(`JSONAPI store for the data of a work item link type.
+See also http://jsonapi.org/format/#document-resource-object-relationships`)
+	a.Attribute("link_category", WorkItemLinkTypeRelationCategory)
+})
+
+// WorkItemLinkTypeRelationCategory is the JSONAPI store for the links
+var WorkItemLinkTypeRelationCategory = a.Type("WorkItemLinkTypeRelationCategory", func() {
+	a.Attribute("data", WorkItemLinkTypeCategoryLink)
+})
+
+// WorkItemLinkTypeCategoryLink is the JSONAPI store for the relation to the work item link category
+var WorkItemLinkTypeCategoryLink = a.Type("WorkItemLinkTypeCategoryLink", func() {
+	a.Attribute("type", d.String, func() {
+		a.Enum("link_category")
+	})
+	a.Attribute("id", d.String, "ID of work item link category", func() {
+		a.Example("6c5610be-30b2-4880-9fec-81e4f8e4fd76")
+	})
 })
