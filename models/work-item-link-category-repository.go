@@ -183,7 +183,7 @@ func (r *GormWorkItemLinkCategoryRepository) Save(ctx context.Context, linkCat a
 		return nil, InternalError{simpleError{db.Error.Error()}}
 	}
 	log.Printf("updated work item link category to %v\n", newLinkCat)
-	result convertLinkCategoryFromModel(&newLinkCat)
+	result := convertLinkCategoryFromModel(&newLinkCat)
 	return &result, nil
 }
 
