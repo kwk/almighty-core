@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"net/http"
 
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/application"
@@ -54,8 +54,8 @@ func (c *WorkItemLinkCategoryController) Show(ctx *app.ShowWorkItemLinkCategoryC
 		if err != nil {
 			switch err.(type) {
 			case models.NotFoundError:
-				log.Printf("not found, id=%s", ctx.ID)
-				return goa.ErrNotFound(err.Error())
+				//ctx.ResponseData.Header().Set("Content-Type", "application/vnd.api+json")
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusNotFound, goa.ErrNotFound(err.Error()))
 			default:
 				return err
 			}
@@ -82,7 +82,8 @@ func (c *WorkItemLinkCategoryController) Delete(ctx *app.DeleteWorkItemLinkCateg
 		if err != nil {
 			switch err.(type) {
 			case models.NotFoundError:
-				return goa.ErrNotFound(err.Error())
+				//ctx.ResponseData.Header().Set("Content-Type", "application/vnd.api+json")
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusNotFound, goa.ErrNotFound(err.Error()))
 			default:
 				return goa.ErrInternal(err.Error())
 			}
@@ -102,6 +103,9 @@ func (c *WorkItemLinkCategoryController) Update(ctx *app.UpdateWorkItemLinkCateg
 
 		if err != nil {
 			switch err := err.(type) {
+			case models.NotFoundError:
+				//ctx.ResponseData.Header().Set("Content-Type", "application/vnd.api+json")
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusNotFound, goa.ErrNotFound(err.Error()))
 			case models.BadParameterError, models.ConversionError:
 				return goa.ErrBadRequest(err.Error())
 			default:

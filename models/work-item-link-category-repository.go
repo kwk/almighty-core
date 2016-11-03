@@ -34,8 +34,9 @@ func (r *GormWorkItemLinkCategoryRepository) Create(ctx context.Context, name *s
 		Description: description,
 	}
 
-	if err := r.db.Create(&created).Error; err != nil {
-		return nil, InternalError{simpleError{err.Error()}}
+	db := r.db.Create(&created)
+	if db.Error != nil {
+		return nil, InternalError{simpleError{db.Error.Error()}}
 	}
 
 	// Convert the created link category entry into a JSONAPI response
@@ -57,7 +58,8 @@ func (r *GormWorkItemLinkCategoryRepository) Load(ctx context.Context, ID string
 	}
 	log.Printf("loading work item link category %s", id.String())
 	res := WorkItemLinkCategory{}
-	if r.db.First(&res, id).RecordNotFound() {
+	db := r.db.First(&res, id)
+	if db.RecordNotFound() {
 		log.Printf("not found, res=%v", res)
 		return nil, NotFoundError{"work item link category", id.String()}
 	}
@@ -88,8 +90,9 @@ func (r *GormWorkItemLinkCategoryRepository) List(ctx context.Context) (*app.Wor
 	if limit != nil {
 		db = db.Limit(*limit)
 	}
-	if err := db.Find(&rows).Error; err != nil {
-		return nil, err
+	db = db.Find(&rows)
+	if db.Error != nil {
+		return nil, db.Error
 	}
 	res := app.WorkItemLinkCategoryArray{}
 	res.Data = make([]*app.WorkItemLinkCategory, len(rows))
@@ -124,24 +127,16 @@ func (r *GormWorkItemLinkCategoryRepository) Delete(ctx context.Context, ID stri
 		ID: id,
 	}
 
-	tx := r.db
+	log.Printf("link cat to delete %v\n", cat)
 
-	if err := tx.Delete(cat).Error; err != nil {
-		if tx.RecordNotFound() {
-			//return JSONAPIErrors{
-			//	Errors:
-			//	Code:   "404",
-			//	Title:  "Work item link category not found",
-			//	Detail: fmt.Sprintf("The work item link category with ID %s wasn't found: %s", ID.String(), err),
-			//	Source: {
-			//		"parameter": "id",
-			//	},
-			//}
-			return NotFoundError{entity: "work item link category", ID: id.String()}
-		}
-		return InternalError{simpleError{err.Error()}}
+	db := r.db.Delete(&cat)
+	if db.Error != nil {
+		return InternalError{simpleError{db.Error.Error()}}
 	}
 
+	if db.RowsAffected == 0 {
+		return NotFoundError{entity: "work item link category", ID: id.String()}
+	}
 	return nil
 }
 
@@ -161,8 +156,8 @@ func (r *GormWorkItemLinkCategoryRepository) Save(ctx context.Context, linkCat a
 	}
 
 	log.Printf("looking for work item link category with id %s", id.String())
-	tx := r.db
-	if tx.First(&res, id).RecordNotFound() {
+	db := r.db.First(&res, id)
+	if db.RecordNotFound() {
 		log.Printf("not found, res=%v", res)
 		return nil, NotFoundError{entity: "work item link category", ID: id.String()}
 	}
@@ -187,9 +182,10 @@ func (r *GormWorkItemLinkCategoryRepository) Save(ctx context.Context, linkCat a
 		Version:     *linkCat.Data.Attributes.Version + 1,
 	}
 
-	if err := tx.Save(&newLinkCat).Error; err != nil {
-		log.Print(err.Error())
-		return nil, InternalError{simpleError{err.Error()}}
+	db = db.Save(&newLinkCat)
+	if db.Error != nil {
+		log.Print(db.Error.Error())
+		return nil, InternalError{simpleError{db.Error.Error()}}
 	}
 	log.Printf("updated work item link category to %v\n", newLinkCat)
 	result, err := ConvertLinkCategoryFromModel(&newLinkCat)

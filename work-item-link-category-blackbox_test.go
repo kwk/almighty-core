@@ -145,7 +145,7 @@ func (s *WorkItemLinkCategorySuite) TestCreateAndDeleteWorkItemLinkCategory() {
 }
 
 func (s *WorkItemLinkCategorySuite) TestDeleteWorkItemLinkCategoryNotFound() {
-	test.DeleteWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")
+	test.DeleteWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, "01f6c751-53f3-401f-be9b-6a9a230db8AA")
 }
 
 func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryNotFound() {
@@ -198,9 +198,9 @@ func (s *WorkItemLinkCategorySuite) TestShowWorkItemLinkCategoryNotFound() {
 	test.ShowWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")
 }
 
-// TestListWorkItemLinkCategory tests if we can find the work item link categories
+// TestListWorkItemLinkCategoryOK tests if we can find the work item link categories
 // "system" and "user" in the list of work item link categories
-func (s *WorkItemLinkCategorySuite) TestListWorkItemLinkCategory() {
+func (s *WorkItemLinkCategorySuite) TestListWorkItemLinkCategoryOK() {
 	_, linkCatSystem := s.createWorkItemLinkCategorySystem()
 	assert.NotNil(s.T(), linkCatSystem)
 	_, linkCatUser := s.createWorkItemLinkCategoryUser()
