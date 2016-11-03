@@ -40,10 +40,7 @@ func (r *GormWorkItemLinkCategoryRepository) Create(ctx context.Context, name *s
 	}
 
 	// Convert the created link category entry into a JSONAPI response
-	result, err := ConvertLinkCategoryFromModel(&created)
-	if err != nil {
-		return nil, InternalError{simpleError{err.Error()}}
-	}
+	result := convertLinkCategoryFromModel(&created)
 
 	return &result, nil
 }
@@ -65,10 +62,7 @@ func (r *GormWorkItemLinkCategoryRepository) Load(ctx context.Context, ID string
 	}
 
 	// Convert the created link category entry into a JSONAPI response
-	result, err := ConvertLinkCategoryFromModel(&res)
-	if err != nil {
-		return nil, InternalError{simpleError{err.Error()}}
-	}
+	result := convertLinkCategoryFromModel(&res)
 	return &result, nil
 }
 
@@ -98,10 +92,7 @@ func (r *GormWorkItemLinkCategoryRepository) List(ctx context.Context) (*app.Wor
 	res.Data = make([]*app.WorkItemLinkCategory, len(rows))
 
 	for index, value := range rows {
-		cat, err := ConvertLinkCategoryFromModel(&value)
-		if err != nil {
-			return nil, InternalError{simpleError{err.Error()}}
-		}
+		cat := convertLinkCategoryFromModel(&value)
 		res.Data[index] = &cat
 	}
 
@@ -192,15 +183,12 @@ func (r *GormWorkItemLinkCategoryRepository) Save(ctx context.Context, linkCat a
 		return nil, InternalError{simpleError{db.Error.Error()}}
 	}
 	log.Printf("updated work item link category to %v\n", newLinkCat)
-	result, err := ConvertLinkCategoryFromModel(&newLinkCat)
-	if err != nil {
-		return nil, InternalError{simpleError{err.Error()}}
-	}
+	result convertLinkCategoryFromModel(&newLinkCat)
 	return &result, nil
 }
 
-// ConvertLinkCategoryFromModel converts from model to app representation
-func ConvertLinkCategoryFromModel(t *WorkItemLinkCategory) (app.WorkItemLinkCategory, error) {
+// convertLinkCategoryFromModel converts from model to app representation
+func convertLinkCategoryFromModel(t *WorkItemLinkCategory) app.WorkItemLinkCategory {
 	var converted = app.WorkItemLinkCategory{
 		Data: &app.WorkItemLinkCategoryData{
 			Type: "workitemlinkcategories",
@@ -212,5 +200,5 @@ func ConvertLinkCategoryFromModel(t *WorkItemLinkCategory) (app.WorkItemLinkCate
 			},
 		},
 	}
-	return converted, nil
+	return converted
 }
