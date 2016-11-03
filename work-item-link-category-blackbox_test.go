@@ -134,17 +134,55 @@ func (s *WorkItemLinkCategorySuite) createWorkItemLinkCategoryUser() (http.Respo
 //-----------------------------------------------------------------------------
 
 // TestCreateWorkItemLinkCategory tests if we can create the "system" work item link category
-func (s *WorkItemLinkCategorySuite) TestCreateWorkItemLinkCategory() {
+func (s *WorkItemLinkCategorySuite) TestCreateAndDeleteWorkItemLinkCategory() {
 	_, linkCatSystem := s.createWorkItemLinkCategorySystem()
 	assert.NotNil(s.T(), linkCatSystem)
-	//assert.Equal(s.T(), "animal", wit.Name)
 
 	_, linkCatUser := s.createWorkItemLinkCategoryUser()
 	assert.NotNil(s.T(), linkCatUser)
+
+	test.DeleteWorkItemLinkCategoryOK(s.T(), nil, nil, s.linkCatCtrl, linkCatSystem.Data.ID)
 }
 
-// TestShowWorkItemLinkCategory tests if we can fetch the "system" work item link category
-func (s *WorkItemLinkCategorySuite) TestShowWorkItemLinkCategory() {
+func (s *WorkItemLinkCategorySuite) TestDeleteWorkItemLinkCategoryNotFound() {
+	test.DeleteWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")
+}
+
+func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryNotFound() {
+	description := "New description for work item link category."
+	payload := &app.UpdateWorkItemLinkCategoryPayload{
+		Data: &app.WorkItemLinkCategoryData{
+			ID:   "88727441-4a21-4b35-aabe-007f8273cd19",
+			Type: "workitemlinkcategories",
+			Attributes: &app.WorkItemLinkCategoryAttributes{
+				Description: &description,
+			},
+		},
+	}
+	test.UpdateWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, payload.Data.ID, payload)
+}
+
+func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryOK() {
+	_, linkCatSystem := s.createWorkItemLinkCategorySystem()
+	assert.NotNil(s.T(), linkCatSystem)
+
+	description := "New description for work item link category \"system\"."
+	updatePayload := &app.UpdateWorkItemLinkCategoryPayload{}
+	updatePayload.Data = linkCatSystem.Data
+	updatePayload.Data.Attributes.Description = &description
+
+	_, newLinkCat := test.UpdateWorkItemLinkCategoryOK(s.T(), nil, nil, s.linkCatCtrl, linkCatSystem.Data.ID, updatePayload)
+
+	// Test that description was updated and version got incremented
+	assert.NotNil(s.T(), newLinkCat.Data.Attributes.Description)
+	assert.Equal(s.T(), description, *newLinkCat.Data.Attributes.Description)
+
+	assert.NotNil(s.T(), newLinkCat.Data.Attributes.Version)
+	assert.Equal(s.T(), *linkCatSystem.Data.Attributes.Version+1, *newLinkCat.Data.Attributes.Version)
+}
+
+// TestShowWorkItemLinkCategoryOK tests if we can fetch the "system" work item link category
+func (s *WorkItemLinkCategorySuite) TestShowWorkItemLinkCategoryOK() {
 	// Create the work item link category first and try to read it back in
 	_, linkCat := s.createWorkItemLinkCategorySystem()
 	assert.NotNil(s.T(), linkCat)
@@ -153,6 +191,11 @@ func (s *WorkItemLinkCategorySuite) TestShowWorkItemLinkCategory() {
 
 	assert.NotNil(s.T(), linkCat2)
 	assert.EqualValues(s.T(), linkCat, linkCat2)
+}
+
+// TestShowWorkItemLinkCategoryNotFound tests if we can fetch a non existing work item link category
+func (s *WorkItemLinkCategorySuite) TestShowWorkItemLinkCategoryNotFound() {
+	test.ShowWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")
 }
 
 // TestListWorkItemLinkCategory tests if we can find the work item link categories
