@@ -155,7 +155,11 @@ func (r *GormWorkItemLinkCategoryRepository) Save(ctx context.Context, linkCat a
 		return nil, BadParameterError{parameter: "data.type", value: linkCat.Data.Type}
 	}
 
-	log.Printf("looking for work item link category with id %s", id.String())
+	// If the name is not nil, it MUST NOT be empty
+	if linkCat.Data.Attributes.Name != nil && *linkCat.Data.Attributes.Name == "" {
+		return nil, BadParameterError{parameter: "data.name", value: *linkCat.Data.Attributes.Name}
+	}
+
 	db := r.db.First(&res, id)
 	if db.RecordNotFound() {
 		log.Printf("not found, res=%v", res)
