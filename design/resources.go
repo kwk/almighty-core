@@ -480,7 +480,8 @@ var _ = a.Resource("work-item-link-category", func() {
 		})
 		a.Response(d.InternalServerError)
 		a.Response(d.NotFound, func() {
-			a.Media(JSONAPIErrors)
+			a.Media(d.ErrorMedia)
+			//a.Media(JSONAPIErrors)
 		})
 		a.Response(d.Unauthorized)
 	})
@@ -502,7 +503,10 @@ var _ = a.Resource("work-item-link-category", func() {
 			a.Media(d.ErrorMedia)
 		})
 		a.Response(d.InternalServerError)
-		a.Response(d.NotFound)
+		a.Response(d.NotFound, func() {
+			a.Media(d.ErrorMedia)
+			//a.Media(JSONAPIErrors)
+		})
 		a.Response(d.Unauthorized)
 	})
 })
