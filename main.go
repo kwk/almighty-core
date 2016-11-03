@@ -181,6 +181,10 @@ func main() {
 	workItemLinkCategoryCtrl := NewWorkItemLinkCategoryController(service, appDB)
 	app.MountWorkItemLinkCategoryController(service, workItemLinkCategoryCtrl)
 
+	// Mount "work item link type" controller
+	workItemLinkTypeCtrl := NewWorkItemLinkTypeController(service, appDB)
+	app.MountWorkItemLinkTypeController(service, workItemLinkTypeCtrl)
+
 	// Mount "tracker" controller
 	c5 := NewTrackerController(service, appDB, scheduler)
 	app.MountTrackerController(service, c5)

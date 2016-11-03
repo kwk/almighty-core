@@ -51,3 +51,12 @@ type WorkItemLinkCategoryRepository interface {
 	Delete(ctx context.Context, ID string) error
 	Save(ctx context.Context, linkCat app.WorkItemLinkCategory) (*app.WorkItemLinkCategory, error)
 }
+
+// WorkItemLinkTypeRepository encapsulates storage & retrieval of work item link types
+type WorkItemLinkTypeRepository interface {
+	Create(ctx context.Context, name *string, description *string, sourceType *string, targetType *string, forwardName *string, reverseName *string, linkCategory *string) (*app.WorkItemLinkType, error)
+	Load(ctx context.Context, ID string) (*app.WorkItemLinkType, error)
+	List(ctx context.Context) (*app.WorkItemLinkType, error)
+	Delete(ctx context.Context, ID string) error
+	Save(ctx context.Context, linkCat app.WorkItemLinkType) (*app.WorkItemLinkType, error)
+}

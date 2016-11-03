@@ -6,8 +6,8 @@ import (
 	satoriuuid "github.com/satori/go.uuid"
 )
 
-// WorkItemLinkCategory represents the category of a work item link as it is stored in the db
-type WorkItemLinkCategory struct {
+// WorkItemLinkType represents the type of a work item link as it is stored in the db
+type WorkItemLinkType struct {
 	gormsupport.Lifecycle
 	// ID
 	ID satoriuuid.UUID `gorm:"primary_key"`
@@ -16,16 +16,21 @@ type WorkItemLinkCategory struct {
 	// Description is an optional description of the work item link category
 	Description *string
 	// Version for optimistic concurrency control
-	Version int
+	Version      int
+	SourceType   string
+	TargetType   string
+	ForwardName  string
+	ReverseName  string
+	LinkCategory satoriuuid.UUID `gorm:"primary_key"`
 }
 
 // Ensure Fields implements the Equaler interface
-var _ convert.Equaler = WorkItemLinkCategory{}
-var _ convert.Equaler = (*WorkItemLinkCategory)(nil)
+var _ convert.Equaler = WorkItemLinkType{}
+var _ convert.Equaler = (*WorkItemLinkType)(nil)
 
-// Equal returns true if two WorkItemLinkCategory objects are equal; otherwise false is returned.
-func (self WorkItemLinkCategory) Equal(u convert.Equaler) bool {
-	other, ok := u.(WorkItemLinkCategory)
+// Equal returns true if two WorkItemLinkType objects are equal; otherwise false is returned.
+func (self WorkItemLinkType) Equal(u convert.Equaler) bool {
+	other, ok := u.(WorkItemLinkType)
 	if !ok {
 		return false
 	}
@@ -50,5 +55,18 @@ func (self WorkItemLinkCategory) Equal(u convert.Equaler) bool {
 			return false
 		}
 	}
+	if self.SourceType != other.SourceType {
+		return false
+	}
+	if self.TargetType != other.TargetType {
+		return false
+	}
+	if self.ForwardName != other.ForwardName {
+		return false
+	}
+	if self.ReverseName != other.ReverseName {
+		return false
+	}
+	// TODO add check for link category
 	return true
 }

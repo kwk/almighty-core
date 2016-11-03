@@ -118,7 +118,7 @@ func (r *GormWorkItemLinkCategoryRepository) Delete(ctx context.Context, ID stri
 		ID: id,
 	}
 
-	log.Printf("link cat to delete %v\n", cat)
+	log.Printf("work item link category to delete %v\n", cat)
 
 	db := r.db.Delete(&cat)
 	if db.Error != nil {
@@ -148,7 +148,7 @@ func (r *GormWorkItemLinkCategoryRepository) Save(ctx context.Context, linkCat a
 
 	// If the name is not nil, it MUST NOT be empty
 	if linkCat.Data.Attributes.Name != nil && *linkCat.Data.Attributes.Name == "" {
-		return nil, BadParameterError{parameter: "data.name", value: *linkCat.Data.Attributes.Name}
+		return nil, BadParameterError{parameter: "data.attributes.name", value: *linkCat.Data.Attributes.Name}
 	}
 
 	db := r.db.First(&res, id)
