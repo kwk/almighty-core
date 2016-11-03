@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/almighty/almighty-core/app"
@@ -35,9 +34,9 @@ func (c *WorkItemLinkCategoryController) Create(ctx *app.CreateWorkItemLinkCateg
 		if err != nil {
 			switch err := err.(type) {
 			case models.BadParameterError, models.ConversionError:
-				return goa.ErrBadRequest(err.Error())
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusBadRequest, goa.ErrBadRequest(err.Error()))
 			default:
-				return goa.ErrInternal(err.Error())
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusInternalServerError, goa.ErrNotFound(err.Error()))
 			}
 		}
 		ctx.ResponseData.Header().Set("Location", app.WorkItemLinkCategoryHref(cat.Data.ID))
@@ -57,7 +56,7 @@ func (c *WorkItemLinkCategoryController) Show(ctx *app.ShowWorkItemLinkCategoryC
 				//ctx.ResponseData.Header().Set("Content-Type", "application/vnd.api+json")
 				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusNotFound, goa.ErrNotFound(err.Error()))
 			default:
-				return err
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusInternalServerError, goa.ErrNotFound(err.Error()))
 			}
 		}
 		return ctx.OK(res)
@@ -69,7 +68,7 @@ func (c *WorkItemLinkCategoryController) List(ctx *app.ListWorkItemLinkCategoryC
 	return application.Transactional(c.db, func(appl application.Application) error {
 		result, err := appl.WorkItemLinkCategories().List(ctx.Context)
 		if err != nil {
-			return goa.ErrInternal(fmt.Sprintf("Error listing work item link categories: %s", err.Error()))
+			return ctx.ResponseData.Service.Send(ctx.Context, http.StatusInternalServerError, goa.ErrNotFound(err.Error()))
 		}
 		return ctx.OK(result)
 	})
@@ -85,7 +84,7 @@ func (c *WorkItemLinkCategoryController) Delete(ctx *app.DeleteWorkItemLinkCateg
 				//ctx.ResponseData.Header().Set("Content-Type", "application/vnd.api+json")
 				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusNotFound, goa.ErrNotFound(err.Error()))
 			default:
-				return goa.ErrInternal(err.Error())
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusInternalServerError, goa.ErrNotFound(err.Error()))
 			}
 		}
 		return ctx.OK([]byte{})
@@ -106,10 +105,10 @@ func (c *WorkItemLinkCategoryController) Update(ctx *app.UpdateWorkItemLinkCateg
 			case models.NotFoundError:
 				//ctx.ResponseData.Header().Set("Content-Type", "application/vnd.api+json")
 				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusNotFound, goa.ErrNotFound(err.Error()))
-			case models.BadParameterError, models.ConversionError:
-				return goa.ErrBadRequest(err.Error())
+			case models.BadParameterError, models.ConversionError, models.VersionConflictError:
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusBadRequest, goa.ErrBadRequest(err.Error()))
 			default:
-				return goa.ErrInternal(err.Error())
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusInternalServerError, goa.ErrNotFound(err.Error()))
 			}
 		}
 		return ctx.OK(linkCategory)
