@@ -70,7 +70,7 @@ func (r *GormWorkItemLinkTypeRepository) Create(ctx context.Context, name *strin
 	}
 
 	// Convert the created link type entry into a JSONAPI response
-	result := convertLinkTypeFromModel(&created)
+	result := ConvertLinkTypeFromModel(&created)
 
 	return &result, nil
 }
@@ -92,7 +92,7 @@ func (r *GormWorkItemLinkTypeRepository) Load(ctx context.Context, ID string) (*
 	}
 
 	// Convert the created link type entry into a JSONAPI response
-	result := convertLinkTypeFromModel(&res)
+	result := ConvertLinkTypeFromModel(&res)
 	return &result, nil
 }
 
@@ -122,7 +122,7 @@ func (r *GormWorkItemLinkTypeRepository) List(ctx context.Context) (*app.WorkIte
 	res.Data = make([]*app.WorkItemLinkType, len(rows))
 
 	for index, value := range rows {
-		cat := convertLinkTypeFromModel(&value)
+		cat := ConvertLinkTypeFromModel(&value)
 		res.Data[index] = &cat
 	}
 
@@ -188,12 +188,12 @@ func (r *GormWorkItemLinkTypeRepository) Save(ctx context.Context, lt app.WorkIt
 		return nil, InternalError{simpleError{db.Error.Error()}}
 	}
 	log.Printf("updated work item link category to %v\n", res)
-	result := convertLinkTypeFromModel(&res)
+	result := ConvertLinkTypeFromModel(&res)
 	return &result, nil
 }
 
-// convertLinkTypeFromModel converts from model to app representation
-func convertLinkTypeFromModel(t *WorkItemLinkType) app.WorkItemLinkType {
+// ConvertLinkTypeFromModel converts from model to app representation
+func ConvertLinkTypeFromModel(t *WorkItemLinkType) app.WorkItemLinkType {
 	workitemlinkcategories := "workitemlinkcategories"
 	lt := t.LinkCategory.String()
 	var converted = app.WorkItemLinkType{

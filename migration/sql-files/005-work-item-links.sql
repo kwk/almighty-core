@@ -54,7 +54,7 @@ CREATE TABLE work_item_link_types (
     target_type text REFERENCES work_item_types(name) NOT NULL,
     forward_name text NOT NULL, -- MUST not be NULL because UI needs this
     reverse_name text NOT NULL, -- MUST not be NULL because UI needs this
-    link_category uuid REFERENCES work_item_link_categories(id),
+    link_category uuid REFERENCES work_item_link_categories(id) NOT NULL,
     version integer
 );
 
