@@ -270,6 +270,7 @@ See also http://jsonapi.org/format/#document-resource-object`)
 	})
 	a.Attribute("attributes", WorkItemLinkTypeAttributes)
 	a.Required("id", "type", "attributes")
+	a.Attribute("relationships", WorkItemLinkTypeRelationships)
 })
 
 // WorkItemLinkTypeAttributes is the JSONAPI store for all the "attributes" of a work item link type.
@@ -299,7 +300,6 @@ For example, if a bug blocks a user story, the forward name is "blocks". See als
 For example, if a bug blocks a user story, the reverse name name is "blocked by" as in: a user story is blocked by a bug. See also forward name.`, func() {
 		a.Example("tested by")
 	})
-	a.Attribute("relationships", WorkItemLinkTypeRelationships)
 
 	// IMPORTANT: We cannot require any field here because these "attributes" will be used
 	// during the creation as well as the update of a work item link type.
