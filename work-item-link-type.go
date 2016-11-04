@@ -2,17 +2,22 @@ package main
 
 import (
 	"github.com/almighty/almighty-core/app"
+	"github.com/almighty/almighty-core/application"
 	"github.com/goadesign/goa"
 )
 
 // WorkItemLinkTypeController implements the work-item-link-type resource.
 type WorkItemLinkTypeController struct {
 	*goa.Controller
+	db application.DB
 }
 
 // NewWorkItemLinkTypeController creates a work-item-link-type controller.
-func NewWorkItemLinkTypeController(service *goa.Service) *WorkItemLinkTypeController {
-	return &WorkItemLinkTypeController{Controller: service.NewController("WorkItemLinkTypeController")}
+func NewWorkItemLinkTypeController(service *goa.Service, db application.DB) *WorkItemLinkTypeController {
+	return &WorkItemLinkTypeController{
+		Controller: service.NewController("WorkItemLinkTypeController"),
+		db:         db,
+	}
 }
 
 // Create runs the create action.
