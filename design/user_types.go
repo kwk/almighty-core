@@ -286,12 +286,6 @@ See also see http://jsonapi.org/format/#document-resource-object-attributes`)
 	a.Attribute("version", d.Integer, "Version for optimistic concurrency control (optional during creating)", func() {
 		a.Example(0)
 	})
-	a.Attribute("source_type", d.String, "The source type specifies the type of work item that can be used as a source.", func() {
-		a.Example("test-workitemtype")
-	})
-	a.Attribute("target_type", d.String, "The target type specifies the type of work item that can be used as a target.", func() {
-		a.Example("pull-request-workitemttype")
-	})
 	a.Attribute("forward_name", d.String, `The forward oriented path from source to target is described with the forward name.
 For example, if a bug blocks a user story, the forward name is "blocks". See also reverse name.`, func() {
 		a.Example("test-workitemtype")
@@ -312,20 +306,39 @@ For example, if a bug blocks a user story, the reverse name name is "blocked by"
 var WorkItemLinkTypeRelationships = a.Type("WorkItemLinkTypeRelationships", func() {
 	a.Description(`JSONAPI store for the data of a work item link type.
 See also http://jsonapi.org/format/#document-resource-object-relationships`)
-	a.Attribute("link_category", WorkItemLinkTypeRelationCategory)
+	a.Attribute("link_category", RelationWorkItemLinkCategory, "The work item link category of this work item link type.")
+	a.Attribute("source_type", RelationWorkItemType, "The source type specifies the type of work item that can be used as a source.")
+	a.Attribute("target_type", RelationWorkItemType, "The target type specifies the type of work item that can be used as a target.")
 })
 
-// WorkItemLinkTypeRelationCategory is the JSONAPI store for the links
-var WorkItemLinkTypeRelationCategory = a.Type("WorkItemLinkTypeRelationCategory", func() {
-	a.Attribute("data", WorkItemLinkTypeCategoryLink)
+// RelationWorkItemLinkCategory is the JSONAPI store for the links
+var RelationWorkItemLinkCategory = a.Type("RelationWorkItemLinkCategory", func() {
+	a.Attribute("data", RelationWorkItemLinkCategoryData)
 })
 
-// WorkItemLinkTypeCategoryLink is the JSONAPI store for the relation to the work item link category
-var WorkItemLinkTypeCategoryLink = a.Type("WorkItemLinkTypeCategoryLink", func() {
-	a.Attribute("type", d.String, func() {
-		a.Enum("link_category")
+// RelationWorkItemType is the JSONAPI store for the work item type relationship objects
+var RelationWorkItemType = a.Type("RelationWorkItemType", func() {
+	a.Attribute("data", RelationWorkItemTypeData)
+})
+
+// RelationWorkItemTypeData is the JSONAPI data object of the the work item link category relationship objects
+var RelationWorkItemLinkCategoryData = a.Type("RelationWorkItemLinkCategoryData", func() {
+	a.Attribute("type", d.String, "The type of the related source", func() {
+		a.Enum("workitemlinkcategories")
 	})
 	a.Attribute("id", d.String, "ID of work item link category", func() {
 		a.Example("6c5610be-30b2-4880-9fec-81e4f8e4fd76")
 	})
+	a.Required("type", "id")
+})
+
+// RelationWorkItemTypeData is the JSONAPI data object of the the work item type relationship objects
+var RelationWorkItemTypeData = a.Type("RelationWorkItemTypeData", func() {
+	a.Attribute("type", d.String, "The type of the related resource", func() {
+		a.Enum("workitemtypes")
+	})
+	a.Attribute("id", d.String, "Name work item type", func() {
+		a.Example("system.bug")
+	})
+	a.Required("type", "id")
 })
