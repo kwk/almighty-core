@@ -24,6 +24,8 @@ const (
 	endpointWorkItems              = "/api/workitems"
 	endpointWorkItemTypes          = "/api/workitemtypes"
 	endpointWorkItemLinkCategories = "/api/workitemlinkcategories"
+	endpointWorkItemLinkTypes      = "/api/workitemlinktypes"
+	endpointWorkItemLinks          = "/api/workitemlinks"
 )
 
 // Expected strcture of 401 error response
