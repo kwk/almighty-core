@@ -18,11 +18,9 @@ func TestWorkItemLinkType_Equal(t *testing.T) {
 	t.Parallel()
 	resource.Require(t, resource.UnitTest)
 
-	uuid, _ := satoriuuid.FromString("0e671e36-871b-43a6-9166-0c4bd573e231")
-	uuid2, _ := satoriuuid.FromString("0e671e36-871b-43a6-9166-0c4bd573eAAA")
 	description := "An example description"
 	const a = models.WorkItemLinkType{
-		ID:             uuid,
+		ID:             satoriuuid.FromStringOrNil("0e671e36-871b-43a6-9166-0c4bd573e231"),
 		Name:           "Example work item link category",
 		Description:    &description,
 		Version:        0,
@@ -32,7 +30,7 @@ func TestWorkItemLinkType_Equal(t *testing.T) {
 		TargetType:     models.WorkItemType{Name: "system.userstory"},
 		ForwardName:    "blocks",
 		ReverseName:    "blocked by",
-		LinkCategoryID: uuid2,
+		LinkCategoryID: satoriuuid.FromStringOrNil("0e671e36-871b-43a6-9166-0c4bd573eAAA"),
 		LinkCategory:   models.WorkItemLinkCategory{},
 	}
 
@@ -51,7 +49,7 @@ func TestWorkItemLinkType_Equal(t *testing.T) {
 
 	// Test ID
 	b = a
-	b.ID = "CCC71e36-871b-43a6-9166-0c4bd573eCCC"
+	b.ID = satoriuuid.FromStringOrNil("CCC71e36-871b-43a6-9166-0c4bd573eCCC")
 	assert.False(t, a.Equal(b))
 
 	// Test Version
@@ -100,4 +98,63 @@ func TestWorkItemLinkType_Equal(t *testing.T) {
 	b.ReverseName = "backup, backup!"
 	assert.False(t, a.Equal(b))
 
+	// Test LinkCategoryID
+	b = a
+	b.LinkCategoryID = satoriuuid.FromStringOrNil("aaa71e36-871b-43a6-9166-0c4bd573eCCC")
+	assert.False(t, a.Equal(b))
+}
+
+func Testfunc_CheckValidForCreation(t *Testing.T) {
+	t.Parallel()
+	resource.Require(t, resource.UnitTest)
+
+	description := "An example description"
+	const a = models.WorkItemLinkType{
+		ID:             satoriuuid.FromStringOrNil("0e671e36-871b-43a6-9166-0c4bd573e231"),
+		Name:           "Example work item link category",
+		Description:    &description,
+		Version:        0,
+		SourceTypeName: "system.bug",
+		SourceType:     models.WorkItemType{Name: "system.bug"},
+		TargetTypeName: "systen.userstory",
+		TargetType:     models.WorkItemType{Name: "system.userstory"},
+		ForwardName:    "blocks",
+		ReverseName:    "blocked by",
+		LinkCategoryID: satoriuuid.FromStringOrNil("0e671e36-871b-43a6-9166-0c4bd573eAAA"),
+		LinkCategory:   models.WorkItemLinkCategory{},
+	}
+
+	// Check valid
+	b := a
+	assert.Nil(t, b.CheckValidForCreation())
+
+	// Check empty Name
+	b = a
+	b.Name = ""
+	assert.NotNil(t, b.CheckValidForCreation())
+
+	// Check empty SourceTypeName
+	b = a
+	b.SourceTypeName = ""
+	assert.NotNil(t, b.CheckValidForCreation())
+
+	// Check empty TargetTypeName
+	b = a
+	b.TargetTypeName = ""
+	assert.NotNil(t, b.CheckValidForCreation())
+
+	// Check empty ForwardName
+	b = a
+	b.ForwardName = ""
+	assert.NotNil(t, b.CheckValidForCreation())
+
+	// Check empty ReverseName
+	b = a
+	b.ReverseName = ""
+	assert.NotNil(t, b.CheckValidForCreation())
+
+	// Check empty LinkCategoryID
+	b = a
+	b.LinkCategoryID = satoriuuid.Nil
+	assert.NotNil(t, b.CheckValidForCreation())
 }
