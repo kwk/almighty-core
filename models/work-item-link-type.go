@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/almighty/almighty-core/app"
@@ -47,7 +48,7 @@ func (self WorkItemLinkType) Equal(u convert.Equaler) bool {
 	if !self.Lifecycle.Equal(other.Lifecycle) {
 		return false
 	}
-	if self.ID != other.ID {
+	if !self.ID.Equal(other.ID) {
 		return false
 	}
 	if self.Name != other.Name {
@@ -90,6 +91,30 @@ func (self WorkItemLinkType) Equal(u convert.Equaler) bool {
 		return false
 	}
 	return true
+}
+
+// CheckValidForCreation returns an error if the work item link type
+// cannot be used for the creation of a new work item link type.
+func (t *WorkItemLinkType) CheckValidForCreation() error {
+	if t.Name == "" {
+		return fmt.Errorf("The name must not be empty.")
+	}
+	if t.SourceTypeName == "" {
+		return fmt.Errorf("The source work item type must be set.")
+	}
+	if t.TargetTypeName == "" {
+		return fmt.Errorf("The target work item type must be set.")
+	}
+	if t.ForwardName == "" {
+		return fmt.Errorf("A forward name must be specified.")
+	}
+	if t.ReverseName == "" {
+		return fmt.Errorf("A reverse name must be specified.")
+	}
+	if t.LinkCategoryID == satoriuuid.Nil {
+		return fmt.Errorf("The work item link type must have a link category.")
+	}
+	return nil
 }
 
 // ConvertLinkTypeFromModel converts a work item link type from model to REST representation
