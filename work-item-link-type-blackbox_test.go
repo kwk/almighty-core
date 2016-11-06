@@ -145,6 +145,7 @@ func (s *WorkItemLinkTypeSuite) createWorkItemLinkType(ID string, Name string, S
 		LinkCategory: linkCatID,
 	}
 	payload := models.ConvertLinkTypeFromModel(&lt)
+	fmt.Printf("payload to creat work item link type: \n\n %v\n\n", payload)
 	// The create payload is required during creation. Simply copy data over.
 	createPayload := app.CreateWorkItemLinkTypePayload{
 		Data: payload.Data,

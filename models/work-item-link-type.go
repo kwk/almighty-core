@@ -1,6 +1,9 @@
 package models
 
 import (
+	"log"
+
+	"github.com/almighty/almighty-core/app"
 	convert "github.com/almighty/almighty-core/convert"
 	"github.com/almighty/almighty-core/gormsupport"
 	satoriuuid "github.com/satori/go.uuid"
@@ -16,12 +19,19 @@ type WorkItemLinkType struct {
 	// Description is an optional description of the work item link category
 	Description *string
 	// Version for optimistic concurrency control
-	Version      int
-	SourceType   string
-	TargetType   string
-	ForwardName  string
-	ReverseName  string
-	LinkCategory satoriuuid.UUID `gorm:"primary_key"`
+	Version int
+
+	SourceTypeName string
+	SourceType     WorkItemType `gorm:"ForeignKey:SourceTypeName;AssociationForeignKey:Name"`
+
+	TargetTypeName string
+	TargetType     WorkItemType `gorm:"ForeignKey:TargetTypeName;AssociationForeignKey:Name"`
+
+	ForwardName string
+	ReverseName string
+
+	LinkCategoryID satoriuuid.UUID
+	LinkCategory   WorkItemLinkCategory `gorm:"ForeignKey:LinkCategoryID;AssociationForeignKey:ID"`
 }
 
 // Ensure Fields implements the Equaler interface
@@ -55,10 +65,16 @@ func (self WorkItemLinkType) Equal(u convert.Equaler) bool {
 			return false
 		}
 	}
-	if self.SourceType != other.SourceType {
+	if self.SourceTypeName != other.SourceTypeName {
 		return false
 	}
-	if self.TargetType != other.TargetType {
+	if !self.SourceType.Equal(other.SourceType) {
+		return false
+	}
+	if self.TargetTypeName != other.TargetTypeName {
+		return false
+	}
+	if !self.TargetType.Equal(other.TargetType) {
 		return false
 	}
 	if self.ForwardName != other.ForwardName {
@@ -67,6 +83,149 @@ func (self WorkItemLinkType) Equal(u convert.Equaler) bool {
 	if self.ReverseName != other.ReverseName {
 		return false
 	}
-	// TODO add check for link category
+	if self.LinkCategoryID != other.LinkCategoryID {
+		return false
+	}
+	if !self.LinkCategory.Equal(other.LinkCategory) {
+		return false
+	}
 	return true
+}
+
+// ConvertLinkTypeFromModel converts a work item link type from model to REST representation
+func ConvertLinkTypeFromModel(t *WorkItemLinkType) app.WorkItemLinkType {
+	var converted = app.WorkItemLinkType{
+		Data: &app.WorkItemLinkTypeData{
+			Type: workitemlinktypes,
+			ID:   t.ID.String(),
+			Attributes: &app.WorkItemLinkTypeAttributes{
+				Name:        &t.Name,
+				Description: t.Description,
+				Version:     &t.Version,
+				ForwardName: &t.ForwardName,
+				ReverseName: &t.ReverseName,
+			},
+			Relationships: &app.WorkItemLinkTypeRelationships{
+				LinkCategory: &app.RelationWorkItemLinkCategory{
+					Data: &app.RelationWorkItemLinkCategoryData{
+						Type: workitemlinkcategories,
+						ID:   t.LinkCategoryID.String(),
+					},
+				},
+				SourceType: &app.RelationWorkItemType{
+					Data: &app.RelationWorkItemTypeData{
+						Type: workitemtypes,
+						ID:   t.SourceTypeName,
+					},
+				},
+				TargetType: &app.RelationWorkItemType{
+					Data: &app.RelationWorkItemTypeData{
+						Type: workitemtypes,
+						ID:   t.TargetTypeName,
+					},
+				},
+			},
+		},
+	}
+	return converted
+}
+
+// ConvertLinkTypeToModel converts the incoming app representation of a work item link type to the model layout.
+// Values are only overwrriten if they are set in "in", otherwise the values in "out" remain.
+// NOTE: Only the LinkCategoryID, SourceTypeName, and TargetTypeName fields will be set.
+//       You need to preload the elements after calling this function.
+func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) error {
+	id, err := satoriuuid.FromString(in.Data.ID)
+	if err != nil {
+		log.Printf("Error when converting %s to UUID: %s", in.Data.ID, err.Error())
+		// treat as not found: clients don't know it must be a UUID
+		return NotFoundError{entity: "work item link type", ID: id.String()}
+	}
+	out.ID = id
+
+	if in.Data.Type != workitemlinktypes {
+		return BadParameterError{parameter: "data.type", value: in.Data.Type}
+	}
+
+	attrs := in.Data.Attributes
+
+	// If the name is not nil, it MUST NOT be empty
+	if attrs.Name != nil {
+		if *attrs.Name == "" {
+			return BadParameterError{parameter: "data.attributes.name", value: *attrs.Name}
+		}
+		out.Name = *attrs.Name
+	}
+
+	if attrs.Description != nil {
+		out.Description = attrs.Description
+	}
+
+	if attrs.Version != nil {
+		out.Version = *attrs.Version
+	}
+
+	// If the forwardName is not nil, it MUST NOT be empty
+	if attrs.ForwardName != nil {
+		if *attrs.ForwardName == "" {
+			return BadParameterError{parameter: "data.attributes.forward_name", value: *attrs.ForwardName}
+		}
+		out.ForwardName = *attrs.ForwardName
+	}
+
+	// If the ReverseName is not nil, it MUST NOT be empty
+	if attrs.ReverseName != nil {
+		if *attrs.ReverseName == "" {
+			return BadParameterError{parameter: "data.attributes.reverse_name", value: *attrs.ReverseName}
+		}
+		out.ReverseName = *attrs.ReverseName
+	}
+
+	rel := in.Data.Relationships
+	if rel != nil && rel.LinkCategory != nil && rel.LinkCategory.Data != nil {
+		d := rel.LinkCategory.Data
+		// If the the link category is not nil, it MUST be "workitemlinkcategories"
+		if d.Type != workitemlinkcategories {
+			return BadParameterError{parameter: "data.relationships.link_category.data.type", value: d.Type}
+		}
+		// The the link category MUST NOT be empty
+		if d.ID == "" {
+			return BadParameterError{parameter: "data.relationships.link_category.data.id", value: d.ID}
+		}
+		out.LinkCategoryID, err = satoriuuid.FromString(d.ID)
+		if err != nil {
+			log.Printf("Error when converting %s to UUID: %s", in.Data.ID, err.Error())
+			// treat as not found: clients don't know it must be a UUID
+			return NotFoundError{entity: "work item link category", ID: d.ID}
+		}
+	}
+
+	if rel != nil && rel.SourceType != nil && rel.SourceType.Data != nil {
+		d := rel.SourceType.Data
+		// If the the link type is not nil, it MUST be "workitemlinktypes"
+		if d.Type != workitemlinktypes {
+			return BadParameterError{parameter: "data.relationships.source_type.data.type", value: d.Type}
+		}
+		// The the link type MUST NOT be empty
+		if d.ID == "" {
+			return BadParameterError{parameter: "data.relationships.source_type.data.id", value: d.ID}
+		}
+		out.SourceTypeName = d.ID
+
+	}
+
+	if rel != nil && rel.TargetType != nil && rel.TargetType.Data != nil {
+		d := rel.TargetType.Data
+		// If the the link type is not nil, it MUST be "workitemlinktypes"
+		if d.Type != workitemlinktypes {
+			return BadParameterError{parameter: "data.relationships.target_type.data.type", value: d.Type}
+		}
+		// The the link type MUST NOT be empty
+		if d.ID == "" {
+			return BadParameterError{parameter: "data.relationships.target_type.data.id", value: d.ID}
+		}
+		out.TargetTypeName = d.ID
+	}
+
+	return nil
 }
