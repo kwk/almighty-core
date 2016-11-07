@@ -204,11 +204,11 @@ See also http://jsonapi.org/format/#document-resource-object`)
 	a.Attribute("type", d.String, func() {
 		a.Enum("workitemlinkcategories")
 	})
-	a.Attribute("id", d.String, "ID of work item link category", func() {
+	a.Attribute("id", d.String, "ID of work item link category (optional during creation)", func() {
 		a.Example("6c5610be-30b2-4880-9fec-81e4f8e4fd76")
 	})
 	a.Attribute("attributes", WorkItemLinkCategoryAttributes)
-	a.Required("id", "type", "attributes")
+	a.Required("type", "attributes")
 })
 
 // WorkItemLinkCategoryAttributes is the JSONAPI store for all the "attributes" of a work item link category.
@@ -265,11 +265,11 @@ See also http://jsonapi.org/format/#document-resource-object`)
 	a.Attribute("type", d.String, func() {
 		a.Enum("workitemlinktypes")
 	})
-	a.Attribute("id", d.String, "ID of work item link type", func() {
+	a.Attribute("id", d.String, "ID of work item link type (optional during creation)", func() {
 		a.Example("40bbdd3d-8b5d-4fd6-ac90-7236b669af04")
 	})
 	a.Attribute("attributes", WorkItemLinkTypeAttributes)
-	a.Required("id", "type", "attributes")
+	a.Required("type", "attributes")
 	a.Attribute("relationships", WorkItemLinkTypeRelationships)
 })
 

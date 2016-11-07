@@ -118,10 +118,11 @@ func (t *WorkItemLinkType) CheckValidForCreation() error {
 
 // ConvertLinkTypeFromModel converts a work item link type from model to REST representation
 func ConvertLinkTypeFromModel(t *WorkItemLinkType) app.WorkItemLinkType {
+	id := t.ID.String()
 	var converted = app.WorkItemLinkType{
 		Data: &app.WorkItemLinkTypeData{
 			Type: workitemlinktypes,
-			ID:   t.ID.String(),
+			ID:   &id,
 			Attributes: &app.WorkItemLinkTypeAttributes{
 				Name:        &t.Name,
 				Description: t.Description,
@@ -161,14 +162,17 @@ func ConvertLinkTypeFromModel(t *WorkItemLinkType) app.WorkItemLinkType {
 func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) error {
 	attrs := in.Data.Attributes
 	rel := in.Data.Relationships
+	var err error
 
-	id, err := satoriuuid.FromString(in.Data.ID)
-	if err != nil {
-		log.Printf("Error when converting %s to UUID: %s", in.Data.ID, err.Error())
-		// treat as not found: clients don't know it must be a UUID
-		return NotFoundError{entity: "work item link type", ID: id.String()}
+	if in.Data.ID != nil {
+		id, err := satoriuuid.FromString(*in.Data.ID)
+		if err != nil {
+			log.Printf("Error when converting %s to UUID: %s", *in.Data.ID, err.Error())
+			// treat as not found: clients don't know it must be a UUID
+			return NotFoundError{entity: "work item link type", ID: id.String()}
+		}
+		out.ID = id
 	}
-	out.ID = id
 
 	if in.Data.Type != workitemlinktypes {
 		return BadParameterError{parameter: "data.type", value: in.Data.Type}
@@ -237,7 +241,6 @@ func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) err
 			return BadParameterError{parameter: "data.relationships.source_type.data.id", value: d.ID}
 		}
 		out.SourceTypeName = d.ID
-
 	}
 
 	if rel != nil && rel.TargetType != nil && rel.TargetType.Data != nil {

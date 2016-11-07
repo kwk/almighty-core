@@ -93,11 +93,12 @@ func (s *WorkItemLinkCategorySuite) TearDownTest() {
 func (s *WorkItemLinkCategorySuite) createWorkItemLinkCategorySystem() (http.ResponseWriter, *app.WorkItemLinkCategory) {
 	name := "system"
 	description := "This work item link category is reserved for the core system."
+	id := "0e671e36-871b-43a6-9166-0c4bd573e231"
 
 	// Use the goa generated code to create a work item link category
 	payload := app.CreateWorkItemLinkCategoryPayload{
 		Data: &app.WorkItemLinkCategoryData{
-			ID:   "0e671e36-871b-43a6-9166-0c4bd573e231",
+			ID:   &id,
 			Type: "workitemlinkcategories",
 			Attributes: &app.WorkItemLinkCategoryAttributes{
 				Name:        &name,
@@ -113,11 +114,12 @@ func (s *WorkItemLinkCategorySuite) createWorkItemLinkCategorySystem() (http.Res
 func (s *WorkItemLinkCategorySuite) createWorkItemLinkCategoryUser() (http.ResponseWriter, *app.WorkItemLinkCategory) {
 	name := "user"
 	description := "This work item link category is managed by an admin user."
+	id := "bf30167a-9446-42de-82be-6b3815152051"
 
 	// Use the goa generated code to create a work item link category
 	payload := app.CreateWorkItemLinkCategoryPayload{
 		Data: &app.WorkItemLinkCategoryData{
-			ID:   "bf30167a-9446-42de-82be-6b3815152051",
+			ID:   &id,
 			Type: "workitemlinkcategories",
 			Attributes: &app.WorkItemLinkCategoryAttributes{
 				Name:        &name,
@@ -141,15 +143,16 @@ func (s *WorkItemLinkCategorySuite) TestCreateAndDeleteWorkItemLinkCategory() {
 	_, linkCatUser := s.createWorkItemLinkCategoryUser()
 	assert.NotNil(s.T(), linkCatUser)
 
-	test.DeleteWorkItemLinkCategoryOK(s.T(), nil, nil, s.linkCatCtrl, linkCatSystem.Data.ID)
+	test.DeleteWorkItemLinkCategoryOK(s.T(), nil, nil, s.linkCatCtrl, *linkCatSystem.Data.ID)
 }
 
 func (s *WorkItemLinkCategorySuite) TestCreateWorkItemLinkCategoryBadRequest() {
 	description := "New description for work item link category."
 	name := "" // This will lead to a bad parameter error
+	id := "88727441-4a21-4b35-aabe-007f8273cdBB"
 	payload := &app.CreateWorkItemLinkCategoryPayload{
 		Data: &app.WorkItemLinkCategoryData{
-			ID:   "88727441-4a21-4b35-aabe-007f8273cdBB",
+			ID:   &id,
 			Type: "workitemlinkcategories",
 			Attributes: &app.WorkItemLinkCategoryAttributes{
 				Name:        &name,
@@ -166,16 +169,17 @@ func (s *WorkItemLinkCategorySuite) TestDeleteWorkItemLinkCategoryNotFound() {
 
 func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryNotFound() {
 	description := "New description for work item link category."
+	id := "88727441-4a21-4b35-aabe-007f8273cd19"
 	payload := &app.UpdateWorkItemLinkCategoryPayload{
 		Data: &app.WorkItemLinkCategoryData{
-			ID:   "88727441-4a21-4b35-aabe-007f8273cd19",
+			ID:   &id,
 			Type: "workitemlinkcategories",
 			Attributes: &app.WorkItemLinkCategoryAttributes{
 				Description: &description,
 			},
 		},
 	}
-	test.UpdateWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, payload.Data.ID, payload)
+	test.UpdateWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, *payload.Data.ID, payload)
 }
 
 func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryOK() {
@@ -187,7 +191,7 @@ func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryOK() {
 	updatePayload.Data = linkCatSystem.Data
 	updatePayload.Data.Attributes.Description = &description
 
-	_, newLinkCat := test.UpdateWorkItemLinkCategoryOK(s.T(), nil, nil, s.linkCatCtrl, linkCatSystem.Data.ID, updatePayload)
+	_, newLinkCat := test.UpdateWorkItemLinkCategoryOK(s.T(), nil, nil, s.linkCatCtrl, *linkCatSystem.Data.ID, updatePayload)
 
 	// Test that description was updated and version got incremented
 	assert.NotNil(s.T(), newLinkCat.Data.Attributes.Description)
@@ -207,7 +211,7 @@ func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryBadRequest() {
 	updatePayload.Data.Attributes.Description = &description
 	updatePayload.Data.Type = "this is a wrong type!!!" // "should be workitemlinkcategories"
 
-	_, _ = test.UpdateWorkItemLinkCategoryBadRequest(s.T(), nil, nil, s.linkCatCtrl, linkCatSystem.Data.ID, updatePayload)
+	_, _ = test.UpdateWorkItemLinkCategoryBadRequest(s.T(), nil, nil, s.linkCatCtrl, *linkCatSystem.Data.ID, updatePayload)
 }
 
 // TestShowWorkItemLinkCategoryOK tests if we can fetch the "system" work item link category
@@ -216,7 +220,7 @@ func (s *WorkItemLinkCategorySuite) TestShowWorkItemLinkCategoryOK() {
 	_, linkCat := s.createWorkItemLinkCategorySystem()
 	assert.NotNil(s.T(), linkCat)
 
-	_, linkCat2 := test.ShowWorkItemLinkCategoryOK(s.T(), nil, nil, s.linkCatCtrl, linkCat.Data.ID)
+	_, linkCat2 := test.ShowWorkItemLinkCategoryOK(s.T(), nil, nil, s.linkCatCtrl, *linkCat.Data.ID)
 
 	assert.NotNil(s.T(), linkCat2)
 	assert.EqualValues(s.T(), linkCat, linkCat2)

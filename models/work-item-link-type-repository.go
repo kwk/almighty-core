@@ -121,10 +121,13 @@ func (r *GormWorkItemLinkTypeRepository) Delete(ctx context.Context, ID string) 
 // returns NotFoundError, VersionConflictError, ConversionError or InternalError
 func (r *GormWorkItemLinkTypeRepository) Save(ctx context.Context, lt app.WorkItemLinkType) (*app.WorkItemLinkType, error) {
 	res := WorkItemLinkType{}
-	db := r.db.Model(&res).Where("id=?", lt.Data.ID).First(&res)
+	if lt.Data.ID == nil {
+		return nil, NotFoundError{entity: "work item link type", ID: "nil"}
+	}
+	db := r.db.Model(&res).Where("id=?", *lt.Data.ID).First(&res)
 	if db.RecordNotFound() {
 		log.Printf("work item link type not found, res=%v", res)
-		return nil, NotFoundError{entity: "work item link type", ID: lt.Data.ID}
+		return nil, NotFoundError{entity: "work item link type", ID: *lt.Data.ID}
 	}
 	if lt.Data.Attributes.Version == nil || res.Version != *lt.Data.Attributes.Version {
 		return nil, VersionConflictError{simpleError{"version conflict"}}
