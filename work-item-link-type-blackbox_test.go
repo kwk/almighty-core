@@ -75,7 +75,7 @@ func (s *WorkItemLinkTypeSuite) TearDownSuite() {
 func (s *WorkItemLinkTypeSuite) cleanup() {
 	db := s.db.Unscoped().Delete(&models.WorkItemLinkType{Name: "bug-blocker"})
 	db = db.Unscoped().Delete(&models.WorkItemLinkCategory{Name: "user"})
-	db = db.Unscoped().Delete(&models.WorkItemType{Name: "system.bug"})
+	db = db.Unscoped().Delete(&models.WorkItemType{Name: "foo.bug"})
 
 }
 
@@ -111,13 +111,11 @@ func (s *WorkItemLinkTypeSuite) createWorkItemType(Name string) (http.ResponseWr
 	return test.CreateWorkitemtypeCreated(s.T(), nil, nil, s.typeCtrl, &payload)
 }
 
-func (s *WorkItemLinkTypeSuite) createWorkItemLinkCategory(ID string) (http.ResponseWriter, *app.WorkItemLinkCategory) {
-	name := "user"
+func (s *WorkItemLinkTypeSuite) createWorkItemLinkCategory(name string) (http.ResponseWriter, *app.WorkItemLinkCategory) {
 	description := "This work item link category is managed by an admin user."
 	// Use the goa generated code to create a work item link category
 	payload := app.CreateWorkItemLinkCategoryPayload{
 		Data: &app.WorkItemLinkCategoryData{
-			ID:   ID,
 			Type: "workitemlinkcategories",
 			Attributes: &app.WorkItemLinkCategoryAttributes{
 				Name:        &name,
@@ -129,11 +127,10 @@ func (s *WorkItemLinkTypeSuite) createWorkItemLinkCategory(ID string) (http.Resp
 }
 
 // createWorkItemLinkTypeBugBlocker defines a work item link type "bug blocker"
-func (s *WorkItemLinkTypeSuite) createWorkItemLinkType(ID string, Name string, SourceType string, TargetType string, categoryID string) (http.ResponseWriter, *app.WorkItemLinkType) {
+func (s *WorkItemLinkTypeSuite) createWorkItemLinkType(Name string, SourceType string, TargetType string, categoryID string) (http.ResponseWriter, *app.WorkItemLinkType) {
 	//   3. Create a work item link type
 	description := "Specify that one bug blocks another one."
 	lt := models.WorkItemLinkType{
-		ID:             satoriuuid.FromStringOrNil(ID),
 		Name:           Name,
 		Description:    &description,
 		SourceTypeName: SourceType,
@@ -143,7 +140,6 @@ func (s *WorkItemLinkTypeSuite) createWorkItemLinkType(ID string, Name string, S
 		LinkCategoryID: satoriuuid.FromStringOrNil(categoryID),
 	}
 	payload := models.ConvertLinkTypeFromModel(&lt)
-	fmt.Printf("payload to creat work item link type: \n\n %v\n\n", payload)
 	// The create payload is required during creation. Simply copy data over.
 	createPayload := app.CreateWorkItemLinkTypePayload{
 		Data: payload.Data,
@@ -165,17 +161,21 @@ func TestSuiteWorkItemLinkType(t *testing.T) {
 // TestCreateWorkItemLinkType tests if we can create the "system" work item link type
 func (s *WorkItemLinkTypeSuite) TestCreateAndDeleteWorkItemLinkType() {
 	//   1. Create at least one work item type
-	_, workItemType := s.createWorkItemType("system.bug")
+	_, workItemType := s.createWorkItemType("foo.bug")
 	assert.NotNil(s.T(), workItemType)
 
 	//   2. Create a work item link category
-	_, workItemLinkCategory := s.createWorkItemLinkCategory("6c5610be-30b2-4880-9fec-81e4f8e4fd76")
+	_, workItemLinkCategory := s.createWorkItemLinkCategory("user")
 	assert.NotNil(s.T(), workItemLinkCategory)
 
-	_, workItemLinkType := s.createWorkItemLinkType("40bbdd3d-8b5d-4fd6-ac90-7236b669af04", "bug-blocker", "system.bug", "system.bug", "6c5610be-30b2-4880-9fec-81e4f8e4fd76")
+	_, workItemLinkType := s.createWorkItemLinkType(
+		"bug-blocker",
+		"foo.bug",
+		"foo.bug",
+		*workItemLinkCategory.Data.ID)
 	assert.NotNil(s.T(), workItemLinkType)
 
-	test.DeleteWorkItemLinkTypeOK(s.T(), nil, nil, s.linkTypeCtrl, workItemLinkType.Data.ID)
+	test.DeleteWorkItemLinkTypeOK(s.T(), nil, nil, s.linkTypeCtrl, *workItemLinkType.Data.ID)
 }
 
 // func (s *WorkItemLinkTypeSuite) TestCreateWorkItemLinkTypeBadRequest() {
