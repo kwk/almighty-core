@@ -55,7 +55,7 @@ func (r *GormWorkItemLinkCategoryRepository) Load(ctx context.Context, ID string
 	}
 	log.Printf("loading work item link category %s", id.String())
 	res := WorkItemLinkCategory{}
-	db := r.db.First(&res, id)
+	db := r.db.Model(&res).Where("id=?", ID).First(&res)
 	if db.RecordNotFound() {
 		log.Printf("not found, res=%v", res)
 		return nil, NotFoundError{"work item link category", id.String()}
@@ -151,7 +151,7 @@ func (r *GormWorkItemLinkCategoryRepository) Save(ctx context.Context, linkCat a
 		return nil, BadParameterError{parameter: "data.attributes.name", value: *linkCat.Data.Attributes.Name}
 	}
 
-	db := r.db.First(&res, id)
+	db := r.db.Model(&res).Where("id=?", linkCat.Data.ID).First(&res)
 	if db.RecordNotFound() {
 		log.Printf("not found, res=%v", res)
 		return nil, NotFoundError{entity: "work item link category", ID: id.String()}

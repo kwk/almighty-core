@@ -51,7 +51,7 @@ func (r *GormWorkItemLinkTypeRepository) Load(ctx context.Context, ID string) (*
 	}
 	log.Printf("loading work item link type %s", id.String())
 	res := WorkItemLinkType{}
-	db := r.db.First(&res, id)
+	db := r.db.Model(&res).Where("id=?", ID).First(&res)
 	if db.RecordNotFound() {
 		log.Printf("not found work item link type, res=%v", res)
 		return nil, NotFoundError{"work item link type", id.String()}
@@ -121,7 +121,7 @@ func (r *GormWorkItemLinkTypeRepository) Delete(ctx context.Context, ID string) 
 // returns NotFoundError, VersionConflictError, ConversionError or InternalError
 func (r *GormWorkItemLinkTypeRepository) Save(ctx context.Context, lt app.WorkItemLinkType) (*app.WorkItemLinkType, error) {
 	res := WorkItemLinkType{}
-	db := r.db.First(&res, lt.Data.ID)
+	db := r.db.Model(&res).Where("id=?", lt.Data.ID).First(&res)
 	if db.RecordNotFound() {
 		log.Printf("work item link type not found, res=%v", res)
 		return nil, NotFoundError{entity: "work item link type", ID: lt.Data.ID}
