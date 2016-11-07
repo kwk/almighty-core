@@ -2,7 +2,6 @@ package main_test
 
 import (
 	"fmt"
-	"net/http"
 	"testing"
 
 	. "github.com/almighty/almighty-core"
@@ -96,7 +95,7 @@ func (s *WorkItemLinkTypeSuite) TearDownTest() {
 // helper method
 //-----------------------------------------------------------------------------
 
-func (s *WorkItemLinkTypeSuite) createWorkItemType(Name string) (http.ResponseWriter, *app.WorkItemType) {
+func (s *WorkItemLinkTypeSuite) createWorkItemType(Name string) *app.CreateWorkItemTypePayload {
 	payload := app.CreateWorkItemTypePayload{
 		Fields: map[string]*app.FieldDefinition{
 			"name": &app.FieldDefinition{
@@ -108,13 +107,13 @@ func (s *WorkItemLinkTypeSuite) createWorkItemType(Name string) (http.ResponseWr
 		},
 		Name: Name,
 	}
-	return test.CreateWorkitemtypeCreated(s.T(), nil, nil, s.typeCtrl, &payload)
+	return &payload
 }
 
-func (s *WorkItemLinkTypeSuite) createWorkItemLinkCategory(name string) (http.ResponseWriter, *app.WorkItemLinkCategory) {
+func (s *WorkItemLinkTypeSuite) createWorkItemLinkCategory(name string) *app.CreateWorkItemLinkCategoryPayload {
 	description := "This work item link category is managed by an admin user."
 	// Use the goa generated code to create a work item link category
-	payload := app.CreateWorkItemLinkCategoryPayload{
+	return &app.CreateWorkItemLinkCategoryPayload{
 		Data: &app.WorkItemLinkCategoryData{
 			Type: "workitemlinkcategories",
 			Attributes: &app.WorkItemLinkCategoryAttributes{
@@ -123,11 +122,10 @@ func (s *WorkItemLinkTypeSuite) createWorkItemLinkCategory(name string) (http.Re
 			},
 		},
 	}
-	return test.CreateWorkItemLinkCategoryCreated(s.T(), nil, nil, s.linkCatCtrl, &payload)
 }
 
 // createWorkItemLinkTypeBugBlocker defines a work item link type "bug blocker"
-func (s *WorkItemLinkTypeSuite) createWorkItemLinkType(Name string, SourceType string, TargetType string, categoryID string) (http.ResponseWriter, *app.WorkItemLinkType) {
+func (s *WorkItemLinkTypeSuite) createWorkItemLinkType(Name string, SourceType string, TargetType string, categoryID string) *app.CreateWorkItemLinkTypePayload {
 	//   3. Create a work item link type
 	description := "Specify that one bug blocks another one."
 	lt := models.WorkItemLinkType{
@@ -141,10 +139,9 @@ func (s *WorkItemLinkTypeSuite) createWorkItemLinkType(Name string, SourceType s
 	}
 	payload := models.ConvertLinkTypeFromModel(&lt)
 	// The create payload is required during creation. Simply copy data over.
-	createPayload := app.CreateWorkItemLinkTypePayload{
+	return &app.CreateWorkItemLinkTypePayload{
 		Data: payload.Data,
 	}
-	return test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, &createPayload)
 }
 
 //-----------------------------------------------------------------------------
@@ -161,42 +158,52 @@ func TestSuiteWorkItemLinkType(t *testing.T) {
 // TestCreateWorkItemLinkType tests if we can create the "system" work item link type
 func (s *WorkItemLinkTypeSuite) TestCreateAndDeleteWorkItemLinkType() {
 	//   1. Create at least one work item type
-	_, workItemType := s.createWorkItemType("foo.bug")
+	workItemTypePayload := s.createWorkItemType("foo.bug")
+	_, workItemType := test.CreateWorkitemtypeCreated(s.T(), nil, nil, s.typeCtrl, workItemTypePayload)
 	assert.NotNil(s.T(), workItemType)
 
 	//   2. Create a work item link category
-	_, workItemLinkCategory := s.createWorkItemLinkCategory("user")
+	createLinkCategoryPayload := s.createWorkItemLinkCategory("user")
+	_, workItemLinkCategory := test.CreateWorkItemLinkCategoryCreated(s.T(), nil, nil, s.linkCatCtrl, createLinkCategoryPayload)
 	assert.NotNil(s.T(), workItemLinkCategory)
 
-	_, workItemLinkType := s.createWorkItemLinkType(
+	// 3. Create work item link type
+	createLinkTypePayload := s.createWorkItemLinkType(
 		"bug-blocker",
 		"foo.bug",
 		"foo.bug",
 		*workItemLinkCategory.Data.ID)
+	_, workItemLinkType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, createLinkTypePayload)
 	assert.NotNil(s.T(), workItemLinkType)
 
-	test.DeleteWorkItemLinkTypeOK(s.T(), nil, nil, s.linkTypeCtrl, *workItemLinkType.Data.ID)
+	_ = test.DeleteWorkItemLinkTypeOK(s.T(), nil, nil, s.linkTypeCtrl, *workItemLinkType.Data.ID)
 }
 
-// func (s *WorkItemLinkTypeSuite) TestCreateWorkItemLinkTypeBadRequest() {
-// 	description := "New description for work item link type."
-// 	name := "" // This will lead to a bad parameter error
-// 	payload := &app.CreateWorkItemLinkTypePayload{
-// 		Data: &app.WorkItemLinkTypeData{
-// 			ID:   "88727441-4a21-4b35-aabe-007f8273cdBB",
-// 			Type: "workitemlinktypes",
-// 			Attributes: &app.WorkItemLinkTypeAttributes{
-// 				Name:        &name,
-// 				Description: &description,
-// 			},
-// 		},
-// 	}
-// 	test.CreateWorkItemLinkTypeBadRequest(s.T(), nil, nil, s.linkTypeCtrl, payload)
-// }
-//
-// func (s *WorkItemLinkTypeSuite) TestDeleteWorkItemLinkTypeNotFound() {
-// 	test.DeleteWorkItemLinkTypeNotFound(s.T(), nil, nil, s.linkTypeCtrl, "01f6c751-53f3-401f-be9b-6a9a230db8AA")
-// }
+func (s *WorkItemLinkTypeSuite) TestCreateWorkItemLinkTypeBadRequest() {
+	//   1. Create at least one work item type
+	workItemTypePayload := s.createWorkItemType("foo.bug")
+	_, workItemType := test.CreateWorkitemtypeCreated(s.T(), nil, nil, s.typeCtrl, workItemTypePayload)
+	assert.NotNil(s.T(), workItemType)
+
+	//   2. Create a work item link category
+	createLinkCategoryPayload := s.createWorkItemLinkCategory("user")
+	_, workItemLinkCategory := test.CreateWorkItemLinkCategoryCreated(s.T(), nil, nil, s.linkCatCtrl, createLinkCategoryPayload)
+	assert.NotNil(s.T(), workItemLinkCategory)
+
+	// 3. Create work item link type
+	createLinkTypePayload := s.createWorkItemLinkType(
+		"",
+		"foo.bug",
+		"foo.bug",
+		*workItemLinkCategory.Data.ID)
+	_, workItemLinkType := test.CreateWorkItemLinkTypeBadRequest(s.T(), nil, nil, s.linkTypeCtrl, createLinkTypePayload)
+	assert.NotNil(s.T(), workItemLinkType)
+}
+
+func (s *WorkItemLinkTypeSuite) TestDeleteWorkItemLinkTypeNotFound() {
+	test.DeleteWorkItemLinkTypeNotFound(s.T(), nil, nil, s.linkTypeCtrl, "1e9a8b53-73a6-40de-b028-5177add79ffa")
+}
+
 //
 // func (s *WorkItemLinkTypeSuite) TestUpdateWorkItemLinkTypeNotFound() {
 // 	description := "New description for work item link type."
