@@ -229,7 +229,7 @@ func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) err
 	if rel != nil && rel.SourceType != nil && rel.SourceType.Data != nil {
 		d := rel.SourceType.Data
 		// If the the link type is not nil, it MUST be "workitemlinktypes"
-		if d.Type != workitemlinktypes {
+		if d.Type != workitemtypes {
 			return BadParameterError{parameter: "data.relationships.source_type.data.type", value: d.Type}
 		}
 		// The the link type MUST NOT be empty
@@ -243,7 +243,7 @@ func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) err
 	if rel != nil && rel.TargetType != nil && rel.TargetType.Data != nil {
 		d := rel.TargetType.Data
 		// If the the link type is not nil, it MUST be "workitemlinktypes"
-		if d.Type != workitemlinktypes {
+		if d.Type != workitemtypes {
 			return BadParameterError{parameter: "data.relationships.target_type.data.type", value: d.Type}
 		}
 		// The the link type MUST NOT be empty
