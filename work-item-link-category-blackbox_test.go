@@ -398,8 +398,8 @@ func getWorkItemLinkCategoryTestData(t *testing.T) []testSecureAPI {
 }
 
 // This test case will check authorized access to Create/Update/Delete APIs
-func TestUnauthorizeWorkItemLinkCategoryCUD(t *testing.T) {
-	UnauthorizeCreateUpdateDeleteTest(t, getWorkItemLinkCategoryTestData, func() *goa.Service {
+func (s *WorkItemLinkCategorySuite) TestUnauthorizeWorkItemLinkCategoryCUD() {
+	UnauthorizeCreateUpdateDeleteTest(s.T(), getWorkItemLinkCategoryTestData, func() *goa.Service {
 		return goa.New("TestUnauthorizedCreateWorkItemLinkCategory-Service")
 	}, func(service *goa.Service) error {
 		controller := NewWorkItemLinkCategoryController(service, gormapplication.NewGormDB(DB))
