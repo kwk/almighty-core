@@ -1,7 +1,9 @@
 package main_test
 
 import (
+	"bytes"
 	"fmt"
+	"net/http"
 	"testing"
 
 	. "github.com/almighty/almighty-core"
@@ -11,6 +13,7 @@ import (
 	"github.com/almighty/almighty-core/gormapplication"
 	"github.com/almighty/almighty-core/models"
 	"github.com/almighty/almighty-core/resource"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/goadesign/goa"
 	"github.com/jinzhu/gorm"
 	satoriuuid "github.com/satori/go.uuid"
@@ -73,6 +76,7 @@ func (s *WorkItemLinkTypeSuite) TearDownSuite() {
 // "deleted_at" field, which is why we need the Unscoped() function.
 func (s *WorkItemLinkTypeSuite) cleanup() {
 	db := s.db.Unscoped().Delete(&models.WorkItemLinkType{Name: "bug-blocker"})
+	db = s.db.Unscoped().Delete(&models.WorkItemLinkType{Name: "related"})
 	db = db.Unscoped().Delete(&models.WorkItemLinkCategory{Name: "user"})
 	db = db.Unscoped().Delete(&models.WorkItemType{Name: "foo.bug"})
 
@@ -172,7 +176,7 @@ func TestSuiteWorkItemLinkType(t *testing.T) {
 	suite.Run(t, new(WorkItemLinkTypeSuite))
 }
 
-// TestCreateWorkItemLinkType tests if we can create the "system" work item link type
+// TestCreateWorkItemLinkType tests if we can create the "bug-blocker" work item link type
 func (s *WorkItemLinkTypeSuite) TestCreateAndDeleteWorkItemLinkType() {
 	createPayload := s.createDemoLinkType("bug-blocker")
 	_, workItemLinkType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, createPayload)
@@ -249,173 +253,178 @@ func (s *WorkItemLinkTypeSuite) TestShowWorkItemLinkTypeNotFound() {
 	test.ShowWorkItemLinkTypeNotFound(s.T(), nil, nil, s.linkTypeCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")
 }
 
-//
-// // TestListWorkItemLinkTypeOK tests if we can find the work item link types
-// // "system" and "user" in the list of work item link types
-// func (s *WorkItemLinkTypeSuite) TestListWorkItemLinkTypeOK() {
-// 	_, linkCatSystem := s.createWorkItemLinkTypeBugBlocker()
-// 	assert.NotNil(s.T(), linkCatSystem)
-// 	_, linkCatUser := s.createWorkItemLinkTypeUser()
-// 	assert.NotNil(s.T(), linkCatUser)
-//
-// 	// Fetch a single work item link type
-// 	_, linkCatCollection := test.ListWorkItemLinkTypeOK(s.T(), nil, nil, s.linkTypeCtrl)
-//
-// 	assert.NotNil(s.T(), linkCatCollection)
-// 	assert.Nil(s.T(), linkCatCollection.Validate())
-//
-// 	// Check the number of found work item link types
-// 	assert.NotNil(s.T(), linkCatCollection.Data)
-// 	assert.Condition(s.T(), func() bool {
-// 		return (len(linkCatCollection.Data) >= 2)
-// 	}, "At least two work item link types must exist (system and user), but only %d exist.", len(linkCatCollection.Data))
-//
-// 	// Search for the work item types that must exist at minimum
-// 	toBeFound := 2
-// 	for i := 0; i < len(linkCatCollection.Data) && toBeFound > 0; i++ {
-// 		if *linkCatCollection.Data[i].Data.Attributes.Name == "system" || *linkCatCollection.Data[i].Data.Attributes.Name == "user" {
-// 			s.T().Log("Found work item link type in collection: ", *linkCatCollection.Data[i].Data.Attributes.Name)
-// 			toBeFound--
-// 		}
-// 	}
-// 	assert.Exactly(s.T(), 0, toBeFound, "Not all required work item link types (system and user) where found.")
-// }
-//
-// func getWorkItemLinkTypeTestData(t *testing.T) []testSecureAPI {
-// 	privatekey, err := jwt.ParseRSAPrivateKeyFromPEM((configuration.GetTokenPrivateKey()))
-// 	if err != nil {
-// 		t.Fatal("Could not parse Key ", err)
-// 	}
-// 	differentPrivatekey, err := jwt.ParseRSAPrivateKeyFromPEM(([]byte(RSADifferentPrivateKeyTest)))
-// 	if err != nil {
-// 		t.Fatal("Could not parse different private key ", err)
-// 	}
-//
-// 	createWorkItemLinkTypePayloadString := bytes.NewBuffer([]byte(`
-// 		{
-// 			"data": {
-// 				"attributes": {
-// 					"description": "A sample work item link type",
-// 					"name": "sample",
-// 					"version": 0
-// 				},
-// 				"id": "6c5610be-30b2-4880-9fec-81e4f8e4fd76",
-// 				"type": "workitemlinktypes"
-// 			}
-// 		}
-// 		`))
-//
-// 	return []testSecureAPI{
-// 		// Create Work Item API with different parameters
-// 		{
-// 			method:             http.MethodPost,
-// 			url:                endpointWorkItemLinkCategories,
-// 			expectedStatusCode: http.StatusUnauthorized,
-// 			expectedErrorCode:  "jwt_security_error",
-// 			payload:            createWorkItemLinkTypePayloadString,
-// 			jwtToken:           getExpiredAuthHeader(t, privatekey),
-// 		}, {
-// 			method:             http.MethodPost,
-// 			url:                endpointWorkItemLinkCategories,
-// 			expectedStatusCode: http.StatusUnauthorized,
-// 			expectedErrorCode:  "jwt_security_error",
-// 			payload:            createWorkItemLinkTypePayloadString,
-// 			jwtToken:           getMalformedAuthHeader(t, privatekey),
-// 		}, {
-// 			method:             http.MethodPost,
-// 			url:                endpointWorkItemLinkCategories,
-// 			expectedStatusCode: http.StatusUnauthorized,
-// 			expectedErrorCode:  "jwt_security_error",
-// 			payload:            createWorkItemLinkTypePayloadString,
-// 			jwtToken:           getValidAuthHeader(t, differentPrivatekey),
-// 		}, {
-// 			method:             http.MethodPost,
-// 			url:                endpointWorkItemLinkCategories,
-// 			expectedStatusCode: http.StatusUnauthorized,
-// 			expectedErrorCode:  "jwt_security_error",
-// 			payload:            createWorkItemLinkTypePayloadString,
-// 			jwtToken:           "",
-// 		},
-// 		// Update Work Item API with different parameters
-// 		{
-// 			method:             http.MethodPut,
-// 			url:                endpointWorkItemLinkCategories + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
-// 			expectedStatusCode: http.StatusUnauthorized,
-// 			expectedErrorCode:  "jwt_security_error",
-// 			payload:            createWorkItemLinkTypePayloadString,
-// 			jwtToken:           getExpiredAuthHeader(t, privatekey),
-// 		}, {
-// 			method:             http.MethodPut,
-// 			url:                endpointWorkItemLinkCategories + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
-// 			expectedStatusCode: http.StatusUnauthorized,
-// 			expectedErrorCode:  "jwt_security_error",
-// 			payload:            createWorkItemLinkTypePayloadString,
-// 			jwtToken:           getMalformedAuthHeader(t, privatekey),
-// 		}, {
-// 			method:             http.MethodPut,
-// 			url:                endpointWorkItemLinkCategories + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
-// 			expectedStatusCode: http.StatusUnauthorized,
-// 			expectedErrorCode:  "jwt_security_error",
-// 			payload:            createWorkItemLinkTypePayloadString,
-// 			jwtToken:           getValidAuthHeader(t, differentPrivatekey),
-// 		}, {
-// 			method:             http.MethodPut,
-// 			url:                endpointWorkItemLinkCategories + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
-// 			expectedStatusCode: http.StatusUnauthorized,
-// 			expectedErrorCode:  "jwt_security_error",
-// 			payload:            createWorkItemLinkTypePayloadString,
-// 			jwtToken:           "",
-// 		},
-// 		// Delete Work Item API with different parameters
-// 		{
-// 			method:             http.MethodDelete,
-// 			url:                endpointWorkItemLinkCategories + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
-// 			expectedStatusCode: http.StatusUnauthorized,
-// 			expectedErrorCode:  "jwt_security_error",
-// 			payload:            nil,
-// 			jwtToken:           getExpiredAuthHeader(t, privatekey),
-// 		}, {
-// 			method:             http.MethodDelete,
-// 			url:                endpointWorkItemLinkCategories + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
-// 			expectedStatusCode: http.StatusUnauthorized,
-// 			expectedErrorCode:  "jwt_security_error",
-// 			payload:            nil,
-// 			jwtToken:           getMalformedAuthHeader(t, privatekey),
-// 		}, {
-// 			method:             http.MethodDelete,
-// 			url:                endpointWorkItemLinkCategories + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
-// 			expectedStatusCode: http.StatusUnauthorized,
-// 			expectedErrorCode:  "jwt_security_error",
-// 			payload:            nil,
-// 			jwtToken:           getValidAuthHeader(t, differentPrivatekey),
-// 		}, {
-// 			method:             http.MethodDelete,
-// 			url:                endpointWorkItemLinkCategories + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
-// 			expectedStatusCode: http.StatusUnauthorized,
-// 			expectedErrorCode:  "jwt_security_error",
-// 			payload:            nil,
-// 			jwtToken:           "",
-// 		},
-// 		// Try fetching a random work item link type
-// 		// We do not have security on GET hence this should return 404 not found
-// 		{
-// 			method:             http.MethodGet,
-// 			url:                endpointWorkItemLinkCategories + "/fc591f38-a805-4abd-bfce-2460e49d8cc4",
-// 			expectedStatusCode: http.StatusNotFound,
-// 			expectedErrorCode:  "not_found",
-// 			payload:            nil,
-// 			jwtToken:           "",
-// 		},
-// 	}
-// }
-//
-// // This test case will check authorized access to Create/Update/Delete APIs
-// func TestUnauthorizeWorkItemLinkTypeCUD(t *testing.T) {
-// 	UnauthorizeCreateUpdateDeleteTest(t, getWorkItemLinkTypeTestData, func() *goa.Service {
-// 		return goa.New("TestUnauthorizedCreateWorkItemLinkType-Service")
-// 	}, func(service *goa.Service) error {
-// 		controller := NewWorkItemLinkTypeController(service, gormapplication.NewGormDB(DB))
-// 		app.MountWorkItemLinkTypeController(service, controller)
-// 		return nil
-// 	})
-// }
+// TestListWorkItemLinkTypeOK tests if we can find the work item link types
+// "bug-blocker" and "related" in the list of work item link types
+func (s *WorkItemLinkTypeSuite) TestListWorkItemLinkTypeOK() {
+	bugBlockerPayload := s.createDemoLinkType("bug-blocker")
+	_, bugBlockerType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, bugBlockerPayload)
+	assert.NotNil(s.T(), bugBlockerType)
+
+	relatedPayload := s.createWorkItemLinkType("related", "foo.bug", "foo.bug", bugBlockerType.Data.Relationships.LinkCategory.Data.ID)
+	_, relatedType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, relatedPayload)
+	assert.NotNil(s.T(), relatedType)
+
+	// Fetch a single work item link type
+	_, linkTypeCollection := test.ListWorkItemLinkTypeOK(s.T(), nil, nil, s.linkTypeCtrl)
+	assert.NotNil(s.T(), linkTypeCollection)
+	assert.Nil(s.T(), linkTypeCollection.Validate())
+	// Check the number of found work item link types
+	assert.NotNil(s.T(), linkTypeCollection.Data)
+	assert.Condition(s.T(), func() bool {
+		return (len(linkTypeCollection.Data) >= 2)
+	}, "At least two work item link types must exist (bug-blocker and related), but only %d exist.", len(linkTypeCollection.Data))
+	// Search for the work item types that must exist at minimum
+	toBeFound := 2
+	for i := 0; i < len(linkTypeCollection.Data) && toBeFound > 0; i++ {
+		if *linkTypeCollection.Data[i].Data.Attributes.Name == "bug-blocker" || *linkTypeCollection.Data[i].Data.Attributes.Name == "related" {
+			s.T().Log("Found work item link type in collection: ", *linkTypeCollection.Data[i].Data.Attributes.Name)
+			toBeFound--
+		}
+	}
+	assert.Exactly(s.T(), 0, toBeFound, "Not all required work item link types (bug-blocker and related) where found.")
+}
+
+func getWorkItemLinkTypeTestData(t *testing.T) []testSecureAPI {
+	privatekey, err := jwt.ParseRSAPrivateKeyFromPEM((configuration.GetTokenPrivateKey()))
+	if err != nil {
+		t.Fatal("Could not parse Key ", err)
+	}
+	differentPrivatekey, err := jwt.ParseRSAPrivateKeyFromPEM(([]byte(RSADifferentPrivateKeyTest)))
+	if err != nil {
+		t.Fatal("Could not parse different private key ", err)
+	}
+
+	createWorkItemLinkTypePayloadString := bytes.NewBuffer([]byte(`
+		{
+			"data": {
+				"type": "workitemlinktypes",
+				"id": "0270e113-7790-477f-9371-97c37d734d5d",				
+				"attributes": {
+					"name": "sample",
+					"description": "A sample work item link type",
+					"version": 0,
+					"forward_name": "forward string name",
+					"reverse_name": "reverse string name"
+				},
+				"relationships": {
+					"link_category": {"data": {"type":"workitemlinkcategories", "id": "a75ea296-6378-4578-8573-90f11b8efb00"}},
+					"source_type": {"data": {"type":"workitemtypes", "id": "foo.bug"}},
+					"target_type": {"data": {"type":"workitemtypes", "id": "foo.bug"}}
+				}
+			}
+		}
+		`))
+	return []testSecureAPI{
+		// Create Work Item API with different parameters
+		{
+			method:             http.MethodPost,
+			url:                endpointWorkItemLinkTypes,
+			expectedStatusCode: http.StatusUnauthorized,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            createWorkItemLinkTypePayloadString,
+			jwtToken:           getExpiredAuthHeader(t, privatekey),
+		}, {
+			method:             http.MethodPost,
+			url:                endpointWorkItemLinkTypes,
+			expectedStatusCode: http.StatusUnauthorized,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            createWorkItemLinkTypePayloadString,
+			jwtToken:           getMalformedAuthHeader(t, privatekey),
+		}, {
+			method:             http.MethodPost,
+			url:                endpointWorkItemLinkTypes,
+			expectedStatusCode: http.StatusUnauthorized,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            createWorkItemLinkTypePayloadString,
+			jwtToken:           getValidAuthHeader(t, differentPrivatekey),
+		}, {
+			method:             http.MethodPost,
+			url:                endpointWorkItemLinkTypes,
+			expectedStatusCode: http.StatusUnauthorized,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            createWorkItemLinkTypePayloadString,
+			jwtToken:           "",
+		},
+		// Update Work Item API with different parameters
+		{
+			method:             http.MethodPut,
+			url:                endpointWorkItemLinkTypes + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
+			expectedStatusCode: http.StatusUnauthorized,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            createWorkItemLinkTypePayloadString,
+			jwtToken:           getExpiredAuthHeader(t, privatekey),
+		}, {
+			method:             http.MethodPut,
+			url:                endpointWorkItemLinkTypes + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
+			expectedStatusCode: http.StatusUnauthorized,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            createWorkItemLinkTypePayloadString,
+			jwtToken:           getMalformedAuthHeader(t, privatekey),
+		}, {
+			method:             http.MethodPut,
+			url:                endpointWorkItemLinkTypes + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
+			expectedStatusCode: http.StatusUnauthorized,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            createWorkItemLinkTypePayloadString,
+			jwtToken:           getValidAuthHeader(t, differentPrivatekey),
+		}, {
+			method:             http.MethodPut,
+			url:                endpointWorkItemLinkTypes + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
+			expectedStatusCode: http.StatusUnauthorized,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            createWorkItemLinkTypePayloadString,
+			jwtToken:           "",
+		},
+		// Delete Work Item API with different parameters
+		{
+			method:             http.MethodDelete,
+			url:                endpointWorkItemLinkTypes + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
+			expectedStatusCode: http.StatusUnauthorized,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            nil,
+			jwtToken:           getExpiredAuthHeader(t, privatekey),
+		}, {
+			method:             http.MethodDelete,
+			url:                endpointWorkItemLinkTypes + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
+			expectedStatusCode: http.StatusUnauthorized,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            nil,
+			jwtToken:           getMalformedAuthHeader(t, privatekey),
+		}, {
+			method:             http.MethodDelete,
+			url:                endpointWorkItemLinkTypes + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
+			expectedStatusCode: http.StatusUnauthorized,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            nil,
+			jwtToken:           getValidAuthHeader(t, differentPrivatekey),
+		}, {
+			method:             http.MethodDelete,
+			url:                endpointWorkItemLinkTypes + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
+			expectedStatusCode: http.StatusUnauthorized,
+			expectedErrorCode:  "jwt_security_error",
+			payload:            nil,
+			jwtToken:           "",
+		},
+		// Try fetching a random work item link type
+		// We do not have security on GET hence this should return 404 not found
+		{
+			method:             http.MethodGet,
+			url:                endpointWorkItemLinkTypes + "/fc591f38-a805-4abd-bfce-2460e49d8cc4",
+			expectedStatusCode: http.StatusNotFound,
+			expectedErrorCode:  "not_found",
+			payload:            nil,
+			jwtToken:           "",
+		},
+	}
+}
+
+// This test case will check authorized access to Create/Update/Delete APIs
+func (s *WorkItemLinkTypeSuite) TestUnauthorizeWorkItemLinkTypeCUD() {
+	UnauthorizeCreateUpdateDeleteTest(s.T(), getWorkItemLinkTypeTestData, func() *goa.Service {
+		return goa.New("TestUnauthorizedCreateWorkItemLinkType-Service")
+	}, func(service *goa.Service) error {
+		controller := NewWorkItemLinkTypeController(service, gormapplication.NewGormDB(DB))
+		app.MountWorkItemLinkTypeController(service, controller)
+		return nil
+	})
+}
