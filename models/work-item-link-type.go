@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/almighty/almighty-core/app"
@@ -48,7 +47,7 @@ func (self WorkItemLinkType) Equal(u convert.Equaler) bool {
 	if !self.Lifecycle.Equal(other.Lifecycle) {
 		return false
 	}
-	if !self.ID.Equal(other.ID) {
+	if !satoriuuid.Equal(self.ID, other.ID) {
 		return false
 	}
 	if self.Name != other.Name {
@@ -84,7 +83,7 @@ func (self WorkItemLinkType) Equal(u convert.Equaler) bool {
 	if self.ReverseName != other.ReverseName {
 		return false
 	}
-	if self.LinkCategoryID != other.LinkCategoryID {
+	if !satoriuuid.Equal(self.LinkCategoryID, other.LinkCategoryID) {
 		return false
 	}
 	if !self.LinkCategory.Equal(other.LinkCategory) {
@@ -97,22 +96,22 @@ func (self WorkItemLinkType) Equal(u convert.Equaler) bool {
 // cannot be used for the creation of a new work item link type.
 func (t *WorkItemLinkType) CheckValidForCreation() error {
 	if t.Name == "" {
-		return fmt.Errorf("The name must not be empty.")
+		return BadParameterError{parameter: "name", value: t.Name}
 	}
 	if t.SourceTypeName == "" {
-		return fmt.Errorf("The source work item type must be set.")
+		return BadParameterError{parameter: "source_type_name", value: t.SourceTypeName}
 	}
 	if t.TargetTypeName == "" {
-		return fmt.Errorf("The target work item type must be set.")
+		return BadParameterError{parameter: "target_type_name", value: t.TargetTypeName}
 	}
 	if t.ForwardName == "" {
-		return fmt.Errorf("A forward name must be specified.")
+		return BadParameterError{parameter: "forward_name", value: t.ForwardName}
 	}
 	if t.ReverseName == "" {
-		return fmt.Errorf("A reverse name must be specified.")
+		return BadParameterError{parameter: "reverse_name", value: t.ReverseName}
 	}
 	if t.LinkCategoryID == satoriuuid.Nil {
-		return fmt.Errorf("The work item link type must have a link category.")
+		return BadParameterError{parameter: "link_category_id", value: t.LinkCategoryID}
 	}
 	return nil
 }
@@ -160,6 +159,9 @@ func ConvertLinkTypeFromModel(t *WorkItemLinkType) app.WorkItemLinkType {
 // NOTE: Only the LinkCategoryID, SourceTypeName, and TargetTypeName fields will be set.
 //       You need to preload the elements after calling this function.
 func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) error {
+	attrs := in.Data.Attributes
+	rel := in.Data.Relationships
+
 	id, err := satoriuuid.FromString(in.Data.ID)
 	if err != nil {
 		log.Printf("Error when converting %s to UUID: %s", in.Data.ID, err.Error())
@@ -172,41 +174,40 @@ func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) err
 		return BadParameterError{parameter: "data.type", value: in.Data.Type}
 	}
 
-	attrs := in.Data.Attributes
-
-	// If the name is not nil, it MUST NOT be empty
-	if attrs.Name != nil {
-		if *attrs.Name == "" {
-			return BadParameterError{parameter: "data.attributes.name", value: *attrs.Name}
+	if attrs != nil {
+		// If the name is not nil, it MUST NOT be empty
+		if attrs.Name != nil {
+			if *attrs.Name == "" {
+				return BadParameterError{parameter: "data.attributes.name", value: *attrs.Name}
+			}
+			out.Name = *attrs.Name
 		}
-		out.Name = *attrs.Name
-	}
 
-	if attrs.Description != nil {
-		out.Description = attrs.Description
-	}
-
-	if attrs.Version != nil {
-		out.Version = *attrs.Version
-	}
-
-	// If the forwardName is not nil, it MUST NOT be empty
-	if attrs.ForwardName != nil {
-		if *attrs.ForwardName == "" {
-			return BadParameterError{parameter: "data.attributes.forward_name", value: *attrs.ForwardName}
+		if attrs.Description != nil {
+			out.Description = attrs.Description
 		}
-		out.ForwardName = *attrs.ForwardName
-	}
 
-	// If the ReverseName is not nil, it MUST NOT be empty
-	if attrs.ReverseName != nil {
-		if *attrs.ReverseName == "" {
-			return BadParameterError{parameter: "data.attributes.reverse_name", value: *attrs.ReverseName}
+		if attrs.Version != nil {
+			out.Version = *attrs.Version
 		}
-		out.ReverseName = *attrs.ReverseName
+
+		// If the forwardName is not nil, it MUST NOT be empty
+		if attrs.ForwardName != nil {
+			if *attrs.ForwardName == "" {
+				return BadParameterError{parameter: "data.attributes.forward_name", value: *attrs.ForwardName}
+			}
+			out.ForwardName = *attrs.ForwardName
+		}
+
+		// If the ReverseName is not nil, it MUST NOT be empty
+		if attrs.ReverseName != nil {
+			if *attrs.ReverseName == "" {
+				return BadParameterError{parameter: "data.attributes.reverse_name", value: *attrs.ReverseName}
+			}
+			out.ReverseName = *attrs.ReverseName
+		}
 	}
 
-	rel := in.Data.Relationships
 	if rel != nil && rel.LinkCategory != nil && rel.LinkCategory.Data != nil {
 		d := rel.LinkCategory.Data
 		// If the the link category is not nil, it MUST be "workitemlinkcategories"
