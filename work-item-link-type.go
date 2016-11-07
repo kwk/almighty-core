@@ -29,7 +29,7 @@ func (c *WorkItemLinkTypeController) Create(ctx *app.CreateWorkItemLinkTypeConte
 	// Convert payload from app to model representation
 	model := models.WorkItemLinkType{}
 	in := app.WorkItemLinkType{
-		Data: app.CreateWorkItemLinkTypeContext.Payload.Data,
+		Data: ctx.Payload.Data,
 	}
 	err := models.ConvertLinkTypeToModel(&in, &model)
 	if err != nil {
@@ -45,7 +45,7 @@ func (c *WorkItemLinkTypeController) Create(ctx *app.CreateWorkItemLinkTypeConte
 				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusInternalServerError, goa.ErrNotFound(err.Error()))
 			}
 		}
-		ctx.ResponseData.Header().Set("Location", app.WorkItemLinkTypesHref(cat.Data.ID))
+		ctx.ResponseData.Header().Set("Location", app.WorkItemLinkTypeHref(cat.Data.ID))
 		return ctx.Created(cat)
 	})
 	// WorkItemLinkTypeController_Create: end_implement

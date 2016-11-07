@@ -3,6 +3,7 @@ package application
 import (
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/criteria"
+	"github.com/almighty/almighty-core/models"
 	"golang.org/x/net/context"
 )
 
@@ -54,7 +55,7 @@ type WorkItemLinkCategoryRepository interface {
 
 // WorkItemLinkTypeRepository encapsulates storage & retrieval of work item link types
 type WorkItemLinkTypeRepository interface {
-	Create(ctx context.Context, linkType *WorkItemLinkType) (*app.WorkItemLinkType, error)
+	Create(ctx context.Context, linkType *models.WorkItemLinkType) (*app.WorkItemLinkType, error)
 	Load(ctx context.Context, ID string) (*app.WorkItemLinkType, error)
 	List(ctx context.Context) (*app.WorkItemLinkTypeArray, error)
 	Delete(ctx context.Context, ID string) error
