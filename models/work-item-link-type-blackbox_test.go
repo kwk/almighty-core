@@ -19,7 +19,7 @@ func TestWorkItemLinkType_Equal(t *testing.T) {
 	resource.Require(t, resource.UnitTest)
 
 	description := "An example description"
-	const a = models.WorkItemLinkType{
+	a := models.WorkItemLinkType{
 		ID:             satoriuuid.FromStringOrNil("0e671e36-871b-43a6-9166-0c4bd573e231"),
 		Name:           "Example work item link category",
 		Description:    &description,
@@ -34,13 +34,13 @@ func TestWorkItemLinkType_Equal(t *testing.T) {
 		LinkCategory:   models.WorkItemLinkCategory{},
 	}
 
-	// Test types
-	c := convert.DummyEqualer{}
-	assert.False(t, a.Equal(c))
-
 	// Test equality
 	b := a
 	assert.True(t, a.Equal(b))
+
+	// Test types
+	c := convert.DummyEqualer{}
+	assert.False(t, a.Equal(c))
 
 	// Test lifecycle
 	b = a
@@ -80,12 +80,12 @@ func TestWorkItemLinkType_Equal(t *testing.T) {
 
 	// Test SourceTypeName
 	b = a
-	b.SourceTypeName.Name = "foobar"
+	b.SourceTypeName = "foobar"
 	assert.False(t, a.Equal(b))
 
 	// Test TargetTypeName
 	b = a
-	b.TargetTypeName.Name = "foobar"
+	b.TargetTypeName = "foobar"
 	assert.False(t, a.Equal(b))
 
 	// Test ForwardName
@@ -104,12 +104,12 @@ func TestWorkItemLinkType_Equal(t *testing.T) {
 	assert.False(t, a.Equal(b))
 }
 
-func Testfunc_CheckValidForCreation(t *Testing.T) {
+func Testfunc_CheckValidForCreation(t *testing.T) {
 	t.Parallel()
 	resource.Require(t, resource.UnitTest)
 
 	description := "An example description"
-	const a = models.WorkItemLinkType{
+	a := models.WorkItemLinkType{
 		ID:             satoriuuid.FromStringOrNil("0e671e36-871b-43a6-9166-0c4bd573e231"),
 		Name:           "Example work item link category",
 		Description:    &description,

@@ -132,17 +132,15 @@ func (s *WorkItemLinkTypeSuite) createWorkItemLinkCategory(ID string) (http.Resp
 func (s *WorkItemLinkTypeSuite) createWorkItemLinkType(ID string, Name string, SourceType string, TargetType string, categoryID string) (http.ResponseWriter, *app.WorkItemLinkType) {
 	//   3. Create a work item link type
 	description := "Specify that one bug blocks another one."
-	linkCatID, _ := satoriuuid.FromString(categoryID)
-	id, _ := satoriuuid.FromString(ID)
 	lt := models.WorkItemLinkType{
-		ID:           id,
-		Name:         Name,
-		Description:  &description,
-		SourceType:   SourceType,
-		TargetType:   TargetType,
-		ForwardName:  "forward name string",
-		ReverseName:  "reverse name string",
-		LinkCategory: linkCatID,
+		ID:             satoriuuid.FromStringOrNil(ID),
+		Name:           Name,
+		Description:    &description,
+		SourceTypeName: SourceType,
+		TargetTypeName: TargetType,
+		ForwardName:    "forward name string",
+		ReverseName:    "reverse name string",
+		LinkCategoryID: satoriuuid.FromStringOrNil(categoryID),
 	}
 	payload := models.ConvertLinkTypeFromModel(&lt)
 	fmt.Printf("payload to creat work item link type: \n\n %v\n\n", payload)
