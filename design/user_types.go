@@ -263,7 +263,7 @@ var WorkItemLinkTypeData = a.Type("WorkItemLinkTypeData", func() {
 	a.Description(`JSONAPI store for the data of a work item link type.
 See also http://jsonapi.org/format/#document-resource-object`)
 	a.Attribute("type", d.String, func() {
-		a.Enum("workitemlinktype")
+		a.Enum("workitemlinktypes")
 	})
 	a.Attribute("id", d.String, "ID of work item link type", func() {
 		a.Example("40bbdd3d-8b5d-4fd6-ac90-7236b669af04")
