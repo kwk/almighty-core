@@ -244,11 +244,11 @@ func (s *WorkItemLinkTypeSuite) TestShowWorkItemLinkTypeOK() {
 	assert.True(s.T(), expected.Equal(actual))
 }
 
-//
-// // TestShowWorkItemLinkTypeNotFound tests if we can fetch a non existing work item link type
-// func (s *WorkItemLinkTypeSuite) TestShowWorkItemLinkTypeNotFound() {
-// 	test.ShowWorkItemLinkTypeNotFound(s.T(), nil, nil, s.linkTypeCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")
-// }
+// TestShowWorkItemLinkTypeNotFound tests if we can fetch a non existing work item link type
+func (s *WorkItemLinkTypeSuite) TestShowWorkItemLinkTypeNotFound() {
+	test.ShowWorkItemLinkTypeNotFound(s.T(), nil, nil, s.linkTypeCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")
+}
+
 //
 // // TestListWorkItemLinkTypeOK tests if we can find the work item link types
 // // "system" and "user" in the list of work item link types
