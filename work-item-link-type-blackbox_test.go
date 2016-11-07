@@ -228,18 +228,22 @@ func (s *WorkItemLinkTypeSuite) TestUpdateWorkItemLinkTypeBadRequest() {
 	test.UpdateWorkItemLinkTypeBadRequest(s.T(), nil, nil, s.linkTypeCtrl, *updateLinkTypePayload.Data.ID, updateLinkTypePayload)
 }
 
-//
-// // TestShowWorkItemLinkTypeOK tests if we can fetch the "system" work item link type
-// func (s *WorkItemLinkTypeSuite) TestShowWorkItemLinkTypeOK() {
-// 	// Create the work item link type first and try to read it back in
-// 	_, linkCat := s.createWorkItemLinkTypeBugBlocker()
-// 	assert.NotNil(s.T(), linkCat)
-//
-// 	_, linkCat2 := test.ShowWorkItemLinkTypeOK(s.T(), nil, nil, s.linkTypeCtrl, linkCat.Data.ID)
-//
-// 	assert.NotNil(s.T(), linkCat2)
-// 	assert.EqualValues(s.T(), linkCat, linkCat2)
-// }
+// TestShowWorkItemLinkTypeOK tests if we can fetch the "system" work item link type
+func (s *WorkItemLinkTypeSuite) TestShowWorkItemLinkTypeOK() {
+	// Create the work item link type first and try to read it back in
+	createPayload := s.createDemoLinkType("bug-blocker")
+	_, workItemLinkType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, createPayload)
+	assert.NotNil(s.T(), workItemLinkType)
+	_, readIn := test.ShowWorkItemLinkTypeOK(s.T(), nil, nil, s.linkTypeCtrl, *workItemLinkType.Data.ID)
+	assert.NotNil(s.T(), readIn)
+	// Convert to model space and use equal function
+	expected := models.WorkItemLinkType{}
+	actual := models.WorkItemLinkType{}
+	assert.Nil(s.T(), models.ConvertLinkTypeToModel(workItemLinkType, &expected))
+	assert.Nil(s.T(), models.ConvertLinkTypeToModel(readIn, &actual))
+	assert.True(s.T(), expected.Equal(actual))
+}
+
 //
 // // TestShowWorkItemLinkTypeNotFound tests if we can fetch a non existing work item link type
 // func (s *WorkItemLinkTypeSuite) TestShowWorkItemLinkTypeNotFound() {
