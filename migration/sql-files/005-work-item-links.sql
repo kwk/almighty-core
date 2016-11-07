@@ -32,13 +32,14 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- work item link categories
 
 CREATE TABLE work_item_link_categories (
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone,
-    deleted_at timestamp with time zone DEFAULT NULL,
-    id uuid primary key DEFAULT uuid_generate_v4() NOT NULL,
-    name text NOT NULL UNIQUE,
+    created_at  timestamp with time zone,
+    updated_at  timestamp with time zone,
+    deleted_at  timestamp with time zone DEFAULT NULL,
+
+    id          uuid primary key DEFAULT uuid_generate_v4() NOT NULL,
+    name        text NOT NULL UNIQUE,
     description text,
-    version integer
+    version     integer
 );
 
 -- work item link types
@@ -62,13 +63,14 @@ CREATE TABLE work_item_link_types (
 -- work item links
 
 CREATE TABLE work_item_links (
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone,
-    deleted_at timestamp with time zone DEFAULT NULL,
-    id uuid primary key DEFAULT uuid_generate_v4() NOT NULL,
-    type uuid REFERENCES work_item_link_types(id) NOT NULL,
-    source bigint REFERENCES work_items(id) NOT NULL,
-    target bigint REFERENCES work_items(id) NOT NULL,
-    comment text DEFAULT NULL,
-    version integer
+    created_at  timestamp with time zone,
+    updated_at  timestamp with time zone,
+    deleted_at  timestamp with time zone DEFAULT NULL,
+    
+    id          uuid primary key DEFAULT uuid_generate_v4() NOT NULL,
+    type        uuid REFERENCES work_item_link_types(id) NOT NULL,
+    source      bigint REFERENCES work_items(id) NOT NULL,
+    target      bigint REFERENCES work_items(id) NOT NULL,
+    comment     text DEFAULT NULL,
+    version     integer
 );
