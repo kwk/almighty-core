@@ -26,11 +26,8 @@ func NewWorkItemLinkCategoryController(service *goa.Service, db application.DB) 
 
 // Create runs the create action.
 func (c *WorkItemLinkCategoryController) Create(ctx *app.CreateWorkItemLinkCategoryContext) error {
-	// WorkItemLinkCategoryController_Create: start_implement
-
 	return application.Transactional(c.db, func(appl application.Application) error {
 		cat, err := appl.WorkItemLinkCategories().Create(ctx.Context, ctx.Payload.Data.Attributes.Name, ctx.Payload.Data.Attributes.Description)
-
 		if err != nil {
 			switch err := err.(type) {
 			case models.BadParameterError, models.ConversionError:
@@ -42,8 +39,6 @@ func (c *WorkItemLinkCategoryController) Create(ctx *app.CreateWorkItemLinkCateg
 		ctx.ResponseData.Header().Set("Location", app.WorkItemLinkCategoryHref(cat.Data.ID))
 		return ctx.Created(cat)
 	})
-
-	// WorkItemLinkCategoryController_Create: end_implement
 }
 
 // Show runs the show action.
@@ -97,9 +92,7 @@ func (c *WorkItemLinkCategoryController) Update(ctx *app.UpdateWorkItemLinkCateg
 		toSave := app.WorkItemLinkCategory{
 			Data: ctx.Payload.Data,
 		}
-
 		linkCategory, err := appl.WorkItemLinkCategories().Save(ctx.Context, toSave)
-
 		if err != nil {
 			switch err := err.(type) {
 			case models.NotFoundError:

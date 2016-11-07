@@ -54,7 +54,7 @@ type WorkItemLinkCategoryRepository interface {
 
 // WorkItemLinkTypeRepository encapsulates storage & retrieval of work item link types
 type WorkItemLinkTypeRepository interface {
-	Create(ctx context.Context, name *string, description *string, sourceType *string, targetType *string, forwardName *string, reverseName *string, linkCategory *string) (*app.WorkItemLinkType, error)
+	Create(ctx context.Context, linkType *WorkItemLinkType) (*app.WorkItemLinkType, error)
 	Load(ctx context.Context, ID string) (*app.WorkItemLinkType, error)
 	List(ctx context.Context) (*app.WorkItemLinkTypeArray, error)
 	Delete(ctx context.Context, ID string) error

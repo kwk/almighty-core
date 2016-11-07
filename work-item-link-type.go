@@ -1,8 +1,11 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/application"
+	"github.com/almighty/almighty-core/models"
 	"github.com/goadesign/goa"
 )
 
@@ -23,9 +26,28 @@ func NewWorkItemLinkTypeController(service *goa.Service, db application.DB) *Wor
 // Create runs the create action.
 func (c *WorkItemLinkTypeController) Create(ctx *app.CreateWorkItemLinkTypeContext) error {
 	// WorkItemLinkTypeController_Create: start_implement
-
-	// Put your logic here
-
+	// Convert payload from app to model representation
+	model := models.WorkItemLinkType{}
+	in := app.WorkItemLinkType{
+		Data: app.CreateWorkItemLinkTypeContext.Payload.Data,
+	}
+	err := models.ConvertLinkTypeToModel(&in, &model)
+	if err != nil {
+		return ctx.ResponseData.Service.Send(ctx.Context, http.StatusBadRequest, goa.ErrBadRequest(err.Error()))
+	}
+	return application.Transactional(c.db, func(appl application.Application) error {
+		cat, err := appl.WorkItemLinkTypes().Create(ctx.Context, &model)
+		if err != nil {
+			switch err := err.(type) {
+			case models.BadParameterError, models.ConversionError:
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusBadRequest, goa.ErrBadRequest(err.Error()))
+			default:
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusInternalServerError, goa.ErrNotFound(err.Error()))
+			}
+		}
+		ctx.ResponseData.Header().Set("Location", app.WorkItemLinkTypesHref(cat.Data.ID))
+		return ctx.Created(cat)
+	})
 	// WorkItemLinkTypeController_Create: end_implement
 	return nil
 }
@@ -33,9 +55,18 @@ func (c *WorkItemLinkTypeController) Create(ctx *app.CreateWorkItemLinkTypeConte
 // Delete runs the delete action.
 func (c *WorkItemLinkTypeController) Delete(ctx *app.DeleteWorkItemLinkTypeContext) error {
 	// WorkItemLinkTypeController_Delete: start_implement
-
-	// Put your logic here
-
+	return application.Transactional(c.db, func(appl application.Application) error {
+		err := appl.WorkItemLinkTypes().Delete(ctx.Context, ctx.ID)
+		if err != nil {
+			switch err.(type) {
+			case models.NotFoundError:
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusNotFound, goa.ErrNotFound(err.Error()))
+			default:
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusInternalServerError, goa.ErrNotFound(err.Error()))
+			}
+		}
+		return ctx.OK([]byte{})
+	})
 	// WorkItemLinkTypeController_Delete: end_implement
 	return nil
 }
@@ -43,32 +74,54 @@ func (c *WorkItemLinkTypeController) Delete(ctx *app.DeleteWorkItemLinkTypeConte
 // List runs the list action.
 func (c *WorkItemLinkTypeController) List(ctx *app.ListWorkItemLinkTypeContext) error {
 	// WorkItemLinkTypeController_List: start_implement
-
-	// Put your logic here
-
+	return application.Transactional(c.db, func(appl application.Application) error {
+		result, err := appl.WorkItemLinkTypes().List(ctx.Context)
+		if err != nil {
+			return ctx.ResponseData.Service.Send(ctx.Context, http.StatusInternalServerError, goa.ErrNotFound(err.Error()))
+		}
+		return ctx.OK(result)
+	})
 	// WorkItemLinkTypeController_List: end_implement
-	res := &app.WorkItemLinkTypeArray{}
-	return ctx.OK(res)
 }
 
 // Show runs the show action.
 func (c *WorkItemLinkTypeController) Show(ctx *app.ShowWorkItemLinkTypeContext) error {
 	// WorkItemLinkTypeController_Show: start_implement
-
-	// Put your logic here
-
+	return application.Transactional(c.db, func(appl application.Application) error {
+		res, err := appl.WorkItemLinkTypes().Load(ctx.Context, ctx.ID)
+		if err != nil {
+			switch err.(type) {
+			case models.NotFoundError:
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusNotFound, goa.ErrNotFound(err.Error()))
+			default:
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusInternalServerError, goa.ErrNotFound(err.Error()))
+			}
+		}
+		return ctx.OK(res)
+	})
 	// WorkItemLinkTypeController_Show: end_implement
-	res := &app.WorkItemLinkType{}
-	return ctx.OK(res)
 }
 
 // Update runs the update action.
 func (c *WorkItemLinkTypeController) Update(ctx *app.UpdateWorkItemLinkTypeContext) error {
 	// WorkItemLinkTypeController_Update: start_implement
-
-	// Put your logic here
-
+	return application.Transactional(c.db, func(appl application.Application) error {
+		toSave := app.WorkItemLinkType{
+			Data: ctx.Payload.Data,
+		}
+		linkType, err := appl.WorkItemLinkTypes().Save(ctx.Context, toSave)
+		if err != nil {
+			switch err := err.(type) {
+			case models.NotFoundError:
+				//ctx.ResponseData.Header().Set("Content-Type", "application/vnd.api+json")
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusNotFound, goa.ErrNotFound(err.Error()))
+			case models.BadParameterError, models.ConversionError, models.VersionConflictError:
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusBadRequest, goa.ErrBadRequest(err.Error()))
+			default:
+				return ctx.ResponseData.Service.Send(ctx.Context, http.StatusInternalServerError, goa.ErrNotFound(err.Error()))
+			}
+		}
+		return ctx.OK(linkType)
+	})
 	// WorkItemLinkTypeController_Update: end_implement
-	res := &app.WorkItemLinkType{}
-	return ctx.OK(res)
 }
