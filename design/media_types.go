@@ -273,7 +273,7 @@ var WorkItemLinkCategoryArray = a.MediaType("application/vnd.work-item-link-cate
 	})
 })
 
-// WorkItemLinkType defines a connection between two types of work items
+// WorkItemLinkType defines a type of connection between two types of work items
 var WorkItemLinkType = a.MediaType("application/vnd.work-item-link-type+json", func() {
 	a.ContentType("application/vnd.api+json")
 	a.TypeName("WorkItemLinkType")
@@ -296,6 +296,38 @@ var WorkItemLinkTypeArray = a.MediaType("application/vnd.work-item-link-type-arr
 	a.Attributes(func() {
 		a.Attribute("meta", WorkItemLinkTypeArrayMeta)
 		a.Attribute("data", a.ArrayOf(WorkItemLinkType))
+		a.Required("data")
+	})
+	a.View("default", func() {
+		a.Attribute("data")
+		a.Attribute("meta")
+		a.Required("data")
+	})
+})
+
+// WorkItemLink defines a connection between two types of work items
+var WorkItemLink = a.MediaType("application/vnd.work-item-link+json", func() {
+	a.ContentType("application/vnd.api+json")
+	a.TypeName("WorkItemLink")
+	a.Description(`Defines a connection between two work items`)
+	a.Attributes(func() {
+		a.Attribute("data", WorkItemLinkData)
+		a.Required("data")
+	})
+	a.View("default", func() {
+		a.Attribute("data")
+		a.Required("data")
+	})
+})
+
+// WorkItemLinkArray is a collection of work WorkItemLinkData objects.
+var WorkItemLinkArray = a.MediaType("application/vnd.work-item-link-array+json", func() {
+	a.ContentType("application/vnd.api+json")
+	a.TypeName("WorkItemLinkArray")
+	a.Description(`An array of work item links`)
+	a.Attributes(func() {
+		a.Attribute("meta", WorkItemLinkArrayMeta)
+		a.Attribute("data", a.ArrayOf(WorkItemLink))
 		a.Required("data")
 	})
 	a.View("default", func() {

@@ -460,7 +460,6 @@ var _ = a.Resource("work-item-link-category", func() {
 	})
 
 	a.Action("list", func() {
-		//a.Security("jwt") // TODO: Add authentication requirement?
 		a.Routing(
 			a.GET(""),
 		)
@@ -472,7 +471,6 @@ var _ = a.Resource("work-item-link-category", func() {
 			a.Media(d.ErrorMedia)
 		})
 		a.Response(d.InternalServerError)
-		//a.Response(d.Unauthorized) // TODO: Add authentication requirement?
 	})
 
 	a.Action("create", func() {
@@ -560,7 +558,6 @@ var _ = a.Resource("work-item-link-type", func() {
 	})
 
 	a.Action("list", func() {
-		//a.Security("jwt") // TODO: Add authentication requirement?
 		a.Routing(
 			a.GET(""),
 		)
@@ -572,7 +569,6 @@ var _ = a.Resource("work-item-link-type", func() {
 			a.Media(d.ErrorMedia)
 		})
 		a.Response(d.InternalServerError)
-		//a.Response(d.Unauthorized) // TODO: Add authentication requirement?
 	})
 
 	a.Action("create", func() {
@@ -625,6 +621,104 @@ var _ = a.Resource("work-item-link-type", func() {
 		a.Payload(UpdateWorkItemLinkTypePayload)
 		a.Response(d.OK, func() {
 			a.Media(WorkItemLinkType)
+		})
+		a.Response(d.BadRequest, func() {
+			a.Media(d.ErrorMedia)
+		})
+		a.Response(d.InternalServerError)
+		a.Response(d.NotFound, func() {
+			a.Media(d.ErrorMedia)
+			//a.Media(JSONAPIErrors)
+		})
+		a.Response(d.Unauthorized)
+	})
+})
+
+var _ = a.Resource("work-item-link", func() {
+	a.BasePath("/workitemlinks")
+
+	a.Action("show", func() {
+		a.Routing(
+			a.GET("/:id"),
+		)
+		a.Description("Retrieve work item link (as JSONAPI) for the given ID.")
+		a.Params(func() {
+			a.Param("id", d.String, "ID of the work item link")
+		})
+		a.Response(d.OK, func() {
+			a.Media(WorkItemLink)
+		})
+		a.Response(d.BadRequest, func() {
+			a.Media(d.ErrorMedia) // TODO return a JSONAPI error here
+		})
+		a.Response(d.InternalServerError)
+		a.Response(d.NotFound)
+	})
+
+	a.Action("list", func() {
+		a.Routing(
+			a.GET(""),
+		)
+		a.Description("List work item links.")
+		a.Response(d.OK, func() {
+			a.Media(WorkItemLinkArray)
+		})
+		a.Response(d.BadRequest, func() {
+			a.Media(d.ErrorMedia)
+		})
+		a.Response(d.InternalServerError)
+	})
+
+	a.Action("create", func() {
+		a.Security("jwt")
+		a.Routing(
+			a.POST(""),
+		)
+		a.Description("Create a work item link")
+		a.Payload(CreateWorkItemLinkPayload)
+		a.Response(d.Created, "/workitemlinks/.*", func() {
+			a.Media(WorkItemLink)
+		})
+		a.Response(d.BadRequest, func() {
+			a.Media(d.ErrorMedia)
+		})
+		a.Response(d.InternalServerError)
+		a.Response(d.Unauthorized)
+	})
+
+	a.Action("delete", func() {
+		a.Security("jwt")
+		a.Routing(
+			a.DELETE("/:id"),
+		)
+		a.Description("Delete work item link with given id.")
+		a.Params(func() {
+			a.Param("id", d.String, "id")
+		})
+		a.Response(d.OK)
+		a.Response(d.BadRequest, func() {
+			a.Media(d.ErrorMedia)
+		})
+		a.Response(d.InternalServerError)
+		a.Response(d.NotFound, func() {
+			a.Media(d.ErrorMedia)
+			//a.Media(JSONAPIErrors)
+		})
+		a.Response(d.Unauthorized)
+	})
+
+	a.Action("update", func() {
+		a.Security("jwt")
+		a.Routing(
+			a.PUT("/:id"),
+		)
+		a.Description("Update the given work item link with given id.")
+		a.Params(func() {
+			a.Param("id", d.String, "id")
+		})
+		a.Payload(UpdateWorkItemLinkPayload)
+		a.Response(d.OK, func() {
+			a.Media(WorkItemLink)
 		})
 		a.Response(d.BadRequest, func() {
 			a.Media(d.ErrorMedia)
