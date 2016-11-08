@@ -9,6 +9,7 @@ type Application interface {
 	SearchItems() SearchRepository
 	WorkItemLinkCategories() WorkItemLinkCategoryRepository
 	WorkItemLinkTypes() WorkItemLinkTypeRepository
+	WorkItemLinks() WorkItemLinkRepository
 }
 
 // A Transaction abstracts a database transaction. The repositories created for the transaction object make changes inside the the transaction

@@ -31,7 +31,7 @@ func TestWorkItemLinkType_Equal(t *testing.T) {
 		ForwardName:    "blocks",
 		ReverseName:    "blocked by",
 		LinkCategoryID: satoriuuid.FromStringOrNil("0e671e36-871b-43a6-9166-0c4bd573eAAA"),
-		LinkCategory:   models.WorkItemLinkCategory{},
+		LinkCategory:   models.WorkItemLinkCategory{ID: satoriuuid.FromStringOrNil("0e671e36-871b-43a6-9166-0c4bd573eAAA")},
 	}
 
 	// Test equality
@@ -102,9 +102,14 @@ func TestWorkItemLinkType_Equal(t *testing.T) {
 	b = a
 	b.LinkCategoryID = satoriuuid.FromStringOrNil("aaa71e36-871b-43a6-9166-0c4bd573eCCC")
 	assert.False(t, a.Equal(b))
+
+	// Test LinkCategory
+	b = a
+	b.LinkCategory = models.WorkItemLinkCategory{ID: satoriuuid.FromStringOrNil("aaa71e36-871b-43a6-9166-0c4bd573eCCC")}
+	assert.False(t, a.Equal(b))
 }
 
-func Testfunc_CheckValidForCreation(t *testing.T) {
+func TestWorkItemLinkTypeCheckValidForCreation(t *testing.T) {
 	t.Parallel()
 	resource.Require(t, resource.UnitTest)
 

@@ -10,12 +10,6 @@ import (
 	satoriuuid "github.com/satori/go.uuid"
 )
 
-const (
-	workitemlinkcategories = "workitemlinkcategories"
-	workitemlinktypes      = "workitemlinktypes"
-	workitemtypes          = "workitemtypes"
-)
-
 // NewWorkItemLinkTypeRepository creates a work item link type repository based on gorm
 func NewWorkItemLinkTypeRepository(db *gorm.DB) *GormWorkItemLinkTypeRepository {
 	return &GormWorkItemLinkTypeRepository{db}

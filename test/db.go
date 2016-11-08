@@ -31,6 +31,9 @@ func (db *MockDB) WorkItemLinkCategories() application.WorkItemLinkCategoryRepos
 func (db *MockDB) WorkItemLinkTypes() application.WorkItemLinkTypeRepository {
 	return nil
 }
+func (db *MockDB) WorkItemLinks() application.WorkItemLinkRepository {
+	return nil
+}
 func (db *MockDB) Commit() error {
 	return nil
 }

@@ -63,3 +63,12 @@ type WorkItemLinkTypeRepository interface {
 	Delete(ctx context.Context, ID string) error
 	Save(ctx context.Context, linkCat app.WorkItemLinkType) (*app.WorkItemLinkType, error)
 }
+
+// WorkItemLinkRepository encapsulates storage & retrieval of work item links
+type WorkItemLinkRepository interface {
+	Create(ctx context.Context, linkType *models.WorkItemLink) (*app.WorkItemType, error)
+	Load(ctx context.Context, ID string) (*app.WorkItemLink, error)
+	List(ctx context.Context) (*app.WorkItemLinkArray, error)
+	Delete(ctx context.Context, ID string) error
+	Save(ctx context.Context, linkCat app.WorkItemType) (*app.WorkItemType, error)
+}

@@ -95,7 +95,7 @@ func getMigrations() migrations {
 	m = append(m, steps{executeSQLFile("005-add-search-index.sql")})
 
 	// Version 6
-	m = append(m, steps{executeSQLFile("005-work-item-links.sql")})
+	m = append(m, steps{executeSQLFile("006-work-item-links.sql")})
 
 	// Version N
 	//
