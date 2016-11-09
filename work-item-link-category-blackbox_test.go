@@ -99,7 +99,7 @@ func (s *WorkItemLinkCategorySuite) createWorkItemLinkCategorySystem() (http.Res
 	payload := app.CreateWorkItemLinkCategoryPayload{
 		Data: &app.WorkItemLinkCategoryData{
 			ID:   &id,
-			Type: "workitemlinkcategories",
+			Type: models.EndpointWorkItemLinkCategories,
 			Attributes: &app.WorkItemLinkCategoryAttributes{
 				Name:        &name,
 				Description: &description,
@@ -120,7 +120,7 @@ func (s *WorkItemLinkCategorySuite) createWorkItemLinkCategoryUser() (http.Respo
 	payload := app.CreateWorkItemLinkCategoryPayload{
 		Data: &app.WorkItemLinkCategoryData{
 			ID:   &id,
-			Type: "workitemlinkcategories",
+			Type: models.EndpointWorkItemLinkCategories,
 			Attributes: &app.WorkItemLinkCategoryAttributes{
 				Name:        &name,
 				Description: &description,
@@ -153,7 +153,7 @@ func (s *WorkItemLinkCategorySuite) TestCreateWorkItemLinkCategoryBadRequest() {
 	payload := &app.CreateWorkItemLinkCategoryPayload{
 		Data: &app.WorkItemLinkCategoryData{
 			ID:   &id,
-			Type: "workitemlinkcategories",
+			Type: models.EndpointWorkItemLinkCategories,
 			Attributes: &app.WorkItemLinkCategoryAttributes{
 				Name:        &name,
 				Description: &description,
@@ -173,7 +173,7 @@ func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryNotFound() {
 	payload := &app.UpdateWorkItemLinkCategoryPayload{
 		Data: &app.WorkItemLinkCategoryData{
 			ID:   &id,
-			Type: "workitemlinkcategories",
+			Type: models.EndpointWorkItemLinkCategories,
 			Attributes: &app.WorkItemLinkCategoryAttributes{
 				Description: &description,
 			},

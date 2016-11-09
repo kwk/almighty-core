@@ -85,6 +85,11 @@ func (g *GormBase) WorkItemLinkTypes() application.WorkItemLinkTypeRepository {
 	return models.NewWorkItemLinkTypeRepository(g.db)
 }
 
+// WorkItemLinks returns a work item link repository
+func (g *GormBase) WorkItemLinks() application.WorkItemLinkRepository {
+	return models.NewWorkItemLinkRepository(g.db)
+}
+
 func (g *GormBase) DB() *gorm.DB {
 	return g.db
 }

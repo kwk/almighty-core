@@ -24,7 +24,7 @@ type GormWorkItemLinkCategoryRepository struct {
 // Returns BadParameterError, ConversionError or InternalError
 func (r *GormWorkItemLinkCategoryRepository) Create(ctx context.Context, name *string, description *string) (*app.WorkItemLinkCategory, error) {
 	if name == nil || *name == "" {
-		return nil, BadParameterError{parameter: "name", value: name}
+		return nil, NewBadParameterError("name", name)
 	}
 	created := WorkItemLinkCategory{
 		// Omit "lifecycle" and "ID" fields as they will be filled by the DB
@@ -33,10 +33,10 @@ func (r *GormWorkItemLinkCategoryRepository) Create(ctx context.Context, name *s
 	}
 	db := r.db.Create(&created)
 	if db.Error != nil {
-		return nil, InternalError{simpleError{db.Error.Error()}}
+		return nil, NewInternalError(db.Error.Error())
 	}
 	// Convert the created link category entry into a JSONAPI response
-	result := convertLinkCategoryFromModel(&created)
+	result := ConvertLinkCategoryFromModel(&created)
 	return &result, nil
 }
 
@@ -46,18 +46,18 @@ func (r *GormWorkItemLinkCategoryRepository) Load(ctx context.Context, ID string
 	id, err := satoriuuid.FromString(ID)
 	if err != nil {
 		// treat as not found: clients don't know it must be a UUID
-		return nil, NotFoundError{entity: "work item link category", ID: ID}
+		return nil, NewNotFoundError("work item link category", ID)
 	}
 	log.Printf("loading work item link category %s", id.String())
 	res := WorkItemLinkCategory{}
 	db := r.db.Model(&res).Where("id=?", ID).First(&res)
 	if db.RecordNotFound() {
 		log.Printf("not found, res=%v", res)
-		return nil, NotFoundError{"work item link category", id.String()}
+		return nil, NewNotFoundError("work item link category", id.String())
 	}
 
 	// Convert the created link category entry into a JSONAPI response
-	result := convertLinkCategoryFromModel(&res)
+	result := ConvertLinkCategoryFromModel(&res)
 	return &result, nil
 }
 
@@ -87,7 +87,7 @@ func (r *GormWorkItemLinkCategoryRepository) List(ctx context.Context) (*app.Wor
 	res.Data = make([]*app.WorkItemLinkCategory, len(rows))
 
 	for index, value := range rows {
-		cat := convertLinkCategoryFromModel(&value)
+		cat := ConvertLinkCategoryFromModel(&value)
 		res.Data[index] = &cat
 	}
 
@@ -106,7 +106,7 @@ func (r *GormWorkItemLinkCategoryRepository) Delete(ctx context.Context, ID stri
 	id, err := satoriuuid.FromString(ID)
 	if err != nil {
 		// treat as not found: clients don't know it must be a UUID
-		return NotFoundError{entity: "work item link category", ID: ID}
+		return NewNotFoundError("work item link category", ID)
 	}
 
 	var cat = WorkItemLinkCategory{
@@ -117,11 +117,11 @@ func (r *GormWorkItemLinkCategoryRepository) Delete(ctx context.Context, ID stri
 
 	db := r.db.Delete(&cat)
 	if db.Error != nil {
-		return InternalError{simpleError{db.Error.Error()}}
+		return NewInternalError(db.Error.Error())
 	}
 
 	if db.RowsAffected == 0 {
-		return NotFoundError{entity: "work item link category", ID: id.String()}
+		return NewNotFoundError("work item link category", id.String())
 	}
 	return nil
 }
@@ -131,31 +131,31 @@ func (r *GormWorkItemLinkCategoryRepository) Delete(ctx context.Context, ID stri
 func (r *GormWorkItemLinkCategoryRepository) Save(ctx context.Context, linkCat app.WorkItemLinkCategory) (*app.WorkItemLinkCategory, error) {
 	res := WorkItemLinkCategory{}
 	if linkCat.Data.ID == nil {
-		return nil, BadParameterError{parameter: "data.id", value: linkCat.Data.ID}
+		return nil, NewBadParameterError("data.id", linkCat.Data.ID)
 	}
 	id, err := satoriuuid.FromString(*linkCat.Data.ID)
 	if err != nil {
 		log.Printf("Error when converting %s to UUID: %s", *linkCat.Data.ID, err.Error())
 		// treat as not found: clients don't know it must be a UUID
-		return nil, NotFoundError{entity: "work item link category", ID: id.String()}
+		return nil, NewNotFoundError("work item link category", id.String())
 	}
 
-	if linkCat.Data.Type != "workitemlinkcategories" {
-		return nil, BadParameterError{parameter: "data.type", value: linkCat.Data.Type}
+	if linkCat.Data.Type != EndpointWorkItemLinkCategories {
+		return nil, NewBadParameterError("data.type", linkCat.Data.Type).Expected(EndpointWorkItemLinkCategories)
 	}
 
 	// If the name is not nil, it MUST NOT be empty
 	if linkCat.Data.Attributes.Name != nil && *linkCat.Data.Attributes.Name == "" {
-		return nil, BadParameterError{parameter: "data.attributes.name", value: *linkCat.Data.Attributes.Name}
+		return nil, NewBadParameterError("data.attributes.name", *linkCat.Data.Attributes.Name)
 	}
 
 	db := r.db.Model(&res).Where("id=?", *linkCat.Data.ID).First(&res)
 	if db.RecordNotFound() {
-		log.Printf("not found, res=%v", res)
-		return nil, NotFoundError{entity: "work item link category", ID: id.String()}
+		log.Printf("work item link category not found, res=%v", res)
+		return nil, NewNotFoundError("work item link category", id.String())
 	}
 	if linkCat.Data.Attributes.Version == nil || res.Version != *linkCat.Data.Attributes.Version {
-		return nil, VersionConflictError{simpleError{"version conflict"}}
+		return nil, NewVersionConflictError("version conflict")
 	}
 
 	description := ""
@@ -178,26 +178,9 @@ func (r *GormWorkItemLinkCategoryRepository) Save(ctx context.Context, linkCat a
 	db = db.Save(&newLinkCat)
 	if db.Error != nil {
 		log.Print(db.Error.Error())
-		return nil, InternalError{simpleError{db.Error.Error()}}
+		return nil, NewInternalError(db.Error.Error())
 	}
 	log.Printf("updated work item link category to %v\n", newLinkCat)
-	result := convertLinkCategoryFromModel(&newLinkCat)
+	result := ConvertLinkCategoryFromModel(&newLinkCat)
 	return &result, nil
-}
-
-// convertLinkCategoryFromModel converts from model to app representation
-func convertLinkCategoryFromModel(t *WorkItemLinkCategory) app.WorkItemLinkCategory {
-	id := t.ID.String()
-	var converted = app.WorkItemLinkCategory{
-		Data: &app.WorkItemLinkCategoryData{
-			Type: "workitemlinkcategories",
-			ID:   &id,
-			Attributes: &app.WorkItemLinkCategoryAttributes{
-				Name:        &t.Name,
-				Description: t.Description,
-				Version:     &t.Version,
-			},
-		},
-	}
-	return converted
 }

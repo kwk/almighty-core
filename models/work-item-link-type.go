@@ -96,22 +96,22 @@ func (self WorkItemLinkType) Equal(u convert.Equaler) bool {
 // cannot be used for the creation of a new work item link type.
 func (t *WorkItemLinkType) CheckValidForCreation() error {
 	if t.Name == "" {
-		return BadParameterError{parameter: "name", value: t.Name}
+		return NewBadParameterError("name", t.Name)
 	}
 	if t.SourceTypeName == "" {
-		return BadParameterError{parameter: "source_type_name", value: t.SourceTypeName}
+		return NewBadParameterError("source_type_name", t.SourceTypeName)
 	}
 	if t.TargetTypeName == "" {
-		return BadParameterError{parameter: "target_type_name", value: t.TargetTypeName}
+		return NewBadParameterError("target_type_name", t.TargetTypeName)
 	}
 	if t.ForwardName == "" {
-		return BadParameterError{parameter: "forward_name", value: t.ForwardName}
+		return NewBadParameterError("forward_name", t.ForwardName)
 	}
 	if t.ReverseName == "" {
-		return BadParameterError{parameter: "reverse_name", value: t.ReverseName}
+		return NewBadParameterError("reverse_name", t.ReverseName)
 	}
 	if t.LinkCategoryID == satoriuuid.Nil {
-		return BadParameterError{parameter: "link_category_id", value: t.LinkCategoryID}
+		return NewBadParameterError("link_category_id", t.LinkCategoryID)
 	}
 	return nil
 }
@@ -121,7 +121,7 @@ func ConvertLinkTypeFromModel(t *WorkItemLinkType) app.WorkItemLinkType {
 	id := t.ID.String()
 	var converted = app.WorkItemLinkType{
 		Data: &app.WorkItemLinkTypeData{
-			Type: workitemlinktypes,
+			Type: EndpointWorkItemLinkTypes,
 			ID:   &id,
 			Attributes: &app.WorkItemLinkTypeAttributes{
 				Name:        &t.Name,
@@ -133,19 +133,19 @@ func ConvertLinkTypeFromModel(t *WorkItemLinkType) app.WorkItemLinkType {
 			Relationships: &app.WorkItemLinkTypeRelationships{
 				LinkCategory: &app.RelationWorkItemLinkCategory{
 					Data: &app.RelationWorkItemLinkCategoryData{
-						Type: workitemlinkcategories,
+						Type: EndpointWorkItemLinkCategories,
 						ID:   t.LinkCategoryID.String(),
 					},
 				},
 				SourceType: &app.RelationWorkItemType{
 					Data: &app.RelationWorkItemTypeData{
-						Type: workitemtypes,
+						Type: EndpointWorkItemTypes,
 						ID:   t.SourceTypeName,
 					},
 				},
 				TargetType: &app.RelationWorkItemType{
 					Data: &app.RelationWorkItemTypeData{
-						Type: workitemtypes,
+						Type: EndpointWorkItemTypes,
 						ID:   t.TargetTypeName,
 					},
 				},
@@ -169,20 +169,20 @@ func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) err
 		if err != nil {
 			log.Printf("Error when converting %s to UUID: %s", *in.Data.ID, err.Error())
 			// treat as not found: clients don't know it must be a UUID
-			return NotFoundError{entity: "work item link type", ID: id.String()}
+			return NewNotFoundError("work item link type", id.String())
 		}
 		out.ID = id
 	}
 
-	if in.Data.Type != workitemlinktypes {
-		return BadParameterError{parameter: "data.type", value: in.Data.Type}
+	if in.Data.Type != EndpointWorkItemLinkTypes {
+		return NewBadParameterError("data.type", in.Data.Type).Expected(EndpointWorkItemLinkTypes)
 	}
 
 	if attrs != nil {
 		// If the name is not nil, it MUST NOT be empty
 		if attrs.Name != nil {
 			if *attrs.Name == "" {
-				return BadParameterError{parameter: "data.attributes.name", value: *attrs.Name}
+				return NewBadParameterError("data.attributes.name", *attrs.Name)
 			}
 			out.Name = *attrs.Name
 		}
@@ -198,7 +198,7 @@ func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) err
 		// If the forwardName is not nil, it MUST NOT be empty
 		if attrs.ForwardName != nil {
 			if *attrs.ForwardName == "" {
-				return BadParameterError{parameter: "data.attributes.forward_name", value: *attrs.ForwardName}
+				return NewBadParameterError("data.attributes.forward_name", *attrs.ForwardName)
 			}
 			out.ForwardName = *attrs.ForwardName
 		}
@@ -206,7 +206,7 @@ func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) err
 		// If the ReverseName is not nil, it MUST NOT be empty
 		if attrs.ReverseName != nil {
 			if *attrs.ReverseName == "" {
-				return BadParameterError{parameter: "data.attributes.reverse_name", value: *attrs.ReverseName}
+				return NewBadParameterError("data.attributes.reverse_name", *attrs.ReverseName)
 			}
 			out.ReverseName = *attrs.ReverseName
 		}
@@ -215,12 +215,12 @@ func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) err
 	if rel != nil && rel.LinkCategory != nil && rel.LinkCategory.Data != nil {
 		d := rel.LinkCategory.Data
 		// If the the link category is not nil, it MUST be "workitemlinkcategories"
-		if d.Type != workitemlinkcategories {
-			return BadParameterError{parameter: "data.relationships.link_category.data.type", value: d.Type}
+		if d.Type != EndpointWorkItemLinkCategories {
+			return NewBadParameterError("data.relationships.link_category.data.type", d.Type).Expected(EndpointWorkItemLinkCategories)
 		}
 		// The the link category MUST NOT be empty
 		if d.ID == "" {
-			return BadParameterError{parameter: "data.relationships.link_category.data.id", value: d.ID}
+			return NewBadParameterError("data.relationships.link_category.data.id", d.ID)
 		}
 		out.LinkCategoryID, err = satoriuuid.FromString(d.ID)
 		if err != nil {
@@ -233,12 +233,12 @@ func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) err
 	if rel != nil && rel.SourceType != nil && rel.SourceType.Data != nil {
 		d := rel.SourceType.Data
 		// If the the link type is not nil, it MUST be "workitemlinktypes"
-		if d.Type != workitemtypes {
-			return BadParameterError{parameter: "data.relationships.source_type.data.type", value: d.Type}
+		if d.Type != EndpointWorkItemTypes {
+			return NewBadParameterError("data.relationships.source_type.data.type", d.Type).Expected(EndpointWorkItemTypes)
 		}
 		// The the link type MUST NOT be empty
 		if d.ID == "" {
-			return BadParameterError{parameter: "data.relationships.source_type.data.id", value: d.ID}
+			return NewBadParameterError("data.relationships.source_type.data.id", d.ID)
 		}
 		out.SourceTypeName = d.ID
 	}
@@ -246,12 +246,12 @@ func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) err
 	if rel != nil && rel.TargetType != nil && rel.TargetType.Data != nil {
 		d := rel.TargetType.Data
 		// If the the link type is not nil, it MUST be "workitemlinktypes"
-		if d.Type != workitemtypes {
-			return BadParameterError{parameter: "data.relationships.target_type.data.type", value: d.Type}
+		if d.Type != EndpointWorkItemTypes {
+			return NewBadParameterError("data.relationships.target_type.data.type", d.Type).Expected(EndpointWorkItemTypes)
 		}
 		// The the link type MUST NOT be empty
 		if d.ID == "" {
-			return BadParameterError{parameter: "data.relationships.target_type.data.id", value: d.ID}
+			return NewBadParameterError("data.relationships.target_type.data.id", d.ID)
 		}
 		out.TargetTypeName = d.ID
 	}

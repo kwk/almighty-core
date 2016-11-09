@@ -5,6 +5,7 @@ import (
 
 	"time"
 
+	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/convert"
 	"github.com/almighty/almighty-core/gormsupport"
 	"github.com/almighty/almighty-core/models"
@@ -55,4 +56,37 @@ func TestWorkItemLinkCategory_Equal(t *testing.T) {
 	// Test equality
 	g := a
 	assert.True(t, a.Equal(g))
+}
+
+func TestWorkItemLinkCategory_ConvertLinkCategoryFromModel(t *testing.T) {
+	t.Parallel()
+	resource.Require(t, resource.UnitTest)
+
+	description := "An example description"
+	m := models.WorkItemLinkCategory{
+		ID:          satoriuuid.FromStringOrNil("0e671e36-871b-43a6-9166-0c4bd573e231"),
+		Name:        "Example work item link category",
+		Description: &description,
+		Version:     0,
+	}
+
+	id := m.ID.String()
+	expected := app.WorkItemLinkCategory{
+		Data: &app.WorkItemLinkCategoryData{
+			Type: models.EndpointWorkItemLinkCategories,
+			ID:   &id,
+			Attributes: &app.WorkItemLinkCategoryAttributes{
+				Name:        &m.Name,
+				Description: m.Description,
+				Version:     &m.Version,
+			},
+		},
+	}
+
+	actual := models.ConvertLinkCategoryFromModel(&m)
+	assert.Equal(t, expected.Data.Type, actual.Data.Type)
+	assert.Equal(t, *expected.Data.ID, *actual.Data.ID)
+	assert.Equal(t, *expected.Data.Attributes.Name, *actual.Data.Attributes.Name)
+	assert.Equal(t, *expected.Data.Attributes.Description, *actual.Data.Attributes.Description)
+	assert.Equal(t, *expected.Data.Attributes.Version, *actual.Data.Attributes.Version)
 }

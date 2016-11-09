@@ -379,8 +379,23 @@ See also http://jsonapi.org/format/#document-resource-object`)
 	a.Attribute("id", d.String, "ID of work item link (optional during creation)", func() {
 		a.Example("40bbdd3d-8b5d-4fd6-ac90-7236b669af04")
 	})
+	a.Attribute("attributes", WorkItemLinkAttributes)
 	a.Attribute("relationships", WorkItemLinkRelationships)
 	a.Required("type", "relationships")
+})
+
+// WorkItemLinkAttributes is the JSONAPI store for all the "attributes" of a work item link type.
+var WorkItemLinkAttributes = a.Type("WorkItemLinkAttributes", func() {
+	a.Description(`JSONAPI store for all the "attributes" of a work item link.
+See also see http://jsonapi.org/format/#document-resource-object-attributes`)
+	a.Attribute("version", d.Integer, "Version for optimistic concurrency control (optional during creating)", func() {
+		a.Example(0)
+	})
+	// IMPORTANT: We cannot require any field here because these "attributes" will be used
+	// during the creation as well as the update of a work item link type.
+	// During creation, the "name" field is required but not during update.
+	// The repository methods need to check for required fields.
+	//a.Required("version")
 })
 
 // WorkItemLinkRelationships is the JSONAPI store for the relationships of a work item link.

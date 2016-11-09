@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	workitemlinkcategories = "workitemlinkcategories"
-	workitemlinktypes      = "workitemlinktypes"
-	workitemlinks          = "workitemlinks"
-	workitemtypes          = "workitemtypes"
-	workitems              = "workitems"
+	EndpointWorkItemTypes          = "workitemtypes"
+	EndpointWorkItems              = "workitems"
+	EndpointWorkItemLinkCategories = "workitemlinkcategories"
+	EndpointWorkItemLinkTypes      = "workitemlinktypes"
+	EndpointWorkItemLinks          = "workitemlinks"
 )
 
 // NewWorkItemLinkRepository creates a work item link repository based on gorm
@@ -47,7 +47,7 @@ func (r *GormWorkItemLinkRepository) Create(ctx context.Context, link *WorkItemL
 	}
 
 	// Fetch the source work item
-	db = r.db.Model(&link.Source).Where("id=?", link.SourceID)
+	db = db.Model(&link.Source).Where("id=?", link.SourceID)
 	if db.Error != nil {
 		return nil, NewInternalError(fmt.Sprintf("Failed to find source work item: %s", db.Error.Error()))
 	}
@@ -56,7 +56,7 @@ func (r *GormWorkItemLinkRepository) Create(ctx context.Context, link *WorkItemL
 	}
 
 	// Fetch the target work item
-	db = r.db.Model(&link.Target).Where("id=?", link.TargetID)
+	db = db.Model(&link.Target).Where("id=?", link.TargetID)
 	if db.Error != nil {
 		return nil, NewInternalError(fmt.Sprintf("Failed to find target work item: %s", db.Error.Error()))
 	}
@@ -64,8 +64,21 @@ func (r *GormWorkItemLinkRepository) Create(ctx context.Context, link *WorkItemL
 		return nil, NewNotFoundError("work item", link.TargetID)
 	}
 
+	// Check that the work item types of the source and target match those specified in the link type
+	if link.LinkType.SourceTypeName != link.Source.Type {
+		return nil, NewBadParameterError("link.source.type", link.Source.Type).Expected(link.Source.Type)
+	}
+	if link.LinkType.TargetTypeName != link.Target.Type {
+		return nil, NewBadParameterError("link.Target.type", link.Target.Type).Expected(link.Target.Type)
+	}
+
+	db = db.Create(link)
+	if db.Error != nil {
+		return nil, NewInternalError(db.Error.Error())
+	}
+
 	// Convert the created link type entry into a JSONAPI response
-	result := ConvertLinkTypeFromModel(link)
+	result := ConvertLinkFromModel(link)
 	return &result, nil
 }
 
@@ -75,17 +88,17 @@ func (r *GormWorkItemLinkRepository) Load(ctx context.Context, ID string) (*app.
 	id, err := satoriuuid.FromString(ID)
 	if err != nil {
 		// treat as not found: clients don't know it must be a UUID
-		return nil, NotFoundError{entity: "work item link", ID: ID}
+		return nil, NewNotFoundError("work item link", ID)
 	}
 	log.Printf("loading work item link %s", id.String())
 	res := WorkItemLink{}
 	db := r.db.Model(&res).Where("id=?", ID).First(&res)
 	if db.RecordNotFound() {
 		log.Printf("not found work item link, res=%v", res)
-		return nil, NotFoundError{"work item link", id.String()}
+		return nil, NewNotFoundError("work item link", id.String())
 	}
 	// Convert the created link type entry into a JSONAPI response
-	result := ConvertLinkTypeFromModel(&res)
+	result := ConvertLinkFromModel(&res)
 	return &result, nil
 }
 
@@ -112,7 +125,7 @@ func (r *GormWorkItemLinkRepository) List(ctx context.Context) (*app.WorkItemLin
 	res := app.WorkItemLinkArray{}
 	res.Data = make([]*app.WorkItemLink, len(rows))
 	for index, value := range rows {
-		cat := ConvertLinkTypeFromModel(&value)
+		cat := ConvertLinkFromModel(&value)
 		res.Data[index] = &cat
 	}
 	// TODO: When adding pagination, this must not be len(rows) but
@@ -129,7 +142,7 @@ func (r *GormWorkItemLinkRepository) Delete(ctx context.Context, ID string) erro
 	id, err := satoriuuid.FromString(ID)
 	if err != nil {
 		// treat as not found: clients don't know it must be a UUID
-		return NotFoundError{entity: "work item link", ID: ID}
+		return NewNotFoundError("work item link", ID)
 	}
 	var cat = WorkItemLink{
 		ID: id,
@@ -137,10 +150,10 @@ func (r *GormWorkItemLinkRepository) Delete(ctx context.Context, ID string) erro
 	log.Printf("work item link to delete %v\n", cat)
 	db := r.db.Delete(&cat)
 	if db.Error != nil {
-		return InternalError{simpleError{db.Error.Error()}}
+		return NewInternalError(db.Error.Error())
 	}
 	if db.RowsAffected == 0 {
-		return NotFoundError{entity: "work item link", ID: id.String()}
+		return NewNotFoundError("work item link", id.String())
 	}
 	return nil
 }
@@ -155,21 +168,21 @@ func (r *GormWorkItemLinkRepository) Save(ctx context.Context, lt app.WorkItemLi
 	db := r.db.Model(&res).Where("id=?", *lt.Data.ID).First(&res)
 	if db.RecordNotFound() {
 		log.Printf("work item link not found, res=%v", res)
-		return nil, NotFoundError{entity: "work item link", ID: *lt.Data.ID}
+		return nil, NewNotFoundError("work item link", *lt.Data.ID)
 	}
 	if lt.Data.Attributes.Version == nil || res.Version != *lt.Data.Attributes.Version {
-		return nil, VersionConflictError{simpleError{"version conflict"}}
+		return nil, NewVersionConflictError("version conflict")
 	}
-	if err := ConvertLinkTypeToModel(&lt, &res); err != nil {
+	if err := ConvertLinkToModel(&lt, &res); err != nil {
 		return nil, err
 	}
 	res.Version = res.Version + 1
 	db = db.Save(&res)
 	if db.Error != nil {
 		log.Print(db.Error.Error())
-		return nil, InternalError{simpleError{db.Error.Error()}}
+		return nil, NewInternalError(db.Error.Error())
 	}
 	log.Printf("updated work item link to %v\n", res)
-	result := ConvertLinkTypeFromModel(&res)
+	result := ConvertLinkFromModel(&res)
 	return &result, nil
 }

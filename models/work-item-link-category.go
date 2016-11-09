@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/almighty/almighty-core/app"
 	convert "github.com/almighty/almighty-core/convert"
 	"github.com/almighty/almighty-core/gormsupport"
 	satoriuuid "github.com/satori/go.uuid"
@@ -51,4 +52,21 @@ func (self WorkItemLinkCategory) Equal(u convert.Equaler) bool {
 		}
 	}
 	return true
+}
+
+// ConvertLinkCategoryFromModel converts work item link category from model to app representation
+func ConvertLinkCategoryFromModel(t *WorkItemLinkCategory) app.WorkItemLinkCategory {
+	id := t.ID.String()
+	var converted = app.WorkItemLinkCategory{
+		Data: &app.WorkItemLinkCategoryData{
+			Type: workitemlinkcategories,
+			ID:   &id,
+			Attributes: &app.WorkItemLinkCategoryAttributes{
+				Name:        &t.Name,
+				Description: t.Description,
+				Version:     &t.Version,
+			},
+		},
+	}
+	return converted
 }

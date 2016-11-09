@@ -20,7 +20,7 @@ func (err simpleError) Error() string {
 	return err.message
 }
 
-// NewInternalError returns the custom defined error of type NewInternalError.
+// NewInternalError returns the custom defined error of type InternalError.
 func NewInternalError(msg string) InternalError {
 	return InternalError{simpleError{msg}}
 }
@@ -33,6 +33,11 @@ type InternalError struct {
 // VersionConflictError means that the version was not as expected in an update operation
 type VersionConflictError struct {
 	simpleError
+}
+
+// NewVersionConflictError returns the custom defined error of type VersionConflictError.
+func NewVersionConflictError(msg string) VersionConflictError {
+	return VersionConflictError{simpleError{msg}}
 }
 
 // BadParameterError means that a parameter was not as required

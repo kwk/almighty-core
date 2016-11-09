@@ -71,13 +71,13 @@ func (self WorkItemLink) Equal(u convert.Equaler) bool {
 // cannot be used for the creation of a new work item link.
 func (t *WorkItemLink) CheckValidForCreation() error {
 	if t.SourceID == "" {
-		return BadParameterError{parameter: "source_id", value: t.SourceID}
+		return NewBadParameterError("source_id", t.SourceID)
 	}
 	if t.TargetID == "" {
-		return BadParameterError{parameter: "target_id", value: t.TargetID}
+		return NewBadParameterError("target_id", t.TargetID)
 	}
 	if satoriuuid.Equal(t.LinkTypeID, satoriuuid.Nil) {
-		return BadParameterError{parameter: "link_type_id", value: t.LinkTypeID}
+		return NewBadParameterError("link_type_id", t.LinkTypeID)
 	}
 	return nil
 }
@@ -87,24 +87,27 @@ func ConvertLinkFromModel(t *WorkItemLink) app.WorkItemLink {
 	id := t.ID.String()
 	var converted = app.WorkItemLink{
 		Data: &app.WorkItemLinkData{
-			Type: workitemlinktypes,
+			Type: EndpointWorkItemLinks,
 			ID:   &id,
+			Attributes: &app.WorkItemLinkAttributes{
+				Version: &t.Version,
+			},
 			Relationships: &app.WorkItemLinkRelationships{
 				LinkType: &app.RelationWorkItemLinkType{
 					Data: &app.RelationWorkItemLinkTypeData{
-						Type: workitemlinktypes,
+						Type: EndpointWorkItemLinkTypes,
 						ID:   t.LinkTypeID.String(),
 					},
 				},
 				Source: &app.RelationWorkItem{
 					Data: &app.RelationWorkItemData{
-						Type: workitems,
+						Type: EndpointWorkItems,
 						ID:   t.SourceID,
 					},
 				},
 				Target: &app.RelationWorkItem{
 					Data: &app.RelationWorkItemData{
-						Type: workitems,
+						Type: EndpointWorkItems,
 						ID:   t.TargetID,
 					},
 				},
@@ -119,7 +122,7 @@ func ConvertLinkFromModel(t *WorkItemLink) app.WorkItemLink {
 // NOTE: Only the LinkTypeID, SourceID, and TargetID fields will be set.
 //       You need to preload the elements after calling this function.
 func ConvertLinkToModel(in *app.WorkItemLink, out *WorkItemLink) error {
-
+	attrs := in.Data.Attributes
 	rel := in.Data.Relationships
 	var err error
 
@@ -128,7 +131,7 @@ func ConvertLinkToModel(in *app.WorkItemLink, out *WorkItemLink) error {
 		if err != nil {
 			log.Printf("Error when converting %s to UUID: %s", *in.Data.ID, err.Error())
 			// treat as not found: clients don't know it must be a UUID
-			return NotFoundError{entity: "work item link", ID: id.String()}
+			return NewNotFoundError("work item link", id.String())
 		}
 		out.ID = id
 	}
@@ -137,33 +140,39 @@ func ConvertLinkToModel(in *app.WorkItemLink, out *WorkItemLink) error {
 		return BadParameterError{parameter: "data.type", value: in.Data.Type}
 	}
 
+	if attrs != nil {
+		if attrs.Version != nil {
+			out.Version = *attrs.Version
+		}
+	}
+
 	if rel != nil && rel.LinkType != nil && rel.LinkType.Data != nil {
 		d := rel.LinkType.Data
 		// If the the link category is not nil, it MUST be "workitemlinktypes"
-		if d.Type != workitemlinktypes {
-			return BadParameterError{parameter: "data.relationships.link_type.data.type", value: d.Type}
+		if d.Type != EndpointWorkItemLinkTypes {
+			return NewBadParameterError("data.relationships.link_type.data.type", d.Type).Expected(EndpointWorkItemLinkTypes)
 		}
 		// The the link type id MUST NOT be empty
 		if d.ID == "" {
-			return BadParameterError{parameter: "data.relationships.link_type.data.id", value: d.ID}
+			return NewBadParameterError("data.relationships.link_type.data.id", d.ID)
 		}
 		out.LinkTypeID, err = satoriuuid.FromString(d.ID)
 		if err != nil {
 			log.Printf("Error when converting %s to UUID: %s", in.Data.ID, err.Error())
 			// treat as not found: clients don't know it must be a UUID
-			return NotFoundError{entity: "work item link type", ID: d.ID}
+			return NewNotFoundError("work item link type", d.ID)
 		}
 	}
 
 	if rel != nil && rel.Source != nil && rel.Source.Data != nil {
 		d := rel.Source.Data
 		// If the the source type is not nil, it MUST be "workitems"
-		if d.Type != workitems {
-			return BadParameterError{parameter: "data.relationships.source.data.type", value: d.Type}
+		if d.Type != EndpointWorkItems {
+			return NewBadParameterError("data.relationships.source.data.type", d.Type).Expected(EndpointWorkItems)
 		}
 		// The the work item id MUST NOT be empty
 		if d.ID == "" {
-			return BadParameterError{parameter: "data.relationships.source.data.id", value: d.ID}
+			return NewBadParameterError("data.relationships.source.data.id", d.ID)
 		}
 		out.SourceID = d.ID
 	}
@@ -171,12 +180,12 @@ func ConvertLinkToModel(in *app.WorkItemLink, out *WorkItemLink) error {
 	if rel != nil && rel.Target != nil && rel.Target.Data != nil {
 		d := rel.Target.Data
 		// If the the target type is not nil, it MUST be "workitems"
-		if d.Type != workitems {
-			return BadParameterError{parameter: "data.relationships.target.data.type", value: d.Type}
+		if d.Type != EndpointWorkItems {
+			return NewBadParameterError("data.relationships.target.data.type", d.Type).Expected(EndpointWorkItems)
 		}
 		// The the work item id MUST NOT be empty
 		if d.ID == "" {
-			return BadParameterError{parameter: "data.relationships.target.data.id", value: d.ID}
+			return NewBadParameterError("data.relationships.target.data.id", d.ID)
 		}
 		out.TargetID = d.ID
 	}

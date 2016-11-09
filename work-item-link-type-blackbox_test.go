@@ -99,69 +99,20 @@ func (s *WorkItemLinkTypeSuite) TearDownTest() {
 // helper method
 //-----------------------------------------------------------------------------
 
-func (s *WorkItemLinkTypeSuite) createWorkItemType(Name string) *app.CreateWorkItemTypePayload {
-	payload := app.CreateWorkItemTypePayload{
-		Fields: map[string]*app.FieldDefinition{
-			"name": &app.FieldDefinition{
-				Required: true,
-				Type: &app.FieldType{
-					Kind: "string",
-				},
-			},
-		},
-		Name: Name,
-	}
-	return &payload
-}
-
-func (s *WorkItemLinkTypeSuite) createWorkItemLinkCategory(name string) *app.CreateWorkItemLinkCategoryPayload {
-	description := "This work item link category is managed by an admin user."
-	// Use the goa generated code to create a work item link category
-	return &app.CreateWorkItemLinkCategoryPayload{
-		Data: &app.WorkItemLinkCategoryData{
-			Type: "workitemlinkcategories",
-			Attributes: &app.WorkItemLinkCategoryAttributes{
-				Name:        &name,
-				Description: &description,
-			},
-		},
-	}
-}
-
-// createWorkItemLinkTypeBugBlocker defines a work item link type "bug blocker"
-func (s *WorkItemLinkTypeSuite) createWorkItemLinkType(Name string, SourceType string, TargetType string, categoryID string) *app.CreateWorkItemLinkTypePayload {
-	//   3. Create a work item link type
-	description := "Specify that one bug blocks another one."
-	lt := models.WorkItemLinkType{
-		Name:           Name,
-		Description:    &description,
-		SourceTypeName: SourceType,
-		TargetTypeName: TargetType,
-		ForwardName:    "forward name string",
-		ReverseName:    "reverse name string",
-		LinkCategoryID: satoriuuid.FromStringOrNil(categoryID),
-	}
-	payload := models.ConvertLinkTypeFromModel(&lt)
-	// The create payload is required during creation. Simply copy data over.
-	return &app.CreateWorkItemLinkTypePayload{
-		Data: payload.Data,
-	}
-}
-
 // createDemoType creates a demo work item link type of type "name"
 func (s *WorkItemLinkTypeSuite) createDemoLinkType(name string) *app.CreateWorkItemLinkTypePayload {
 	//   1. Create at least one work item type
-	workItemTypePayload := s.createWorkItemType("foo.bug")
+	workItemTypePayload := CreateWorkItemType("foo.bug")
 	_, workItemType := test.CreateWorkitemtypeCreated(s.T(), nil, nil, s.typeCtrl, workItemTypePayload)
 	assert.NotNil(s.T(), workItemType)
 
 	//   2. Create a work item link category
-	createLinkCategoryPayload := s.createWorkItemLinkCategory("user")
+	createLinkCategoryPayload := CreateWorkItemLinkCategory("user")
 	_, workItemLinkCategory := test.CreateWorkItemLinkCategoryCreated(s.T(), nil, nil, s.linkCatCtrl, createLinkCategoryPayload)
 	assert.NotNil(s.T(), workItemLinkCategory)
 
 	// 3. Create work item link type payload
-	createLinkTypePayload := s.createWorkItemLinkType(name, "foo.bug", "foo.bug", *workItemLinkCategory.Data.ID)
+	createLinkTypePayload := CreateWorkItemLinkType(name, "foo.bug", "foo.bug", *workItemLinkCategory.Data.ID)
 	return createLinkTypePayload
 }
 
