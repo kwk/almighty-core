@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	"github.com/almighty/almighty-core/app/test"
 	"github.com/almighty/almighty-core/configuration"
 	"github.com/almighty/almighty-core/gormapplication"
+	"github.com/almighty/almighty-core/migration"
 	"github.com/almighty/almighty-core/models"
 	"github.com/almighty/almighty-core/resource"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -35,8 +37,6 @@ type WorkItemLinkCategorySuite struct {
 // The SetupSuite method will run before the tests in the suite are run.
 // It sets up a database connection for all the tests in this suite without polluting global space.
 func (s *WorkItemLinkCategorySuite) SetupSuite() {
-	fmt.Println("--- Setting up test suite WorkItemLinkCategorySuite ---")
-
 	var err error
 
 	if err = configuration.Setup(""); err != nil {
@@ -49,6 +49,15 @@ func (s *WorkItemLinkCategorySuite) SetupSuite() {
 		panic("Failed to connect database: " + err.Error())
 	}
 
+	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
+	if configuration.GetPopulateCommonTypes() {
+		if err := models.Transactional(DB, func(tx *gorm.DB) error {
+			return migration.PopulateCommonTypes(context.Background(), tx, models.NewWorkItemTypeRepository(tx))
+		}); err != nil {
+			panic(err.Error())
+		}
+	}
+
 	svc := goa.New("WorkItemLinkCategorySuite-Service")
 	require.NotNil(s.T(), svc)
 	s.linkCatCtrl = NewWorkItemLinkCategoryController(svc, gormapplication.NewGormDB(DB))
@@ -58,7 +67,6 @@ func (s *WorkItemLinkCategorySuite) SetupSuite() {
 // The TearDownSuite method will run after all the tests in the suite have been run
 // It tears down the database connection for all the tests in this suite.
 func (s *WorkItemLinkCategorySuite) TearDownSuite() {
-	fmt.Println("--- Tearing down test suite WorkItemLinkCategorySuite ---")
 	if s.db != nil {
 		s.db.Close()
 	}
@@ -75,13 +83,11 @@ func (s *WorkItemLinkCategorySuite) removeWorkItemLinkCategories() {
 // The SetupTest method will be run before every test in the suite.
 // SetupTest ensures that none of the work item link categories that we will create already exist.
 func (s *WorkItemLinkCategorySuite) SetupTest() {
-	s.T().Log("--- Running SetupTest ---")
 	s.removeWorkItemLinkCategories()
 }
 
 // The TearDownTest method will be run after every test in the suite.
 func (s *WorkItemLinkCategorySuite) TearDownTest() {
-	s.T().Log("--- Running TearDownTest ---")
 	s.removeWorkItemLinkCategories()
 }
 

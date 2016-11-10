@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	"github.com/almighty/almighty-core/app/test"
 	"github.com/almighty/almighty-core/configuration"
 	"github.com/almighty/almighty-core/gormapplication"
+	"github.com/almighty/almighty-core/migration"
 	"github.com/almighty/almighty-core/models"
 	"github.com/almighty/almighty-core/resource"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -32,14 +34,12 @@ type WorkItemLinkTypeSuite struct {
 	db           *gorm.DB
 	linkTypeCtrl *WorkItemLinkTypeController
 	linkCatCtrl  *WorkItemLinkCategoryController
-	typeCtrl     *WorkitemtypeController
+	//	typeCtrl     *WorkitemtypeController
 }
 
 // The SetupSuite method will run before the tests in the suite are run.
 // It sets up a database connection for all the tests in this suite without polluting global space.
 func (s *WorkItemLinkTypeSuite) SetupSuite() {
-	fmt.Println("--- Setting up test suite WorkItemLinkTypeSuite ---")
-
 	var err error
 
 	if err = configuration.Setup(""); err != nil {
@@ -52,20 +52,28 @@ func (s *WorkItemLinkTypeSuite) SetupSuite() {
 		panic("Failed to connect database: " + err.Error())
 	}
 
+	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
+	if configuration.GetPopulateCommonTypes() {
+		if err := models.Transactional(DB, func(tx *gorm.DB) error {
+			return migration.PopulateCommonTypes(context.Background(), tx, models.NewWorkItemTypeRepository(tx))
+		}); err != nil {
+			panic(err.Error())
+		}
+	}
+
 	svc := goa.New("WorkItemLinkTypeSuite-Service")
 	require.NotNil(s.T(), svc)
 	s.linkTypeCtrl = NewWorkItemLinkTypeController(svc, gormapplication.NewGormDB(DB))
 	require.NotNil(s.T(), s.linkTypeCtrl)
 	s.linkCatCtrl = NewWorkItemLinkCategoryController(svc, gormapplication.NewGormDB(DB))
 	require.NotNil(s.T(), s.linkCatCtrl)
-	s.typeCtrl = NewWorkitemtypeController(svc, gormapplication.NewGormDB(DB))
-	require.NotNil(s.T(), s.typeCtrl)
+	//	s.typeCtrl = NewWorkitemtypeController(svc, gormapplication.NewGormDB(DB))
+	//	require.NotNil(s.T(), s.typeCtrl)
 }
 
 // The TearDownSuite method will run after all the tests in the suite have been run
 // It tears down the database connection for all the tests in this suite.
 func (s *WorkItemLinkTypeSuite) TearDownSuite() {
-	fmt.Println("--- Tearing down test suite WorkItemLinkTypeSuite ---")
 	if s.db != nil {
 		s.db.Close()
 	}
@@ -78,20 +86,18 @@ func (s *WorkItemLinkTypeSuite) cleanup() {
 	db := s.db.Unscoped().Delete(&models.WorkItemLinkType{Name: "bug-blocker"})
 	db = s.db.Unscoped().Delete(&models.WorkItemLinkType{Name: "related"})
 	db = db.Unscoped().Delete(&models.WorkItemLinkCategory{Name: "user"})
-	db = db.Unscoped().Delete(&models.WorkItemType{Name: "foo.bug"})
+	//db = db.Unscoped().Delete(&models.WorkItemType{Name: "foo.bug"})
 
 }
 
 // The SetupTest method will be run before every test in the suite.
 // SetupTest ensures that none of the work item link types that we will create already exist.
 func (s *WorkItemLinkTypeSuite) SetupTest() {
-	s.T().Log("--- Running SetupTest ---")
 	s.cleanup()
 }
 
 // The TearDownTest method will be run after every test in the suite.
 func (s *WorkItemLinkTypeSuite) TearDownTest() {
-	s.T().Log("--- Running TearDownTest ---")
 	s.cleanup()
 }
 
@@ -101,10 +107,10 @@ func (s *WorkItemLinkTypeSuite) TearDownTest() {
 
 // createDemoType creates a demo work item link type of type "name"
 func (s *WorkItemLinkTypeSuite) createDemoLinkType(name string) *app.CreateWorkItemLinkTypePayload {
-	//   1. Create at least one work item type
-	workItemTypePayload := CreateWorkItemType("foo.bug")
-	_, workItemType := test.CreateWorkitemtypeCreated(s.T(), nil, nil, s.typeCtrl, workItemTypePayload)
-	require.NotNil(s.T(), workItemType)
+	//	//   1. Create at least one work item type
+	//	workItemTypePayload := CreateWorkItemType("foo.bug")
+	//	_, workItemType := test.CreateWorkitemtypeCreated(s.T(), nil, nil, s.typeCtrl, workItemTypePayload)
+	//	require.NotNil(s.T(), workItemType)
 
 	//   2. Create a work item link category
 	createLinkCategoryPayload := CreateWorkItemLinkCategory("user")
@@ -112,7 +118,7 @@ func (s *WorkItemLinkTypeSuite) createDemoLinkType(name string) *app.CreateWorkI
 	require.NotNil(s.T(), workItemLinkCategory)
 
 	// 3. Create work item link type payload
-	createLinkTypePayload := CreateWorkItemLinkType(name, "foo.bug", "foo.bug", *workItemLinkCategory.Data.ID)
+	createLinkTypePayload := CreateWorkItemLinkType(name, models.SystemBug, models.SystemBug, *workItemLinkCategory.Data.ID)
 	return createLinkTypePayload
 }
 

@@ -63,12 +63,12 @@ func TestWorkItemLink_Equal(t *testing.T) {
 
 	// Test Source
 	b = a
-	b.Source = models.WorkItem{ID: 11111}
+	b.Source = models.WorkItem{Type: "foobar"}
 	require.False(t, a.Equal(b))
 
 	// Test Target
 	b = a
-	b.Target = models.WorkItem{ID: 22222}
+	b.Target = models.WorkItem{Type: "foobar"}
 	require.False(t, a.Equal(b))
 
 	// Test LinkTypeID

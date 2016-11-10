@@ -41,8 +41,6 @@ type WorkItemTypeSuite struct {
 // The SetupSuite method will run before the tests in the suite are run.
 // It sets up a database connection for all the tests in this suite without polluting global space.
 func (s *WorkItemTypeSuite) SetupSuite() {
-	fmt.Println("--- Setting up test suite WorkItemTypeSuite ---")
-
 	var err error
 
 	if err = configuration.Setup(""); err != nil {
@@ -73,7 +71,6 @@ func (s *WorkItemTypeSuite) SetupSuite() {
 // The TearDownSuite method will run after all the tests in the suite have been run
 // It tears down the database connection for all the tests in this suite.
 func (s *WorkItemTypeSuite) TearDownSuite() {
-	fmt.Println("--- Tearing down test suite WorkItemTypeSuite ---")
 	if s.db != nil {
 		s.db.Close()
 	}
@@ -83,7 +80,6 @@ func (s *WorkItemTypeSuite) TearDownSuite() {
 // during these tests. We need to remove them completely and not only set the
 // "deleted_at" field, which is why we need the Unscoped() function.
 func (s *WorkItemTypeSuite) removeWorkItemTypes() {
-
 	s.db.Unscoped().Delete(&models.WorkItemType{Name: "person"})
 	s.db.Unscoped().Delete(&models.WorkItemType{Name: "animal"})
 }
@@ -91,13 +87,11 @@ func (s *WorkItemTypeSuite) removeWorkItemTypes() {
 // The SetupTest method will be run before every test in the suite.
 // SetupTest ensures that non of the work item types that we will create already exist.
 func (s *WorkItemTypeSuite) SetupTest() {
-	s.T().Log("--- Running SetupTest ---")
 	s.removeWorkItemTypes()
 }
 
 // The TearDownTest method will be run after every test in the suite.
 func (s *WorkItemTypeSuite) TearDownTest() {
-	s.T().Log("--- Running TearDownTest ---")
 	s.removeWorkItemTypes()
 }
 

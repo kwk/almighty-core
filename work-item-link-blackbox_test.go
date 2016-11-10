@@ -1,16 +1,21 @@
 package main_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	. "github.com/almighty/almighty-core"
+	"github.com/almighty/almighty-core/account"
 	"github.com/almighty/almighty-core/app"
 	"github.com/almighty/almighty-core/app/test"
 	"github.com/almighty/almighty-core/configuration"
 	"github.com/almighty/almighty-core/gormapplication"
+	"github.com/almighty/almighty-core/migration"
 	"github.com/almighty/almighty-core/models"
 	"github.com/almighty/almighty-core/resource"
+	testsupport "github.com/almighty/almighty-core/test"
+	almtoken "github.com/almighty/almighty-core/token"
 	"github.com/goadesign/goa"
 	"github.com/jinzhu/gorm"
 	satoriuuid "github.com/satori/go.uuid"
@@ -29,7 +34,7 @@ type WorkItemLinkSuite struct {
 	db           *gorm.DB
 	linkTypeCtrl *WorkItemLinkTypeController
 	linkCatCtrl  *WorkItemLinkCategoryController
-	typeCtrl     *WorkitemtypeController
+	//	typeCtrl     *WorkitemtypeController
 	linkCtrl     *WorkItemLinkController
 	workItemCtrl *WorkitemController
 }
@@ -37,8 +42,6 @@ type WorkItemLinkSuite struct {
 // The SetupSuite method will run before the tests in the suite are run.
 // It sets up a database connection for all the tests in this suite without polluting global space.
 func (s *WorkItemLinkSuite) SetupSuite() {
-	fmt.Println("--- Setting up test suite WorkItemLinkSuite ---")
-
 	var err error
 
 	if err = configuration.Setup(""); err != nil {
@@ -51,16 +54,36 @@ func (s *WorkItemLinkSuite) SetupSuite() {
 		panic("Failed to connect database: " + err.Error())
 	}
 
-	svc := goa.New("WorkItemLinkSuite-Service")
+	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
+	if configuration.GetPopulateCommonTypes() {
+		if err := models.Transactional(DB, func(tx *gorm.DB) error {
+			return migration.PopulateCommonTypes(context.Background(), tx, models.NewWorkItemTypeRepository(tx))
+		}); err != nil {
+			panic(err.Error())
+		}
+	}
+
+	svc := goa.New("TestWorkItemLinkTypeSuite-Service")
 	require.NotNil(s.T(), svc)
 	s.linkTypeCtrl = NewWorkItemLinkTypeController(svc, gormapplication.NewGormDB(DB))
 	require.NotNil(s.T(), s.linkTypeCtrl)
+
+	svc = goa.New("TestWorkItemLinkCategorySuite-Service")
+	require.NotNil(s.T(), svc)
 	s.linkCatCtrl = NewWorkItemLinkCategoryController(svc, gormapplication.NewGormDB(DB))
 	require.NotNil(s.T(), s.linkCatCtrl)
-	s.typeCtrl = NewWorkitemtypeController(svc, gormapplication.NewGormDB(DB))
-	require.NotNil(s.T(), s.typeCtrl)
-	s.linkCtrl = NewWorkItemLinkController(svc, gormapplication.NewGormDB(DB))
-	require.NotNil(s.T(), s.linkCtrl)
+
+	//	svc = goa.New("TestWorkItemTypeSuite-Service")
+	//	require.NotNil(s.T(), svc)
+	//	s.typeCtrl = NewWorkitemtypeController(svc, gormapplication.NewGormDB(DB))
+	//	require.NotNil(s.T(), s.typeCtrl)
+
+	pub, err := almtoken.ParsePublicKey([]byte(almtoken.RSAPublicKey))
+	require.Nil(s.T(), err)
+	priv, err := almtoken.ParsePrivateKey([]byte(almtoken.RSAPrivateKey))
+	require.Nil(s.T(), err)
+	svc = testsupport.ServiceAsUser("TestWorkItem-Service", almtoken.NewManager(pub, priv), account.TestIdentity)
+	require.NotNil(s.T(), svc)
 	s.workItemCtrl = NewWorkitemController(svc, gormapplication.NewGormDB(DB))
 	require.NotNil(s.T(), s.workItemCtrl)
 }
@@ -68,7 +91,6 @@ func (s *WorkItemLinkSuite) SetupSuite() {
 // The TearDownSuite method will run after all the tests in the suite have been run
 // It tears down the database connection for all the tests in this suite.
 func (s *WorkItemLinkSuite) TearDownSuite() {
-	fmt.Println("--- Tearing down test suite WorkItemLinkSuite ---")
 	if s.db != nil {
 		s.db.Close()
 	}
@@ -80,19 +102,17 @@ func (s *WorkItemLinkSuite) TearDownSuite() {
 func (s *WorkItemLinkSuite) cleanup() {
 	db := s.db.Unscoped().Delete(&models.WorkItemLinkType{Name: "bug-blocker"})
 	db = db.Unscoped().Delete(&models.WorkItemLinkCategory{Name: "user"})
-	db = db.Unscoped().Delete(&models.WorkItemType{Name: "foo.bug"})
+	//db = db.Unscoped().Delete(&models.WorkItemType{Name: "foo.bug"})
 }
 
 // The SetupTest method will be run before every test in the suite.
 // SetupTest ensures that none of the work item links that we will create already exist.
 func (s *WorkItemLinkSuite) SetupTest() {
-	s.T().Log("--- Running SetupTest ---")
 	s.cleanup()
 }
 
 // The TearDownTest method will be run after every test in the suite.
 func (s *WorkItemLinkSuite) TearDownTest() {
-	s.T().Log("--- Running TearDownTest ---")
 	s.cleanup()
 }
 
@@ -115,26 +135,26 @@ func CreateWorkItemLinkCategory(name string) *app.CreateWorkItemLinkCategoryPayl
 	}
 }
 
-// CreateWorkItemType creates a new work item type
-func CreateWorkItemType(Name string) *app.CreateWorkItemTypePayload {
-	payload := app.CreateWorkItemTypePayload{
-		Fields: map[string]*app.FieldDefinition{
-			"name": &app.FieldDefinition{
-				Required: true,
-				Type: &app.FieldType{
-					Kind: "string",
-				},
-			},
-		},
-		Name: Name,
-	}
-	return &payload
-}
+//  // CreateWorkItemType creates a new work item type
+//  func CreateWorkItemType(Name string) *app.CreateWorkItemTypePayload {
+//  	payload := app.CreateWorkItemTypePayload{
+//  		Fields: map[string]*app.FieldDefinition{
+//  			"name": &app.FieldDefinition{
+//  				Required: true,
+//  				Type: &app.FieldType{
+//  					Kind: "string",
+//  				},
+//  			},
+//  		},
+//  		Name: Name,
+//  	}
+//  	return &payload
+//  }
 
 // CreateWorkItem defines a work item link
 func CreateWorkItem(workItemType string) *app.CreateWorkItemPayload {
 	payload := app.CreateWorkItemPayload{
-		Type: models.SystemBug,
+		Type: workItemType,
 		Fields: map[string]interface{}{
 			models.SystemTitle:   "Test WI",
 			models.SystemCreator: "konrad",
@@ -179,13 +199,13 @@ func CreateWorkItemLink(sourceID string, targetID string, linkTypeID string) *ap
 
 // createDemoType creates a demo work item link
 func (s *WorkItemLinkSuite) createDemoLink() *app.CreateWorkItemLinkPayload {
-	// 1. Create at least one work item type
-	workItemTypePayload := CreateWorkItemType("foo.bug")
-	_, workItemType := test.CreateWorkitemtypeCreated(s.T(), nil, nil, s.typeCtrl, workItemTypePayload)
-	require.NotNil(s.T(), workItemType)
+	//	// 1. Create at least one work item type
+	//	workItemTypePayload := CreateWorkItemType("foo.bug")
+	//	_, workItemType := test.CreateWorkitemtypeCreated(s.T(), nil, nil, s.typeCtrl, workItemTypePayload)
+	//	require.NotNil(s.T(), workItemType)
 
 	// 2. Create 2 random work item payloads (TODO add ids)
-	createWorkItemPayload := CreateWorkItem("foo.bug")
+	createWorkItemPayload := CreateWorkItem(models.SystemBug)
 	_, workItem1 := test.CreateWorkitemCreated(s.T(), nil, nil, s.workItemCtrl, createWorkItemPayload)
 	require.NotNil(s.T(), workItem1)
 	_, workItem2 := test.CreateWorkitemCreated(s.T(), nil, nil, s.workItemCtrl, createWorkItemPayload)
