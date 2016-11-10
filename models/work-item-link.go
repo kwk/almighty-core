@@ -136,8 +136,8 @@ func ConvertLinkToModel(in *app.WorkItemLink, out *WorkItemLink) error {
 		out.ID = id
 	}
 
-	if in.Data.Type != workitemlinks {
-		return BadParameterError{parameter: "data.type", value: in.Data.Type}
+	if in.Data.Type != EndpointWorkItemLinks {
+		return NewBadParameterError("data.type", in.Data.Type).Expected(EndpointWorkItemLinks)
 	}
 
 	if attrs != nil {

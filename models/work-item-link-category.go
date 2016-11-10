@@ -59,7 +59,7 @@ func ConvertLinkCategoryFromModel(t *WorkItemLinkCategory) app.WorkItemLinkCateg
 	id := t.ID.String()
 	var converted = app.WorkItemLinkCategory{
 		Data: &app.WorkItemLinkCategoryData{
-			Type: workitemlinkcategories,
+			Type: EndpointWorkItemLinkCategories,
 			ID:   &id,
 			Attributes: &app.WorkItemLinkCategoryAttributes{
 				Name:        &t.Name,

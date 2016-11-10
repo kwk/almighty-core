@@ -11,7 +11,7 @@ import (
 	"github.com/almighty/almighty-core/models"
 	"github.com/almighty/almighty-core/resource"
 	satoriuuid "github.com/satori/go.uuid"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestWorkItemType_Equal Tests equality of two work item link categories
@@ -30,32 +30,32 @@ func TestWorkItemLinkCategory_Equal(t *testing.T) {
 
 	// Test types
 	b := convert.DummyEqualer{}
-	assert.False(t, a.Equal(b))
+	require.False(t, a.Equal(b))
 
 	// Test lifecycle
 	c := a
 	c.Lifecycle = gormsupport.Lifecycle{CreatedAt: time.Now().Add(time.Duration(1000))}
-	assert.False(t, a.Equal(c))
+	require.False(t, a.Equal(c))
 
 	// Test version
 	d := a
 	d.Version += 1
-	assert.False(t, a.Equal(d))
+	require.False(t, a.Equal(d))
 
 	// Test name
 	e := a
 	e.Name = "bar"
-	assert.False(t, a.Equal(e))
+	require.False(t, a.Equal(e))
 
 	// Test description
 	otherDescription := "bar"
 	f := a
 	f.Description = &otherDescription
-	assert.False(t, a.Equal(f))
+	require.False(t, a.Equal(f))
 
 	// Test equality
 	g := a
-	assert.True(t, a.Equal(g))
+	require.True(t, a.Equal(g))
 }
 
 func TestWorkItemLinkCategory_ConvertLinkCategoryFromModel(t *testing.T) {
@@ -84,9 +84,9 @@ func TestWorkItemLinkCategory_ConvertLinkCategoryFromModel(t *testing.T) {
 	}
 
 	actual := models.ConvertLinkCategoryFromModel(&m)
-	assert.Equal(t, expected.Data.Type, actual.Data.Type)
-	assert.Equal(t, *expected.Data.ID, *actual.Data.ID)
-	assert.Equal(t, *expected.Data.Attributes.Name, *actual.Data.Attributes.Name)
-	assert.Equal(t, *expected.Data.Attributes.Description, *actual.Data.Attributes.Description)
-	assert.Equal(t, *expected.Data.Attributes.Version, *actual.Data.Attributes.Version)
+	require.Equal(t, expected.Data.Type, actual.Data.Type)
+	require.Equal(t, *expected.Data.ID, *actual.Data.ID)
+	require.Equal(t, *expected.Data.Attributes.Name, *actual.Data.Attributes.Name)
+	require.Equal(t, *expected.Data.Attributes.Description, *actual.Data.Attributes.Description)
+	require.Equal(t, *expected.Data.Attributes.Version, *actual.Data.Attributes.Version)
 }

@@ -16,7 +16,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/goadesign/goa"
 	"github.com/jinzhu/gorm"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -50,9 +50,9 @@ func (s *WorkItemLinkCategorySuite) SetupSuite() {
 	}
 
 	svc := goa.New("WorkItemLinkCategorySuite-Service")
-	assert.NotNil(s.T(), svc)
+	require.NotNil(s.T(), svc)
 	s.linkCatCtrl = NewWorkItemLinkCategoryController(svc, gormapplication.NewGormDB(DB))
-	assert.NotNil(s.T(), s.linkCatCtrl)
+	require.NotNil(s.T(), s.linkCatCtrl)
 }
 
 // The TearDownSuite method will run after all the tests in the suite have been run
@@ -138,10 +138,10 @@ func (s *WorkItemLinkCategorySuite) createWorkItemLinkCategoryUser() (http.Respo
 // TestCreateWorkItemLinkCategory tests if we can create the "system" work item link category
 func (s *WorkItemLinkCategorySuite) TestCreateAndDeleteWorkItemLinkCategory() {
 	_, linkCatSystem := s.createWorkItemLinkCategorySystem()
-	assert.NotNil(s.T(), linkCatSystem)
+	require.NotNil(s.T(), linkCatSystem)
 
 	_, linkCatUser := s.createWorkItemLinkCategoryUser()
-	assert.NotNil(s.T(), linkCatUser)
+	require.NotNil(s.T(), linkCatUser)
 
 	test.DeleteWorkItemLinkCategoryOK(s.T(), nil, nil, s.linkCatCtrl, *linkCatSystem.Data.ID)
 }
@@ -184,7 +184,7 @@ func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryNotFound() {
 
 func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryOK() {
 	_, linkCatSystem := s.createWorkItemLinkCategorySystem()
-	assert.NotNil(s.T(), linkCatSystem)
+	require.NotNil(s.T(), linkCatSystem)
 
 	description := "New description for work item link category \"system\"."
 	updatePayload := &app.UpdateWorkItemLinkCategoryPayload{}
@@ -194,16 +194,16 @@ func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryOK() {
 	_, newLinkCat := test.UpdateWorkItemLinkCategoryOK(s.T(), nil, nil, s.linkCatCtrl, *linkCatSystem.Data.ID, updatePayload)
 
 	// Test that description was updated and version got incremented
-	assert.NotNil(s.T(), newLinkCat.Data.Attributes.Description)
-	assert.Equal(s.T(), description, *newLinkCat.Data.Attributes.Description)
+	require.NotNil(s.T(), newLinkCat.Data.Attributes.Description)
+	require.Equal(s.T(), description, *newLinkCat.Data.Attributes.Description)
 
-	assert.NotNil(s.T(), newLinkCat.Data.Attributes.Version)
-	assert.Equal(s.T(), *linkCatSystem.Data.Attributes.Version+1, *newLinkCat.Data.Attributes.Version)
+	require.NotNil(s.T(), newLinkCat.Data.Attributes.Version)
+	require.Equal(s.T(), *linkCatSystem.Data.Attributes.Version+1, *newLinkCat.Data.Attributes.Version)
 }
 
 func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryBadRequest() {
 	_, linkCatSystem := s.createWorkItemLinkCategorySystem()
-	assert.NotNil(s.T(), linkCatSystem)
+	require.NotNil(s.T(), linkCatSystem)
 
 	description := "New description for work item link category \"system\"."
 	updatePayload := &app.UpdateWorkItemLinkCategoryPayload{}
@@ -218,12 +218,12 @@ func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryBadRequest() {
 func (s *WorkItemLinkCategorySuite) TestShowWorkItemLinkCategoryOK() {
 	// Create the work item link category first and try to read it back in
 	_, linkCat := s.createWorkItemLinkCategorySystem()
-	assert.NotNil(s.T(), linkCat)
+	require.NotNil(s.T(), linkCat)
 
 	_, linkCat2 := test.ShowWorkItemLinkCategoryOK(s.T(), nil, nil, s.linkCatCtrl, *linkCat.Data.ID)
 
-	assert.NotNil(s.T(), linkCat2)
-	assert.EqualValues(s.T(), linkCat, linkCat2)
+	require.NotNil(s.T(), linkCat2)
+	require.EqualValues(s.T(), linkCat, linkCat2)
 }
 
 // TestShowWorkItemLinkCategoryNotFound tests if we can fetch a non existing work item link category
@@ -235,19 +235,19 @@ func (s *WorkItemLinkCategorySuite) TestShowWorkItemLinkCategoryNotFound() {
 // "system" and "user" in the list of work item link categories
 func (s *WorkItemLinkCategorySuite) TestListWorkItemLinkCategoryOK() {
 	_, linkCatSystem := s.createWorkItemLinkCategorySystem()
-	assert.NotNil(s.T(), linkCatSystem)
+	require.NotNil(s.T(), linkCatSystem)
 	_, linkCatUser := s.createWorkItemLinkCategoryUser()
-	assert.NotNil(s.T(), linkCatUser)
+	require.NotNil(s.T(), linkCatUser)
 
 	// Fetch a single work item link category
 	_, linkCatCollection := test.ListWorkItemLinkCategoryOK(s.T(), nil, nil, s.linkCatCtrl)
 
-	assert.NotNil(s.T(), linkCatCollection)
-	assert.Nil(s.T(), linkCatCollection.Validate())
+	require.NotNil(s.T(), linkCatCollection)
+	require.Nil(s.T(), linkCatCollection.Validate())
 
 	// Check the number of found work item link categories
-	assert.NotNil(s.T(), linkCatCollection.Data)
-	assert.Condition(s.T(), func() bool {
+	require.NotNil(s.T(), linkCatCollection.Data)
+	require.Condition(s.T(), func() bool {
 		return (len(linkCatCollection.Data) >= 2)
 	}, "At least two work item link categories must exist (system and user), but only %d exist.", len(linkCatCollection.Data))
 
@@ -259,7 +259,7 @@ func (s *WorkItemLinkCategorySuite) TestListWorkItemLinkCategoryOK() {
 			toBeFound--
 		}
 	}
-	assert.Exactly(s.T(), 0, toBeFound, "Not all required work item link categories (system and user) where found.")
+	require.Exactly(s.T(), 0, toBeFound, "Not all required work item link categories (system and user) where found.")
 }
 
 // In order for 'go test' to run this suite, we need to create
@@ -326,28 +326,28 @@ func getWorkItemLinkCategoryTestData(t *testing.T) []testSecureAPI {
 		},
 		// Update Work Item API with different parameters
 		{
-			method:             http.MethodPut,
+			method:             http.MethodPatch,
 			url:                endpointWorkItemLinkCategories + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
 			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWorkItemLinkCategoryPayloadString,
 			jwtToken:           getExpiredAuthHeader(t, privatekey),
 		}, {
-			method:             http.MethodPut,
+			method:             http.MethodPatch,
 			url:                endpointWorkItemLinkCategories + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
 			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWorkItemLinkCategoryPayloadString,
 			jwtToken:           getMalformedAuthHeader(t, privatekey),
 		}, {
-			method:             http.MethodPut,
+			method:             http.MethodPatch,
 			url:                endpointWorkItemLinkCategories + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
 			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWorkItemLinkCategoryPayloadString,
 			jwtToken:           getValidAuthHeader(t, differentPrivatekey),
 		}, {
-			method:             http.MethodPut,
+			method:             http.MethodPatch,
 			url:                endpointWorkItemLinkCategories + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
 			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",

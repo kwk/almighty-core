@@ -17,7 +17,7 @@ import (
 	"github.com/goadesign/goa"
 	"github.com/jinzhu/gorm"
 	satoriuuid "github.com/satori/go.uuid"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -53,13 +53,13 @@ func (s *WorkItemLinkTypeSuite) SetupSuite() {
 	}
 
 	svc := goa.New("WorkItemLinkTypeSuite-Service")
-	assert.NotNil(s.T(), svc)
+	require.NotNil(s.T(), svc)
 	s.linkTypeCtrl = NewWorkItemLinkTypeController(svc, gormapplication.NewGormDB(DB))
-	assert.NotNil(s.T(), s.linkTypeCtrl)
+	require.NotNil(s.T(), s.linkTypeCtrl)
 	s.linkCatCtrl = NewWorkItemLinkCategoryController(svc, gormapplication.NewGormDB(DB))
-	assert.NotNil(s.T(), s.linkCatCtrl)
+	require.NotNil(s.T(), s.linkCatCtrl)
 	s.typeCtrl = NewWorkitemtypeController(svc, gormapplication.NewGormDB(DB))
-	assert.NotNil(s.T(), s.typeCtrl)
+	require.NotNil(s.T(), s.typeCtrl)
 }
 
 // The TearDownSuite method will run after all the tests in the suite have been run
@@ -104,12 +104,12 @@ func (s *WorkItemLinkTypeSuite) createDemoLinkType(name string) *app.CreateWorkI
 	//   1. Create at least one work item type
 	workItemTypePayload := CreateWorkItemType("foo.bug")
 	_, workItemType := test.CreateWorkitemtypeCreated(s.T(), nil, nil, s.typeCtrl, workItemTypePayload)
-	assert.NotNil(s.T(), workItemType)
+	require.NotNil(s.T(), workItemType)
 
 	//   2. Create a work item link category
 	createLinkCategoryPayload := CreateWorkItemLinkCategory("user")
 	_, workItemLinkCategory := test.CreateWorkItemLinkCategoryCreated(s.T(), nil, nil, s.linkCatCtrl, createLinkCategoryPayload)
-	assert.NotNil(s.T(), workItemLinkCategory)
+	require.NotNil(s.T(), workItemLinkCategory)
 
 	// 3. Create work item link type payload
 	createLinkTypePayload := CreateWorkItemLinkType(name, "foo.bug", "foo.bug", *workItemLinkCategory.Data.ID)
@@ -131,7 +131,7 @@ func TestSuiteWorkItemLinkType(t *testing.T) {
 func (s *WorkItemLinkTypeSuite) TestCreateAndDeleteWorkItemLinkType() {
 	createPayload := s.createDemoLinkType("bug-blocker")
 	_, workItemLinkType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, createPayload)
-	assert.NotNil(s.T(), workItemLinkType)
+	require.NotNil(s.T(), workItemLinkType)
 	_ = test.DeleteWorkItemLinkTypeOK(s.T(), nil, nil, s.linkTypeCtrl, *workItemLinkType.Data.ID)
 }
 
@@ -159,7 +159,7 @@ func (s *WorkItemLinkTypeSuite) TestUpdateWorkItemLinkTypeNotFound() {
 func (s *WorkItemLinkTypeSuite) TestUpdateWorkItemLinkTypeOK() {
 	createPayload := s.createDemoLinkType("bug-blocker")
 	_, workItemLinkType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, createPayload)
-	assert.NotNil(s.T(), workItemLinkType)
+	require.NotNil(s.T(), workItemLinkType)
 	// Specify new description for link type that we just created
 	// Wrap data portion in an update payload instead of a create payload
 	updateLinkTypePayload := &app.UpdateWorkItemLinkTypePayload{
@@ -168,10 +168,10 @@ func (s *WorkItemLinkTypeSuite) TestUpdateWorkItemLinkTypeOK() {
 	newDescription := "Lalala this is a new description for the work item type"
 	updateLinkTypePayload.Data.Attributes.Description = &newDescription
 	_, lt := test.UpdateWorkItemLinkTypeOK(s.T(), nil, nil, s.linkTypeCtrl, *updateLinkTypePayload.Data.ID, updateLinkTypePayload)
-	assert.NotNil(s.T(), lt.Data)
-	assert.NotNil(s.T(), lt.Data.Attributes)
-	assert.NotNil(s.T(), lt.Data.Attributes.Description)
-	assert.Equal(s.T(), newDescription, *lt.Data.Attributes.Description)
+	require.NotNil(s.T(), lt.Data)
+	require.NotNil(s.T(), lt.Data.Attributes)
+	require.NotNil(s.T(), lt.Data.Attributes.Description)
+	require.Equal(s.T(), newDescription, *lt.Data.Attributes.Description)
 }
 
 func (s *WorkItemLinkTypeSuite) TestUpdateWorkItemLinkTypeBadRequest() {
@@ -188,15 +188,15 @@ func (s *WorkItemLinkTypeSuite) TestShowWorkItemLinkTypeOK() {
 	// Create the work item link type first and try to read it back in
 	createPayload := s.createDemoLinkType("bug-blocker")
 	_, workItemLinkType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, createPayload)
-	assert.NotNil(s.T(), workItemLinkType)
+	require.NotNil(s.T(), workItemLinkType)
 	_, readIn := test.ShowWorkItemLinkTypeOK(s.T(), nil, nil, s.linkTypeCtrl, *workItemLinkType.Data.ID)
-	assert.NotNil(s.T(), readIn)
+	require.NotNil(s.T(), readIn)
 	// Convert to model space and use equal function
 	expected := models.WorkItemLinkType{}
 	actual := models.WorkItemLinkType{}
-	assert.Nil(s.T(), models.ConvertLinkTypeToModel(workItemLinkType, &expected))
-	assert.Nil(s.T(), models.ConvertLinkTypeToModel(readIn, &actual))
-	assert.True(s.T(), expected.Equal(actual))
+	require.Nil(s.T(), models.ConvertLinkTypeToModel(workItemLinkType, &expected))
+	require.Nil(s.T(), models.ConvertLinkTypeToModel(readIn, &actual))
+	require.True(s.T(), expected.Equal(actual))
 }
 
 // TestShowWorkItemLinkTypeNotFound tests if we can fetch a non existing work item link type
@@ -209,19 +209,19 @@ func (s *WorkItemLinkTypeSuite) TestShowWorkItemLinkTypeNotFound() {
 func (s *WorkItemLinkTypeSuite) TestListWorkItemLinkTypeOK() {
 	bugBlockerPayload := s.createDemoLinkType("bug-blocker")
 	_, bugBlockerType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, bugBlockerPayload)
-	assert.NotNil(s.T(), bugBlockerType)
+	require.NotNil(s.T(), bugBlockerType)
 
-	relatedPayload := s.createWorkItemLinkType("related", "foo.bug", "foo.bug", bugBlockerType.Data.Relationships.LinkCategory.Data.ID)
+	relatedPayload := CreateWorkItemLinkType("related", "foo.bug", "foo.bug", bugBlockerType.Data.Relationships.LinkCategory.Data.ID)
 	_, relatedType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, relatedPayload)
-	assert.NotNil(s.T(), relatedType)
+	require.NotNil(s.T(), relatedType)
 
 	// Fetch a single work item link type
 	_, linkTypeCollection := test.ListWorkItemLinkTypeOK(s.T(), nil, nil, s.linkTypeCtrl)
-	assert.NotNil(s.T(), linkTypeCollection)
-	assert.Nil(s.T(), linkTypeCollection.Validate())
+	require.NotNil(s.T(), linkTypeCollection)
+	require.Nil(s.T(), linkTypeCollection.Validate())
 	// Check the number of found work item link types
-	assert.NotNil(s.T(), linkTypeCollection.Data)
-	assert.Condition(s.T(), func() bool {
+	require.NotNil(s.T(), linkTypeCollection.Data)
+	require.Condition(s.T(), func() bool {
 		return (len(linkTypeCollection.Data) >= 2)
 	}, "At least two work item link types must exist (bug-blocker and related), but only %d exist.", len(linkTypeCollection.Data))
 	// Search for the work item types that must exist at minimum
@@ -232,7 +232,7 @@ func (s *WorkItemLinkTypeSuite) TestListWorkItemLinkTypeOK() {
 			toBeFound--
 		}
 	}
-	assert.Exactly(s.T(), 0, toBeFound, "Not all required work item link types (bug-blocker and related) where found.")
+	require.Exactly(s.T(), 0, toBeFound, "Not all required work item link types (bug-blocker and related) where found.")
 }
 
 func getWorkItemLinkTypeTestData(t *testing.T) []testSecureAPI {
@@ -298,28 +298,28 @@ func getWorkItemLinkTypeTestData(t *testing.T) []testSecureAPI {
 		},
 		// Update Work Item API with different parameters
 		{
-			method:             http.MethodPut,
+			method:             http.MethodPatch,
 			url:                endpointWorkItemLinkTypes + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
 			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWorkItemLinkTypePayloadString,
 			jwtToken:           getExpiredAuthHeader(t, privatekey),
 		}, {
-			method:             http.MethodPut,
+			method:             http.MethodPatch,
 			url:                endpointWorkItemLinkTypes + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
 			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWorkItemLinkTypePayloadString,
 			jwtToken:           getMalformedAuthHeader(t, privatekey),
 		}, {
-			method:             http.MethodPut,
+			method:             http.MethodPatch,
 			url:                endpointWorkItemLinkTypes + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
 			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",
 			payload:            createWorkItemLinkTypePayloadString,
 			jwtToken:           getValidAuthHeader(t, differentPrivatekey),
 		}, {
-			method:             http.MethodPut,
+			method:             http.MethodPatch,
 			url:                endpointWorkItemLinkTypes + "/6c5610be-30b2-4880-9fec-81e4f8e4fd76",
 			expectedStatusCode: http.StatusUnauthorized,
 			expectedErrorCode:  "jwt_security_error",

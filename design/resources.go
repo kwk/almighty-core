@@ -514,7 +514,7 @@ var _ = a.Resource("work-item-link-category", func() {
 	a.Action("update", func() {
 		a.Security("jwt")
 		a.Routing(
-			a.PUT("/:id"),
+			a.PATCH("/:id"),
 		)
 		a.Description("Update the given work item link category with given id.")
 		a.Params(func() {
@@ -612,7 +612,7 @@ var _ = a.Resource("work-item-link-type", func() {
 	a.Action("update", func() {
 		a.Security("jwt")
 		a.Routing(
-			a.PUT("/:id"),
+			a.PATCH("/:id"),
 		)
 		a.Description("Update the given work item link type with given id.")
 		a.Params(func() {
@@ -710,7 +710,7 @@ var _ = a.Resource("work-item-link", func() {
 	a.Action("update", func() {
 		a.Security("jwt")
 		a.Routing(
-			a.PUT("/:id"),
+			a.PATCH("/:id"),
 		)
 		a.Description("Update the given work item link with given id.")
 		a.Params(func() {
