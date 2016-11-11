@@ -3,6 +3,7 @@ package main_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	. "github.com/almighty/almighty-core"
@@ -31,12 +32,25 @@ import (
 // It implements these interfaces from the suite package: SetupAllSuite, SetupTestSuite, TearDownAllSuite, TearDownTestSuite
 type WorkItemLinkSuite struct {
 	suite.Suite
-	db           *gorm.DB
-	linkTypeCtrl *WorkItemLinkTypeController
-	linkCatCtrl  *WorkItemLinkCategoryController
-	//	typeCtrl     *WorkitemtypeController
-	linkCtrl     *WorkItemLinkController
-	workItemCtrl *WorkitemController
+	db                       *gorm.DB
+	workItemLinkTypeCtrl     *WorkItemLinkTypeController
+	workItemLinkCategoryCtrl *WorkItemLinkCategoryController
+	workItemLinkCtrl         *WorkItemLinkController
+	workItemCtrl             *WorkitemController
+	workItemSvc              *goa.Service
+
+	// These IDs can safely be used by all tests
+	bug1ID               string
+	bug2ID               string
+	feature1ID           string
+	userLinkCategoryID   string
+	bugBlockerLinkTypeID string
+
+	// Store IDs of resources that need to be removed at the beginning or end of a test
+	deleteWorkItemLinkCategories []string
+	deleteWorkItemLinkTypes      []string
+	deleteWorkItemLinks          []string
+	deleteWorkItems              []string
 }
 
 // The SetupSuite method will run before the tests in the suite are run.
@@ -55,35 +69,34 @@ func (s *WorkItemLinkSuite) SetupSuite() {
 	}
 
 	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
-	if configuration.GetPopulateCommonTypes() {
-		if err := models.Transactional(DB, func(tx *gorm.DB) error {
-			return migration.PopulateCommonTypes(context.Background(), tx, models.NewWorkItemTypeRepository(tx))
-		}); err != nil {
-			panic(err.Error())
-		}
+	if err := models.Transactional(DB, func(tx *gorm.DB) error {
+		return migration.PopulateCommonTypes(context.Background(), tx, models.NewWorkItemTypeRepository(tx))
+	}); err != nil {
+		panic(err.Error())
 	}
-
-	svc := goa.New("TestWorkItemLinkTypeSuite-Service")
-	require.NotNil(s.T(), svc)
-	s.linkTypeCtrl = NewWorkItemLinkTypeController(svc, gormapplication.NewGormDB(DB))
-	require.NotNil(s.T(), s.linkTypeCtrl)
-
-	svc = goa.New("TestWorkItemLinkCategorySuite-Service")
-	require.NotNil(s.T(), svc)
-	s.linkCatCtrl = NewWorkItemLinkCategoryController(svc, gormapplication.NewGormDB(DB))
-	require.NotNil(s.T(), s.linkCatCtrl)
-
-	//	svc = goa.New("TestWorkItemTypeSuite-Service")
-	//	require.NotNil(s.T(), svc)
-	//	s.typeCtrl = NewWorkitemtypeController(svc, gormapplication.NewGormDB(DB))
-	//	require.NotNil(s.T(), s.typeCtrl)
 
 	pub, err := almtoken.ParsePublicKey([]byte(almtoken.RSAPublicKey))
 	require.Nil(s.T(), err)
 	priv, err := almtoken.ParsePrivateKey([]byte(almtoken.RSAPrivateKey))
 	require.Nil(s.T(), err)
-	svc = testsupport.ServiceAsUser("TestWorkItem-Service", almtoken.NewManager(pub, priv), account.TestIdentity)
+
+	svc := goa.New("TestWorkItemLinkType-Service")
 	require.NotNil(s.T(), svc)
+	s.workItemLinkTypeCtrl = NewWorkItemLinkTypeController(svc, gormapplication.NewGormDB(DB))
+	require.NotNil(s.T(), s.workItemLinkTypeCtrl)
+
+	svc = goa.New("TestWorkItemLinkCategory-Service")
+	require.NotNil(s.T(), svc)
+	s.workItemLinkCategoryCtrl = NewWorkItemLinkCategoryController(svc, gormapplication.NewGormDB(DB))
+	require.NotNil(s.T(), s.workItemLinkCategoryCtrl)
+
+	svc = goa.New("TestWorkItemLink-Service")
+	require.NotNil(s.T(), svc)
+	s.workItemLinkCtrl = NewWorkItemLinkController(svc, gormapplication.NewGormDB(DB))
+	require.NotNil(s.T(), s.workItemLinkCtrl)
+
+	s.workItemSvc = testsupport.ServiceAsUser("TestWorkItem-Service", almtoken.NewManager(pub, priv), account.TestIdentity)
+	require.NotNil(s.T(), s.workItemSvc)
 	s.workItemCtrl = NewWorkitemController(svc, gormapplication.NewGormDB(DB))
 	require.NotNil(s.T(), s.workItemCtrl)
 }
@@ -100,15 +113,81 @@ func (s *WorkItemLinkSuite) TearDownSuite() {
 // with this test suite. We need to remove them completely and not only set the
 // "deleted_at" field, which is why we need the Unscoped() function.
 func (s *WorkItemLinkSuite) cleanup() {
-	db := s.db.Unscoped().Delete(&models.WorkItemLinkType{Name: "bug-blocker"})
+	db := s.db
+
+	// First delete work item links and then the types;
+	// otherwise referential integrity will be violated.
+	for _, id := range s.deleteWorkItemLinks {
+		db = db.Unscoped().Delete(&models.WorkItemLink{ID: satoriuuid.FromStringOrNil(id)})
+		require.Nil(s.T(), db.Error)
+	}
+
+	// Delete work item link types
+	db = db.Unscoped().Delete(&models.WorkItemLinkType{Name: "bug-blocker"})
 	db = db.Unscoped().Delete(&models.WorkItemLinkCategory{Name: "user"})
-	//db = db.Unscoped().Delete(&models.WorkItemType{Name: "foo.bug"})
+	//for _, id := range s.deleteWorkItemLinkTypes {
+	//	db = db.Unscoped().Delete(&models.WorkItemLinkType{ID: satoriuuid.FromStringOrNil(id)})
+	//	require.Nil(s.T(), db.Error)
+	//}
+
+	//// Delete work item link categories
+	//for _, id := range s.deleteWorkItemLinkCategories {
+	//	db = db.Unscoped().Delete(&models.WorkItemLinkCategory{ID: satoriuuid.FromStringOrNil(id)})
+	//	require.Nil(s.T(), db.Error)
+	//}
+
+	// Last but not least delete the work items
+	for _, idStr := range s.deleteWorkItems {
+		id, err := strconv.ParseUint(idStr, 10, 64)
+		require.Nil(s.T(), err)
+		db = db.Unscoped().Delete(&models.WorkItem{ID: id})
+		require.Nil(s.T(), db.Error)
+	}
 }
 
 // The SetupTest method will be run before every test in the suite.
 // SetupTest ensures that none of the work item links that we will create already exist.
+// It will also make sure that some resources that we rely on do exists.
 func (s *WorkItemLinkSuite) SetupTest() {
 	s.cleanup()
+
+	// Create 3 work items (bug1, bug2, and feature1)
+	bug1Payload := CreateWorkItem(models.SystemBug, "bug1")
+	_, bug1 := test.CreateWorkitemCreated(s.T(), s.workItemSvc.Context, s.workItemSvc, s.workItemCtrl, bug1Payload)
+	require.NotNil(s.T(), bug1)
+	s.deleteWorkItems = append(s.deleteWorkItems, bug1.ID)
+	s.bug1ID = bug1.ID
+	fmt.Printf("Created bug1 with ID: %s\n", bug1.ID)
+
+	bug2Payload := CreateWorkItem(models.SystemBug, "bug2")
+	_, bug2 := test.CreateWorkitemCreated(s.T(), s.workItemSvc.Context, s.workItemSvc, s.workItemCtrl, bug2Payload)
+	require.NotNil(s.T(), bug2)
+	s.deleteWorkItems = append(s.deleteWorkItems, bug2.ID)
+	s.bug2ID = bug2.ID
+	fmt.Printf("Created bug2 with ID: %s\n", bug2.ID)
+
+	feature1Payload := CreateWorkItem(models.SystemFeature, "feature1")
+	_, feature1 := test.CreateWorkitemCreated(s.T(), s.workItemSvc.Context, s.workItemSvc, s.workItemCtrl, feature1Payload)
+	require.NotNil(s.T(), feature1)
+	s.deleteWorkItems = append(s.deleteWorkItems, feature1.ID)
+	s.feature1ID = feature1.ID
+	fmt.Printf("Created feature with ID: %s\n", feature1.ID)
+
+	// Create a work item link category
+	createLinkCategoryPayload := CreateWorkItemLinkCategory("user")
+	_, workItemLinkCategory := test.CreateWorkItemLinkCategoryCreated(s.T(), nil, nil, s.workItemLinkCategoryCtrl, createLinkCategoryPayload)
+	require.NotNil(s.T(), workItemLinkCategory)
+	s.deleteWorkItemLinkCategories = append(s.deleteWorkItemLinkCategories, *workItemLinkCategory.Data.ID)
+	s.userLinkCategoryID = *workItemLinkCategory.Data.ID
+	fmt.Printf("Created link category with ID: %s\n", *workItemLinkCategory.Data.ID)
+
+	// Create work item link type payload
+	createLinkTypePayload := CreateWorkItemLinkType("bug-blocker", models.SystemBug, models.SystemBug, s.userLinkCategoryID)
+	_, workItemLinkType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.workItemLinkTypeCtrl, createLinkTypePayload)
+	require.NotNil(s.T(), workItemLinkType)
+	s.deleteWorkItemLinkTypes = append(s.deleteWorkItemLinkTypes, *workItemLinkType.Data.ID)
+	s.bugBlockerLinkTypeID = *workItemLinkType.Data.ID
+	fmt.Printf("Created link type with ID: %s\n", *workItemLinkType.Data.ID)
 }
 
 // The TearDownTest method will be run after every test in the suite.
@@ -135,44 +214,28 @@ func CreateWorkItemLinkCategory(name string) *app.CreateWorkItemLinkCategoryPayl
 	}
 }
 
-//  // CreateWorkItemType creates a new work item type
-//  func CreateWorkItemType(Name string) *app.CreateWorkItemTypePayload {
-//  	payload := app.CreateWorkItemTypePayload{
-//  		Fields: map[string]*app.FieldDefinition{
-//  			"name": &app.FieldDefinition{
-//  				Required: true,
-//  				Type: &app.FieldType{
-//  					Kind: "string",
-//  				},
-//  			},
-//  		},
-//  		Name: Name,
-//  	}
-//  	return &payload
-//  }
-
 // CreateWorkItem defines a work item link
-func CreateWorkItem(workItemType string) *app.CreateWorkItemPayload {
+func CreateWorkItem(workItemType string, title string) *app.CreateWorkItemPayload {
 	payload := app.CreateWorkItemPayload{
 		Type: workItemType,
 		Fields: map[string]interface{}{
-			models.SystemTitle:   "Test WI",
+			models.SystemTitle:   title,
 			models.SystemCreator: "konrad",
 			models.SystemState:   "closed"},
 	}
 	return &payload
 }
 
-// CreateWorkItemLinkType defines a work item link type"
-func CreateWorkItemLinkType(Name string, sourceType string, targetType string, categoryID string) *app.CreateWorkItemLinkTypePayload {
+// CreateWorkItemLinkType defines a work item link type
+func CreateWorkItemLinkType(name string, sourceType string, targetType string, categoryID string) *app.CreateWorkItemLinkTypePayload {
 	description := "Specify that one bug blocks another one."
 	lt := models.WorkItemLinkType{
-		Name:           Name,
+		Name:           name,
 		Description:    &description,
 		SourceTypeName: sourceType,
 		TargetTypeName: targetType,
-		ForwardName:    "forward name string",
-		ReverseName:    "reverse name string",
+		ForwardName:    "forward name string for " + name,
+		ReverseName:    "reverse name string for " + name,
 		LinkCategoryID: satoriuuid.FromStringOrNil(categoryID),
 	}
 	payload := models.ConvertLinkTypeFromModel(&lt)
@@ -184,7 +247,6 @@ func CreateWorkItemLinkType(Name string, sourceType string, targetType string, c
 
 // CreateWorkItemLink defines a work item link
 func CreateWorkItemLink(sourceID string, targetID string, linkTypeID string) *app.CreateWorkItemLinkPayload {
-	//   3. Create a work item link
 	lt := models.WorkItemLink{
 		SourceID:   sourceID,
 		TargetID:   targetID,
@@ -195,36 +257,6 @@ func CreateWorkItemLink(sourceID string, targetID string, linkTypeID string) *ap
 	return &app.CreateWorkItemLinkPayload{
 		Data: payload.Data,
 	}
-}
-
-// createDemoType creates a demo work item link
-func (s *WorkItemLinkSuite) createDemoLink() *app.CreateWorkItemLinkPayload {
-	//	// 1. Create at least one work item type
-	//	workItemTypePayload := CreateWorkItemType("foo.bug")
-	//	_, workItemType := test.CreateWorkitemtypeCreated(s.T(), nil, nil, s.typeCtrl, workItemTypePayload)
-	//	require.NotNil(s.T(), workItemType)
-
-	// 2. Create 2 random work item payloads (TODO add ids)
-	createWorkItemPayload := CreateWorkItem(models.SystemBug)
-	_, workItem1 := test.CreateWorkitemCreated(s.T(), nil, nil, s.workItemCtrl, createWorkItemPayload)
-	require.NotNil(s.T(), workItem1)
-	_, workItem2 := test.CreateWorkitemCreated(s.T(), nil, nil, s.workItemCtrl, createWorkItemPayload)
-	require.NotNil(s.T(), workItem2)
-
-	// 2. Create a work item link category
-	createLinkCategoryPayload := CreateWorkItemLinkCategory("user")
-	_, workItemLinkCategory := test.CreateWorkItemLinkCategoryCreated(s.T(), nil, nil, s.linkCatCtrl, createLinkCategoryPayload)
-	require.NotNil(s.T(), workItemLinkCategory)
-
-	// 4. Create work item link type payload
-	createLinkTypePayload := CreateWorkItemLinkType("bug-blocker", "foo.bug", "foo.bug", *workItemLinkCategory.Data.ID)
-	_, workItemLinkType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, createLinkTypePayload)
-	require.NotNil(s.T(), workItemLinkType)
-
-	// 5. Work item link (finally, *phew*)
-	require.NotNil(s.T(), workItemLinkType.Data.ID)
-	createLinkPayload := CreateWorkItemLink(workItem1.ID, workItem2.ID, *workItemLinkType.Data.ID)
-	return createLinkPayload
 }
 
 //-----------------------------------------------------------------------------
@@ -240,20 +272,25 @@ func TestSuiteWorkItemLink(t *testing.T) {
 
 // TestCreateWorkItemLink tests if we can create the work item link
 func (s *WorkItemLinkSuite) TestCreateAndDeleteWorkItemLink() {
-	createPayload := s.createDemoLink()
-	_, workItemLink := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.linkCtrl, createPayload)
+	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.bugBlockerLinkTypeID)
+	_, workItemLink := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
 	require.NotNil(s.T(), workItemLink)
 
-	_ = test.DeleteWorkItemLinkOK(s.T(), nil, nil, s.linkCtrl, *workItemLink.Data.ID)
+	// Delete this work item link during cleanup
+	s.deleteWorkItemLinks = append(s.deleteWorkItemLinks, *workItemLink.Data.ID)
+
+	_ = test.DeleteWorkItemLinkOK(s.T(), nil, nil, s.workItemLinkCtrl, *workItemLink.Data.ID)
 }
 
-//  func (s *WorkItemLinkSuite) TestCreateWorkItemLinkBadRequest() {
-//  	createPayload := s.createDemoLinkType("") // empty name causes bad request
-//  	_, _ = test.CreateWorkItemLinkBadRequest(s.T(), nil, nil, s.linkTypeCtrl, createPayload)
-//  }
-//
+//func (s *WorkItemLinkSuite) TestCreateWorkItemLinkBadRequest() {
+//	// Linking a bug and a feature isn't allowed for the bug blocker link type,
+//	// thererfore this will cause a bad parameter error (which results in a bad request error).
+//	createPayload := CreateWorkItemLink(s.bug1ID, s.feature1ID, s.bugBlockerLinkTypeID)
+//	_, _ = test.CreateWorkItemLinkBadRequest(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
+//}
+
 //  func (s *WorkItemLinkSuite) TestDeleteWorkItemLinkNotFound() {
-//  	test.DeleteWorkItemLinkNotFound(s.T(), nil, nil, s.linkTypeCtrl, "1e9a8b53-73a6-40de-b028-5177add79ffa")
+//  	test.DeleteWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkTypeCtrl, "1e9a8b53-73a6-40de-b028-5177add79ffa")
 //  }
 //
 //  func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkNotFound() {
@@ -265,12 +302,12 @@ func (s *WorkItemLinkSuite) TestCreateAndDeleteWorkItemLink() {
 //  	updateLinkTypePayload := &app.UpdateWorkItemLinkPayload{
 //  		Data: createPayload.Data,
 //  	}
-//  	test.UpdateWorkItemLinkNotFound(s.T(), nil, nil, s.linkTypeCtrl, *updateLinkTypePayload.Data.ID, updateLinkTypePayload)
+//  	test.UpdateWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkTypeCtrl, *updateLinkTypePayload.Data.ID, updateLinkTypePayload)
 //  }
 //
 //  func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkOK() {
 //  	createPayload := s.createDemoLinkType("bug-blocker")
-//  	_, workItemLinkType := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.linkTypeCtrl, createPayload)
+//  	_, workItemLinkType := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkTypeCtrl, createPayload)
 //  	require.NotNil(s.T(), workItemLinkType)
 //  	// Specify new description for link type that we just created
 //  	// Wrap data portion in an update payload instead of a create payload
@@ -279,7 +316,7 @@ func (s *WorkItemLinkSuite) TestCreateAndDeleteWorkItemLink() {
 //  	}
 //  	newDescription := "Lalala this is a new description for the work item type"
 //  	updateLinkTypePayload.Data.Attributes.Description = &newDescription
-//  	_, lt := test.UpdateWorkItemLinkOK(s.T(), nil, nil, s.linkTypeCtrl, *updateLinkTypePayload.Data.ID, updateLinkTypePayload)
+//  	_, lt := test.UpdateWorkItemLinkOK(s.T(), nil, nil, s.workItemLinkTypeCtrl, *updateLinkTypePayload.Data.ID, updateLinkTypePayload)
 //  	require.NotNil(s.T(), lt.Data)
 //  	require.NotNil(s.T(), lt.Data.Attributes)
 //  	require.NotNil(s.T(), lt.Data.Attributes.Description)
@@ -292,16 +329,16 @@ func (s *WorkItemLinkSuite) TestCreateAndDeleteWorkItemLink() {
 //  		Data: createPayload.Data,
 //  	}
 //  	updateLinkTypePayload.Data.Type = "This should be workitemlinktypes" // Causes bad request
-//  	test.UpdateWorkItemLinkBadRequest(s.T(), nil, nil, s.linkTypeCtrl, *updateLinkTypePayload.Data.ID, updateLinkTypePayload)
+//  	test.UpdateWorkItemLinkBadRequest(s.T(), nil, nil, s.workItemLinkTypeCtrl, *updateLinkTypePayload.Data.ID, updateLinkTypePayload)
 //  }
 //
 //  // TestShowWorkItemLinkOK tests if we can fetch the "system" work item link
 //  func (s *WorkItemLinkSuite) TestShowWorkItemLinkOK() {
 //  	// Create the work item link first and try to read it back in
 //  	createPayload := s.createDemoLinkType("bug-blocker")
-//  	_, workItemLinkType := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.linkTypeCtrl, createPayload)
+//  	_, workItemLinkType := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkTypeCtrl, createPayload)
 //  	require.NotNil(s.T(), workItemLinkType)
-//  	_, readIn := test.ShowWorkItemLinkOK(s.T(), nil, nil, s.linkTypeCtrl, *workItemLinkType.Data.ID)
+//  	_, readIn := test.ShowWorkItemLinkOK(s.T(), nil, nil, s.workItemLinkTypeCtrl, *workItemLinkType.Data.ID)
 //  	require.NotNil(s.T(), readIn)
 //  	// Convert to model space and use equal function
 //  	expected := models.WorkItemLink{}
@@ -313,22 +350,22 @@ func (s *WorkItemLinkSuite) TestCreateAndDeleteWorkItemLink() {
 //
 //  // TestShowWorkItemLinkNotFound tests if we can fetch a non existing work item link
 //  func (s *WorkItemLinkSuite) TestShowWorkItemLinkNotFound() {
-//  	test.ShowWorkItemLinkNotFound(s.T(), nil, nil, s.linkTypeCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")
+//  	test.ShowWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkTypeCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")
 //  }
 //
 //  // TestListWorkItemLinkOK tests if we can find the work item links
 //  // "bug-blocker" and "related" in the list of work item links
 //  func (s *WorkItemLinkSuite) TestListWorkItemLinkOK() {
 //  	bugBlockerPayload := s.createDemoLinkType("bug-blocker")
-//  	_, bugBlockerType := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.linkTypeCtrl, bugBlockerPayload)
+//  	_, bugBlockerType := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkTypeCtrl, bugBlockerPayload)
 //  	require.NotNil(s.T(), bugBlockerType)
 //
 //  	relatedPayload := s.createWorkItemLink("related", "foo.bug", "foo.bug", bugBlockerType.Data.Relationships.LinkCategory.Data.ID)
-//  	_, relatedType := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.linkTypeCtrl, relatedPayload)
+//  	_, relatedType := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkTypeCtrl, relatedPayload)
 //  	require.NotNil(s.T(), relatedType)
 //
 //  	// Fetch a single work item link
-//  	_, linkTypeCollection := test.ListWorkItemLinkOK(s.T(), nil, nil, s.linkTypeCtrl)
+//  	_, linkTypeCollection := test.ListWorkItemLinkOK(s.T(), nil, nil, s.workItemLinkTypeCtrl)
 //  	require.NotNil(s.T(), linkTypeCollection)
 //  	require.Nil(s.T(), linkTypeCollection.Validate())
 //  	// Check the number of found work item links
@@ -371,8 +408,8 @@ func (s *WorkItemLinkSuite) TestCreateAndDeleteWorkItemLink() {
 //  				},
 //  				"relationships": {
 //  					"link_category": {"data": {"type":"workitemlinkcategories", "id": "a75ea296-6378-4578-8573-90f11b8efb00"}},
-//  					"source_type": {"data": {"type":"workitemtypes", "id": "foo.bug"}},
-//  					"target_type": {"data": {"type":"workitemtypes", "id": "foo.bug"}}
+//  					"source_type": {"data": {"type":"workitemtypes", "id": "system.bug"}},
+//  					"target_type": {"data": {"type":"workitemtypes", "id": "system.bug"}}
 //  				}
 //  			}
 //  		}

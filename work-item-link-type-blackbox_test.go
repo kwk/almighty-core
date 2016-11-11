@@ -53,12 +53,10 @@ func (s *WorkItemLinkTypeSuite) SetupSuite() {
 	}
 
 	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
-	if configuration.GetPopulateCommonTypes() {
-		if err := models.Transactional(DB, func(tx *gorm.DB) error {
-			return migration.PopulateCommonTypes(context.Background(), tx, models.NewWorkItemTypeRepository(tx))
-		}); err != nil {
-			panic(err.Error())
-		}
+	if err := models.Transactional(DB, func(tx *gorm.DB) error {
+		return migration.PopulateCommonTypes(context.Background(), tx, models.NewWorkItemTypeRepository(tx))
+	}); err != nil {
+		panic(err.Error())
 	}
 
 	svc := goa.New("WorkItemLinkTypeSuite-Service")
@@ -84,8 +82,11 @@ func (s *WorkItemLinkTypeSuite) TearDownSuite() {
 // "deleted_at" field, which is why we need the Unscoped() function.
 func (s *WorkItemLinkTypeSuite) cleanup() {
 	db := s.db.Unscoped().Delete(&models.WorkItemLinkType{Name: "bug-blocker"})
+	require.Nil(s.T(), db.Error)
 	db = s.db.Unscoped().Delete(&models.WorkItemLinkType{Name: "related"})
+	require.Nil(s.T(), db.Error)
 	db = db.Unscoped().Delete(&models.WorkItemLinkCategory{Name: "user"})
+	require.Nil(s.T(), db.Error)
 	//db = db.Unscoped().Delete(&models.WorkItemType{Name: "foo.bug"})
 
 }
@@ -217,7 +218,7 @@ func (s *WorkItemLinkTypeSuite) TestListWorkItemLinkTypeOK() {
 	_, bugBlockerType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, bugBlockerPayload)
 	require.NotNil(s.T(), bugBlockerType)
 
-	relatedPayload := CreateWorkItemLinkType("related", "foo.bug", "foo.bug", bugBlockerType.Data.Relationships.LinkCategory.Data.ID)
+	relatedPayload := CreateWorkItemLinkType("related", models.SystemBug, models.SystemBug, bugBlockerType.Data.Relationships.LinkCategory.Data.ID)
 	_, relatedType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.linkTypeCtrl, relatedPayload)
 	require.NotNil(s.T(), relatedType)
 
@@ -265,8 +266,8 @@ func getWorkItemLinkTypeTestData(t *testing.T) []testSecureAPI {
 				},
 				"relationships": {
 					"link_category": {"data": {"type":"workitemlinkcategories", "id": "a75ea296-6378-4578-8573-90f11b8efb00"}},
-					"source_type": {"data": {"type":"workitemtypes", "id": "foo.bug"}},
-					"target_type": {"data": {"type":"workitemtypes", "id": "foo.bug"}}
+					"source_type": {"data": {"type":"workitemtypes", "id": "system.bug"}},
+					"target_type": {"data": {"type":"workitemtypes", "id": "system.bug"}}
 				}
 			}
 		}

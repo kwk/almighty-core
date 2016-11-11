@@ -50,12 +50,10 @@ func (s *WorkItemLinkCategorySuite) SetupSuite() {
 	}
 
 	// Make sure the database is populated with the correct types (e.g. system.bug etc.)
-	if configuration.GetPopulateCommonTypes() {
-		if err := models.Transactional(DB, func(tx *gorm.DB) error {
-			return migration.PopulateCommonTypes(context.Background(), tx, models.NewWorkItemTypeRepository(tx))
-		}); err != nil {
-			panic(err.Error())
-		}
+	if err := models.Transactional(DB, func(tx *gorm.DB) error {
+		return migration.PopulateCommonTypes(context.Background(), tx, models.NewWorkItemTypeRepository(tx))
+	}); err != nil {
+		panic(err.Error())
 	}
 
 	svc := goa.New("WorkItemLinkCategorySuite-Service")

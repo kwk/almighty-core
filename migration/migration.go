@@ -213,49 +213,25 @@ func PopulateCommonTypes(ctx context.Context, db *gorm.DB, witr application.Work
 	// q := `ALTER TABLE "tracker_queries" ADD CONSTRAINT "tracker_fk" FOREIGN KEY ("tracker") REFERENCES "trackers" ON DELETE CASCADE`
 	// db.Exec(q)
 
-	if err := createOrUpdateSystemUserstory(ctx, witr, db); err != nil {
+	if err := createOrUpdateCommon(models.SystemUserStory, ctx, witr, db); err != nil {
 		return err
 	}
-	if err := createOrUpdateSystemValueProposition(ctx, witr, db); err != nil {
+	if err := createOrUpdateCommon(models.SystemValueProposition, ctx, witr, db); err != nil {
 		return err
 	}
-	if err := createOrUpdateSystemFundamental(ctx, witr, db); err != nil {
+	if err := createOrUpdateCommon(models.SystemFundamental, ctx, witr, db); err != nil {
 		return err
 	}
-	if err := createOrUpdateSystemExperience(ctx, witr, db); err != nil {
+	if err := createOrUpdateCommon(models.SystemExperience, ctx, witr, db); err != nil {
 		return err
 	}
-	if err := createOrUpdateSystemFeature(ctx, witr, db); err != nil {
+	if err := createOrUpdateCommon(models.SystemFeature, ctx, witr, db); err != nil {
 		return err
 	}
-	if err := createOrUpdateSystemBug(ctx, witr, db); err != nil {
+	if err := createOrUpdateCommon(models.SystemBug, ctx, witr, db); err != nil {
 		return err
 	}
 	return nil
-}
-
-func createOrUpdateSystemUserstory(ctx context.Context, witr application.WorkItemTypeRepository, db *gorm.DB) error {
-	return createOrUpdateCommon(models.SystemUserStory, ctx, witr, db)
-}
-
-func createOrUpdateSystemValueProposition(ctx context.Context, witr application.WorkItemTypeRepository, db *gorm.DB) error {
-	return createOrUpdateCommon(models.SystemValueProposition, ctx, witr, db)
-}
-
-func createOrUpdateSystemFundamental(ctx context.Context, witr application.WorkItemTypeRepository, db *gorm.DB) error {
-	return createOrUpdateCommon(models.SystemFundamental, ctx, witr, db)
-}
-
-func createOrUpdateSystemExperience(ctx context.Context, witr application.WorkItemTypeRepository, db *gorm.DB) error {
-	return createOrUpdateCommon(models.SystemExperience, ctx, witr, db)
-}
-
-func createOrUpdateSystemFeature(ctx context.Context, witr application.WorkItemTypeRepository, db *gorm.DB) error {
-	return createOrUpdateCommon(models.SystemFeature, ctx, witr, db)
-}
-
-func createOrUpdateSystemBug(ctx context.Context, witr application.WorkItemTypeRepository, db *gorm.DB) error {
-	return createOrUpdateCommon(models.SystemBug, ctx, witr, db)
 }
 
 func createOrUpdateCommon(typeName string, ctx context.Context, witr application.WorkItemTypeRepository, db *gorm.DB) error {
