@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"golang.org/x/net/context"
 
@@ -38,7 +39,8 @@ func (r *GormWorkItemLinkRepository) Create(ctx context.Context, link *WorkItemL
 
 	// Fetch the work item link type first in order to check that
 	// the given source and target work items match the correct work item types.
-	db := r.db.Model(&link.LinkType).Where("id=?", link.LinkTypeID)
+	linkType := WorkItemLinkType{}
+	db := r.db.Model(&linkType).Where("id=?", link.LinkTypeID)
 	if db.Error != nil {
 		return nil, NewInternalError(fmt.Sprintf("Failed to find work item link type: %s", db.Error.Error()))
 	}
@@ -47,29 +49,31 @@ func (r *GormWorkItemLinkRepository) Create(ctx context.Context, link *WorkItemL
 	}
 
 	// Fetch the source work item
-	db = db.Model(&link.Source).Where("id=?", link.SourceID)
+	source := WorkItem{}
+	db = db.Model(&source).Where("id=?", link.SourceID)
 	if db.Error != nil {
 		return nil, NewInternalError(fmt.Sprintf("Failed to find source work item: %s", db.Error.Error()))
 	}
 	if db.RecordNotFound() {
-		return nil, NewNotFoundError("work item", link.SourceID)
+		return nil, NewNotFoundError("source work item", strconv.FormatUint(link.SourceID, 10))
 	}
 
 	// Fetch the target work item
-	db = db.Model(&link.Target).Where("id=?", link.TargetID)
+	target := WorkItem{}
+	db = db.Model(&target).Where("id=?", link.TargetID)
 	if db.Error != nil {
 		return nil, NewInternalError(fmt.Sprintf("Failed to find target work item: %s", db.Error.Error()))
 	}
 	if db.RecordNotFound() {
-		return nil, NewNotFoundError("work item", link.TargetID)
+		return nil, NewNotFoundError("target work item", strconv.FormatUint(link.TargetID, 10))
 	}
 
 	// Check that the work item types of the source and target match those specified in the link type
-	if link.LinkType.SourceTypeName != link.Source.Type {
-		return nil, NewBadParameterError("link.source.type", link.Source.Type).Expected(link.Source.Type)
+	if source.Type != linkType.SourceTypeName {
+		return nil, NewBadParameterError("source.type", source.Type).Expected(linkType.SourceTypeName)
 	}
-	if link.LinkType.TargetTypeName != link.Target.Type {
-		return nil, NewBadParameterError("link.Target.type", link.Target.Type).Expected(link.Target.Type)
+	if target.Type != linkType.TargetTypeName {
+		return nil, NewBadParameterError("target.type", target.Type).Expected(linkType.TargetTypeName)
 	}
 
 	db = db.Create(link)
@@ -123,10 +127,10 @@ func (r *GormWorkItemLinkRepository) List(ctx context.Context) (*app.WorkItemLin
 		return nil, db.Error
 	}
 	res := app.WorkItemLinkArray{}
-	res.Data = make([]*app.WorkItemLink, len(rows))
+	res.Data = make([]*app.WorkItemLinkData, len(rows))
 	for index, value := range rows {
 		cat := ConvertLinkFromModel(&value)
-		res.Data[index] = &cat
+		res.Data[index] = cat.Data
 	}
 	// TODO: When adding pagination, this must not be len(rows) but
 	// the overall total number of elements from all pages.

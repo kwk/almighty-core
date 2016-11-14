@@ -327,7 +327,7 @@ var WorkItemLinkArray = a.MediaType("application/vnd.work-item-link-array+json",
 	a.Description(`An array of work item links`)
 	a.Attributes(func() {
 		a.Attribute("meta", WorkItemLinkArrayMeta)
-		a.Attribute("data", a.ArrayOf(WorkItemLink))
+		a.Attribute("data", a.ArrayOf(WorkItemLinkData))
 		a.Required("data")
 	})
 	a.View("default", func() {

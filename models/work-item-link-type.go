@@ -22,16 +22,12 @@ type WorkItemLinkType struct {
 	Version int
 
 	SourceTypeName string
-	SourceType     WorkItemType `gorm:"ForeignKey:SourceTypeName;AssociationForeignKey:Name"`
-
 	TargetTypeName string
-	TargetType     WorkItemType `gorm:"ForeignKey:TargetTypeName;AssociationForeignKey:Name"`
 
 	ForwardName string
 	ReverseName string
 
 	LinkCategoryID satoriuuid.UUID
-	LinkCategory   WorkItemLinkCategory `gorm:"ForeignKey:LinkCategoryID;AssociationForeignKey:ID"`
 }
 
 // Ensure Fields implements the Equaler interface
@@ -68,13 +64,7 @@ func (self WorkItemLinkType) Equal(u convert.Equaler) bool {
 	if self.SourceTypeName != other.SourceTypeName {
 		return false
 	}
-	if !self.SourceType.Equal(other.SourceType) {
-		return false
-	}
 	if self.TargetTypeName != other.TargetTypeName {
-		return false
-	}
-	if !self.TargetType.Equal(other.TargetType) {
 		return false
 	}
 	if self.ForwardName != other.ForwardName {
@@ -84,9 +74,6 @@ func (self WorkItemLinkType) Equal(u convert.Equaler) bool {
 		return false
 	}
 	if !satoriuuid.Equal(self.LinkCategoryID, other.LinkCategoryID) {
-		return false
-	}
-	if !self.LinkCategory.Equal(other.LinkCategory) {
 		return false
 	}
 	return true
@@ -157,8 +144,6 @@ func ConvertLinkTypeFromModel(t *WorkItemLinkType) app.WorkItemLinkType {
 
 // ConvertLinkTypeToModel converts the incoming app representation of a work item link type to the model layout.
 // Values are only overwrriten if they are set in "in", otherwise the values in "out" remain.
-// NOTE: Only the LinkCategoryID, SourceTypeName, and TargetTypeName fields will be set.
-//       You need to preload the elements after calling this function.
 func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) error {
 	attrs := in.Data.Attributes
 	rel := in.Data.Relationships

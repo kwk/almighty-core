@@ -40,17 +40,15 @@ type WorkItemLinkSuite struct {
 	workItemSvc              *goa.Service
 
 	// These IDs can safely be used by all tests
-	bug1ID               string
-	bug2ID               string
-	feature1ID           string
+	bug1ID               uint64
+	bug2ID               uint64
+	feature1ID           uint64
 	userLinkCategoryID   string
 	bugBlockerLinkTypeID string
 
 	// Store IDs of resources that need to be removed at the beginning or end of a test
-	deleteWorkItemLinkCategories []string
-	deleteWorkItemLinkTypes      []string
-	deleteWorkItemLinks          []string
-	deleteWorkItems              []string
+	deleteWorkItemLinks []string
+	deleteWorkItems     []string
 }
 
 // The SetupSuite method will run before the tests in the suite are run.
@@ -121,20 +119,19 @@ func (s *WorkItemLinkSuite) cleanup() {
 		db = db.Unscoped().Delete(&models.WorkItemLink{ID: satoriuuid.FromStringOrNil(id)})
 		require.Nil(s.T(), db.Error)
 	}
+	s.deleteWorkItemLinks = nil
 
-	// Delete work item link types
+	// Delete all work item links for now
+	db.Unscoped().Delete(&models.WorkItemLink{})
+	require.Nil(s.T(), db.Error)
+
+	// Delete work item link types and categories by name.
+	// They will be created during the tests but have to be deleted by name
+	// rather than ID, unlike the work items or work item links.
 	db = db.Unscoped().Delete(&models.WorkItemLinkType{Name: "bug-blocker"})
+	require.Nil(s.T(), db.Error)
 	db = db.Unscoped().Delete(&models.WorkItemLinkCategory{Name: "user"})
-	//for _, id := range s.deleteWorkItemLinkTypes {
-	//	db = db.Unscoped().Delete(&models.WorkItemLinkType{ID: satoriuuid.FromStringOrNil(id)})
-	//	require.Nil(s.T(), db.Error)
-	//}
-
-	//// Delete work item link categories
-	//for _, id := range s.deleteWorkItemLinkCategories {
-	//	db = db.Unscoped().Delete(&models.WorkItemLinkCategory{ID: satoriuuid.FromStringOrNil(id)})
-	//	require.Nil(s.T(), db.Error)
-	//}
+	require.Nil(s.T(), db.Error)
 
 	// Last but not least delete the work items
 	for _, idStr := range s.deleteWorkItems {
@@ -143,6 +140,8 @@ func (s *WorkItemLinkSuite) cleanup() {
 		db = db.Unscoped().Delete(&models.WorkItem{ID: id})
 		require.Nil(s.T(), db.Error)
 	}
+	s.deleteWorkItems = nil
+
 }
 
 // The SetupTest method will be run before every test in the suite.
@@ -151,33 +150,39 @@ func (s *WorkItemLinkSuite) cleanup() {
 func (s *WorkItemLinkSuite) SetupTest() {
 	s.cleanup()
 
+	var err error
+
 	// Create 3 work items (bug1, bug2, and feature1)
 	bug1Payload := CreateWorkItem(models.SystemBug, "bug1")
 	_, bug1 := test.CreateWorkitemCreated(s.T(), s.workItemSvc.Context, s.workItemSvc, s.workItemCtrl, bug1Payload)
 	require.NotNil(s.T(), bug1)
 	s.deleteWorkItems = append(s.deleteWorkItems, bug1.ID)
-	s.bug1ID = bug1.ID
+	s.bug1ID, err = strconv.ParseUint(bug1.ID, 10, 64)
+	require.Nil(s.T(), err)
 	fmt.Printf("Created bug1 with ID: %s\n", bug1.ID)
 
 	bug2Payload := CreateWorkItem(models.SystemBug, "bug2")
 	_, bug2 := test.CreateWorkitemCreated(s.T(), s.workItemSvc.Context, s.workItemSvc, s.workItemCtrl, bug2Payload)
 	require.NotNil(s.T(), bug2)
 	s.deleteWorkItems = append(s.deleteWorkItems, bug2.ID)
-	s.bug2ID = bug2.ID
+	s.bug2ID, err = strconv.ParseUint(bug2.ID, 10, 64)
+	require.Nil(s.T(), err)
+
 	fmt.Printf("Created bug2 with ID: %s\n", bug2.ID)
 
 	feature1Payload := CreateWorkItem(models.SystemFeature, "feature1")
 	_, feature1 := test.CreateWorkitemCreated(s.T(), s.workItemSvc.Context, s.workItemSvc, s.workItemCtrl, feature1Payload)
 	require.NotNil(s.T(), feature1)
 	s.deleteWorkItems = append(s.deleteWorkItems, feature1.ID)
-	s.feature1ID = feature1.ID
+	s.feature1ID, err = strconv.ParseUint(feature1.ID, 10, 64)
+	require.Nil(s.T(), err)
 	fmt.Printf("Created feature with ID: %s\n", feature1.ID)
 
 	// Create a work item link category
 	createLinkCategoryPayload := CreateWorkItemLinkCategory("user")
 	_, workItemLinkCategory := test.CreateWorkItemLinkCategoryCreated(s.T(), nil, nil, s.workItemLinkCategoryCtrl, createLinkCategoryPayload)
 	require.NotNil(s.T(), workItemLinkCategory)
-	s.deleteWorkItemLinkCategories = append(s.deleteWorkItemLinkCategories, *workItemLinkCategory.Data.ID)
+	//s.deleteWorkItemLinkCategories = append(s.deleteWorkItemLinkCategories, *workItemLinkCategory.Data.ID)
 	s.userLinkCategoryID = *workItemLinkCategory.Data.ID
 	fmt.Printf("Created link category with ID: %s\n", *workItemLinkCategory.Data.ID)
 
@@ -185,7 +190,7 @@ func (s *WorkItemLinkSuite) SetupTest() {
 	createLinkTypePayload := CreateWorkItemLinkType("bug-blocker", models.SystemBug, models.SystemBug, s.userLinkCategoryID)
 	_, workItemLinkType := test.CreateWorkItemLinkTypeCreated(s.T(), nil, nil, s.workItemLinkTypeCtrl, createLinkTypePayload)
 	require.NotNil(s.T(), workItemLinkType)
-	s.deleteWorkItemLinkTypes = append(s.deleteWorkItemLinkTypes, *workItemLinkType.Data.ID)
+	//s.deleteWorkItemLinkTypes = append(s.deleteWorkItemLinkTypes, *workItemLinkType.Data.ID)
 	s.bugBlockerLinkTypeID = *workItemLinkType.Data.ID
 	fmt.Printf("Created link type with ID: %s\n", *workItemLinkType.Data.ID)
 }
@@ -246,7 +251,7 @@ func CreateWorkItemLinkType(name string, sourceType string, targetType string, c
 }
 
 // CreateWorkItemLink defines a work item link
-func CreateWorkItemLink(sourceID string, targetID string, linkTypeID string) *app.CreateWorkItemLinkPayload {
+func CreateWorkItemLink(sourceID uint64, targetID uint64, linkTypeID string) *app.CreateWorkItemLinkPayload {
 	lt := models.WorkItemLink{
 		SourceID:   sourceID,
 		TargetID:   targetID,
@@ -282,12 +287,12 @@ func (s *WorkItemLinkSuite) TestCreateAndDeleteWorkItemLink() {
 	_ = test.DeleteWorkItemLinkOK(s.T(), nil, nil, s.workItemLinkCtrl, *workItemLink.Data.ID)
 }
 
-//func (s *WorkItemLinkSuite) TestCreateWorkItemLinkBadRequest() {
-//	// Linking a bug and a feature isn't allowed for the bug blocker link type,
-//	// thererfore this will cause a bad parameter error (which results in a bad request error).
-//	createPayload := CreateWorkItemLink(s.bug1ID, s.feature1ID, s.bugBlockerLinkTypeID)
-//	_, _ = test.CreateWorkItemLinkBadRequest(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
-//}
+func (s *WorkItemLinkSuite) TestCreateWorkItemLinkBadRequest() {
+	// Linking a bug and a feature isn't allowed for the bug blocker link type,
+	// thererfore this will cause a bad parameter error (which results in a bad request error).
+	createPayload := CreateWorkItemLink(s.bug1ID, s.feature1ID, s.bugBlockerLinkTypeID)
+	_, _ = test.CreateWorkItemLinkBadRequest(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
+}
 
 //  func (s *WorkItemLinkSuite) TestDeleteWorkItemLinkNotFound() {
 //  	test.DeleteWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkTypeCtrl, "1e9a8b53-73a6-40de-b028-5177add79ffa")

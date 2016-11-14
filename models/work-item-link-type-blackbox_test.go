@@ -24,14 +24,11 @@ func TestWorkItemLinkType_Equal(t *testing.T) {
 		Name:           "Example work item link category",
 		Description:    &description,
 		Version:        0,
-		SourceTypeName: "system.bug",
-		SourceType:     models.WorkItemType{Name: "system.bug"},
-		TargetTypeName: "systen.userstory",
-		TargetType:     models.WorkItemType{Name: "system.userstory"},
+		SourceTypeName: models.SystemBug,
+		TargetTypeName: models.SystemUserStory,
 		ForwardName:    "blocks",
 		ReverseName:    "blocked by",
 		LinkCategoryID: satoriuuid.FromStringOrNil("0e671e36-871b-43a6-9166-0c4bd573eAAA"),
-		LinkCategory:   models.WorkItemLinkCategory{ID: satoriuuid.FromStringOrNil("0e671e36-871b-43a6-9166-0c4bd573eAAA")},
 	}
 
 	// Test equality
@@ -68,16 +65,6 @@ func TestWorkItemLinkType_Equal(t *testing.T) {
 	b.Description = &otherDescription
 	require.False(t, a.Equal(b))
 
-	// Test SourceType
-	b = a
-	b.SourceType.Name = "foobar"
-	require.False(t, a.Equal(b))
-
-	// Test TargetType
-	b = a
-	b.TargetType.Name = "foobar"
-	require.False(t, a.Equal(b))
-
 	// Test SourceTypeName
 	b = a
 	b.SourceTypeName = "foobar"
@@ -102,11 +89,6 @@ func TestWorkItemLinkType_Equal(t *testing.T) {
 	b = a
 	b.LinkCategoryID = satoriuuid.FromStringOrNil("aaa71e36-871b-43a6-9166-0c4bd573eCCC")
 	require.False(t, a.Equal(b))
-
-	// Test LinkCategory
-	b = a
-	b.LinkCategory = models.WorkItemLinkCategory{ID: satoriuuid.FromStringOrNil("aaa71e36-871b-43a6-9166-0c4bd573eCCC")}
-	require.False(t, a.Equal(b))
 }
 
 func TestWorkItemLinkTypeCheckValidForCreation(t *testing.T) {
@@ -119,14 +101,11 @@ func TestWorkItemLinkTypeCheckValidForCreation(t *testing.T) {
 		Name:           "Example work item link category",
 		Description:    &description,
 		Version:        0,
-		SourceTypeName: "system.bug",
-		SourceType:     models.WorkItemType{Name: "system.bug"},
-		TargetTypeName: "systen.userstory",
-		TargetType:     models.WorkItemType{Name: "system.userstory"},
+		SourceTypeName: models.SystemBug,
+		TargetTypeName: models.SystemUserStory,
 		ForwardName:    "blocks",
 		ReverseName:    "blocked by",
 		LinkCategoryID: satoriuuid.FromStringOrNil("0e671e36-871b-43a6-9166-0c4bd573eAAA"),
-		LinkCategory:   models.WorkItemLinkCategory{},
 	}
 
 	// Check valid

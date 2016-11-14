@@ -2,6 +2,7 @@ package models
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/almighty/almighty-core/app"
 	convert "github.com/almighty/almighty-core/convert"
@@ -15,16 +16,10 @@ type WorkItemLink struct {
 	// ID
 	ID satoriuuid.UUID `gorm:"primary_key"`
 	// Version for optimistic concurrency control
-	Version int
-
-	SourceID string
-	Source   WorkItem `gorm:"ForeignKey:SourceID;AssociationForeignKey:ID"`
-
-	TargetID string
-	Target   WorkItem `gorm:"ForeignKey:TargetID;AssociationForeignKey:ID"`
-
+	Version    int
+	SourceID   uint64
+	TargetID   uint64
 	LinkTypeID satoriuuid.UUID
-	LinkType   WorkItemLinkType `gorm:"ForeignKey:LinkTypeID;AssociationForeignKey:ID"`
 }
 
 // Ensure Fields implements the Equaler interface
@@ -49,19 +44,10 @@ func (self WorkItemLink) Equal(u convert.Equaler) bool {
 	if self.SourceID != other.SourceID {
 		return false
 	}
-	if !self.Source.Equal(other.Source) {
-		return false
-	}
 	if self.TargetID != other.TargetID {
 		return false
 	}
-	if !self.Target.Equal(other.Target) {
-		return false
-	}
 	if self.LinkTypeID != other.LinkTypeID {
-		return false
-	}
-	if !self.LinkType.Equal(other.LinkType) {
 		return false
 	}
 	return true
@@ -70,12 +56,6 @@ func (self WorkItemLink) Equal(u convert.Equaler) bool {
 // CheckValidForCreation returns an error if the work item link
 // cannot be used for the creation of a new work item link.
 func (t *WorkItemLink) CheckValidForCreation() error {
-	if t.SourceID == "" {
-		return NewBadParameterError("source_id", t.SourceID)
-	}
-	if t.TargetID == "" {
-		return NewBadParameterError("target_id", t.TargetID)
-	}
 	if satoriuuid.Equal(t.LinkTypeID, satoriuuid.Nil) {
 		return NewBadParameterError("link_type_id", t.LinkTypeID)
 	}
@@ -102,13 +82,13 @@ func ConvertLinkFromModel(t *WorkItemLink) app.WorkItemLink {
 				Source: &app.RelationWorkItem{
 					Data: &app.RelationWorkItemData{
 						Type: EndpointWorkItems,
-						ID:   t.SourceID,
+						ID:   strconv.FormatUint(t.SourceID, 10),
 					},
 				},
 				Target: &app.RelationWorkItem{
 					Data: &app.RelationWorkItemData{
 						Type: EndpointWorkItems,
-						ID:   t.TargetID,
+						ID:   strconv.FormatUint(t.TargetID, 10),
 					},
 				},
 			},
@@ -156,8 +136,7 @@ func ConvertLinkToModel(in *app.WorkItemLink, out *WorkItemLink) error {
 		if d.ID == "" {
 			return NewBadParameterError("data.relationships.link_type.data.id", d.ID)
 		}
-		out.LinkTypeID, err = satoriuuid.FromString(d.ID)
-		if err != nil {
+		if out.LinkTypeID, err = satoriuuid.FromString(d.ID); err != nil {
 			log.Printf("Error when converting %s to UUID: %s", in.Data.ID, err.Error())
 			// treat as not found: clients don't know it must be a UUID
 			return NewNotFoundError("work item link type", d.ID)
@@ -174,7 +153,9 @@ func ConvertLinkToModel(in *app.WorkItemLink, out *WorkItemLink) error {
 		if d.ID == "" {
 			return NewBadParameterError("data.relationships.source.data.id", d.ID)
 		}
-		out.SourceID = d.ID
+		if out.SourceID, err = strconv.ParseUint(d.ID, 10, 64); err != nil {
+			return NewBadParameterError("data.relationships.source.data.id", d.ID)
+		}
 	}
 
 	if rel != nil && rel.Target != nil && rel.Target.Data != nil {
@@ -187,7 +168,9 @@ func ConvertLinkToModel(in *app.WorkItemLink, out *WorkItemLink) error {
 		if d.ID == "" {
 			return NewBadParameterError("data.relationships.target.data.id", d.ID)
 		}
-		out.TargetID = d.ID
+		if out.TargetID, err = strconv.ParseUint(d.ID, 10, 64); err != nil {
+			return NewBadParameterError("data.relationships.target.data.id", d.ID)
+		}
 	}
 
 	return nil
