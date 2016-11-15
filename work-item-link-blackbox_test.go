@@ -2,11 +2,12 @@ package main_test
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
 	"testing"
+
+	"golang.org/x/net/context"
 
 	. "github.com/almighty/almighty-core"
 	"github.com/almighty/almighty-core/account"
