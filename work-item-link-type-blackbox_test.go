@@ -19,7 +19,6 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/goadesign/goa"
 	"github.com/jinzhu/gorm"
-	satoriuuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -158,9 +157,19 @@ func (s *WorkItemLinkTypeSuite) TestDeleteWorkItemLinkTypeNotFoundDueToBadID() {
 
 func (s *WorkItemLinkTypeSuite) TestUpdateWorkItemLinkTypeNotFound() {
 	createPayload := s.createDemoLinkType("bug-blocker")
-	notExistingId := satoriuuid.FromStringOrNil("46bbce9c-8219-4364-a450-dfd1b501654e") // This ID does not exist
-	notExistingIdStr := notExistingId.String()
-	createPayload.Data.ID = &notExistingIdStr
+	notExistingId := "46bbce9c-8219-4364-a450-dfd1b501654e" // This ID does not exist
+	createPayload.Data.ID = &notExistingId
+	// Wrap data portion in an update payload instead of a create payload
+	updateLinkTypePayload := &app.UpdateWorkItemLinkTypePayload{
+		Data: createPayload.Data,
+	}
+	test.UpdateWorkItemLinkTypeNotFound(s.T(), nil, nil, s.linkTypeCtrl, *updateLinkTypePayload.Data.ID, updateLinkTypePayload)
+}
+
+func (s *WorkItemLinkTypeSuite) TestUpdateWorkItemLinkTypeNotFoundDueToBadID() {
+	createPayload := s.createDemoLinkType("bug-blocker")
+	notExistingId := "something that is not a UUID" // This ID does not exist
+	createPayload.Data.ID = &notExistingId
 	// Wrap data portion in an update payload instead of a create payload
 	updateLinkTypePayload := &app.UpdateWorkItemLinkTypePayload{
 		Data: createPayload.Data,

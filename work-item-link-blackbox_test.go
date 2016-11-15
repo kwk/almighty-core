@@ -316,9 +316,19 @@ func (s *WorkItemLinkSuite) TestDeleteWorkItemLinkNotFoundDueToBadID() {
 
 func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkNotFound() {
 	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.userLinkCategoryID)
-	notExistingId := satoriuuid.FromStringOrNil("46bbce9c-8219-4364-a450-dfd1b501654e") // This ID does not exist
-	notExistingIdStr := notExistingId.String()
-	createPayload.Data.ID = &notExistingIdStr
+	notExistingId := "46bbce9c-8219-4364-a450-dfd1b501654e"
+	createPayload.Data.ID = &notExistingId
+	// Wrap data portion in an update payload instead of a create payload
+	updateLinkPayload := &app.UpdateWorkItemLinkPayload{
+		Data: createPayload.Data,
+	}
+	test.UpdateWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkCtrl, *updateLinkPayload.Data.ID, updateLinkPayload)
+}
+
+func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkNotFoundDueToBadID() {
+	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.userLinkCategoryID)
+	nonUUID := "something that is not a UUID"
+	createPayload.Data.ID = &nonUUID
 	// Wrap data portion in an update payload instead of a create payload
 	updateLinkPayload := &app.UpdateWorkItemLinkPayload{
 		Data: createPayload.Data,
