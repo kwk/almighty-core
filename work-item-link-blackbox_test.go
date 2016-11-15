@@ -294,21 +294,22 @@ func (s *WorkItemLinkSuite) TestCreateWorkItemLinkBadRequest() {
 	_, _ = test.CreateWorkItemLinkBadRequest(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
 }
 
-//  func (s *WorkItemLinkSuite) TestDeleteWorkItemLinkNotFound() {
-//  	test.DeleteWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkTypeCtrl, "1e9a8b53-73a6-40de-b028-5177add79ffa")
-//  }
-//
-//  func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkNotFound() {
-//  	createPayload := s.createDemoLinkType("bug-blocker")
-//  	notExistingId := satoriuuid.FromStringOrNil("46bbce9c-8219-4364-a450-dfd1b501654e") // This ID does not exist
-//  	notExistingIdStr := notExistingId.String()
-//  	createPayload.Data.ID = &notExistingIdStr
-//  	// Wrap data portion in an update payload instead of a create payload
-//  	updateLinkTypePayload := &app.UpdateWorkItemLinkPayload{
-//  		Data: createPayload.Data,
-//  	}
-//  	test.UpdateWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkTypeCtrl, *updateLinkTypePayload.Data.ID, updateLinkTypePayload)
-//  }
+func (s *WorkItemLinkSuite) TestDeleteWorkItemLinkNotFound() {
+	test.DeleteWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkCtrl, "1e9a8b53-73a6-40de-b028-5177add79ffa")
+}
+
+func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkNotFound() {
+	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.userLinkCategoryID)
+	notExistingId := satoriuuid.FromStringOrNil("46bbce9c-8219-4364-a450-dfd1b501654e") // This ID does not exist
+	notExistingIdStr := notExistingId.String()
+	createPayload.Data.ID = &notExistingIdStr
+	// Wrap data portion in an update payload instead of a create payload
+	updateLinkPayload := &app.UpdateWorkItemLinkPayload{
+		Data: createPayload.Data,
+	}
+	test.UpdateWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkCtrl, *updateLinkPayload.Data.ID, updateLinkPayload)
+}
+
 //
 //  func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkOK() {
 //  	createPayload := s.createDemoLinkType("bug-blocker")

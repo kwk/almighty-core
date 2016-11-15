@@ -11,7 +11,7 @@ import (
 type WorkItemLinkCategory struct {
 	gormsupport.Lifecycle
 	// ID
-	ID satoriuuid.UUID `gorm:"primary_key"`
+	ID satoriuuid.UUID `sql:"type:uuid default uuid_generate_v4()" gorm:"primary_key"`
 	// Name is the unique name of this work item link category.
 	Name string
 	// Description is an optional description of the work item link category

@@ -40,7 +40,7 @@ func (r *GormWorkItemLinkRepository) Create(ctx context.Context, link *WorkItemL
 	// Fetch the work item link type first in order to check that
 	// the given source and target work items match the correct work item types.
 	linkType := WorkItemLinkType{}
-	db := r.db.Model(&linkType).Where("id=?", link.LinkTypeID)
+	db := r.db.Where("id=?", link.LinkTypeID).Find(&linkType)
 	if db.Error != nil {
 		return nil, NewInternalError(fmt.Sprintf("Failed to find work item link type: %s", db.Error.Error()))
 	}
@@ -50,7 +50,7 @@ func (r *GormWorkItemLinkRepository) Create(ctx context.Context, link *WorkItemL
 
 	// Fetch the source work item
 	source := WorkItem{}
-	db = db.Model(&source).Where("id=?", link.SourceID)
+	db = r.db.Where("id=?", link.SourceID).Find(&source)
 	if db.Error != nil {
 		return nil, NewInternalError(fmt.Sprintf("Failed to find source work item: %s", db.Error.Error()))
 	}
@@ -60,7 +60,7 @@ func (r *GormWorkItemLinkRepository) Create(ctx context.Context, link *WorkItemL
 
 	// Fetch the target work item
 	target := WorkItem{}
-	db = db.Model(&target).Where("id=?", link.TargetID)
+	db = r.db.Where("id=?", link.TargetID).Find(&target)
 	if db.Error != nil {
 		return nil, NewInternalError(fmt.Sprintf("Failed to find target work item: %s", db.Error.Error()))
 	}
@@ -96,7 +96,8 @@ func (r *GormWorkItemLinkRepository) Load(ctx context.Context, ID string) (*app.
 	}
 	log.Printf("loading work item link %s", id.String())
 	res := WorkItemLink{}
-	db := r.db.Model(&res).Where("id=?", ID).First(&res)
+	//db := r.db.Model(&res).Where("id=?", ID).First(&res)
+	db := r.db.Where("id=?", id).Find(&res)
 	if db.RecordNotFound() {
 		log.Printf("not found work item link, res=%v", res)
 		return nil, NewNotFoundError("work item link", id.String())
@@ -148,11 +149,11 @@ func (r *GormWorkItemLinkRepository) Delete(ctx context.Context, ID string) erro
 		// treat as not found: clients don't know it must be a UUID
 		return NewNotFoundError("work item link", ID)
 	}
-	var cat = WorkItemLink{
+	var link = WorkItemLink{
 		ID: id,
 	}
-	log.Printf("work item link to delete %v\n", cat)
-	db := r.db.Delete(&cat)
+	log.Printf("work item link to delete %v\n", link)
+	db := r.db.Delete(&link)
 	if db.Error != nil {
 		return NewInternalError(db.Error.Error())
 	}
