@@ -52,7 +52,6 @@ func (c *WorkItemLinkController) Create(ctx *app.CreateWorkItemLinkContext) erro
 		return ctx.Created(cat)
 	})
 	// WorkItemLinkController_Create: end_implement
-	return nil
 }
 
 // Delete runs the delete action.
@@ -71,7 +70,6 @@ func (c *WorkItemLinkController) Delete(ctx *app.DeleteWorkItemLinkContext) erro
 		return ctx.OK([]byte{})
 	})
 	// WorkItemLinkController_Delete: end_implement
-	return nil
 }
 
 // List runs the list action.
