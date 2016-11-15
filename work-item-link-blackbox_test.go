@@ -369,37 +369,45 @@ func (s *WorkItemLinkSuite) TestShowWorkItemLinkNotFound() {
 	test.ShowWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")
 }
 
-//
-//  // TestListWorkItemLinkOK tests if we can find the work item links
-//  // "bug-blocker" and "related" in the list of work item links
-//  func (s *WorkItemLinkSuite) TestListWorkItemLinkOK() {
-//  	bugBlockerPayload := s.createDemoLinkType("bug-blocker")
-//  	_, bugBlockerType := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkTypeCtrl, bugBlockerPayload)
-//  	require.NotNil(s.T(), bugBlockerType)
-//
-//  	relatedPayload := s.createWorkItemLink("related", "foo.bug", "foo.bug", bugBlockerType.Data.Relationships.LinkCategory.Data.ID)
-//  	_, relatedType := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkTypeCtrl, relatedPayload)
-//  	require.NotNil(s.T(), relatedType)
-//
-//  	// Fetch a single work item link
-//  	_, linkTypeCollection := test.ListWorkItemLinkOK(s.T(), nil, nil, s.workItemLinkTypeCtrl)
-//  	require.NotNil(s.T(), linkTypeCollection)
-//  	require.Nil(s.T(), linkTypeCollection.Validate())
-//  	// Check the number of found work item links
-//  	require.NotNil(s.T(), linkTypeCollection.Data)
-//  	require.Condition(s.T(), func() bool {
-//  		return (len(linkTypeCollection.Data) >= 2)
-//  	}, "At least two work item links must exist (bug-blocker and related), but only %d exist.", len(linkTypeCollection.Data))
-//  	// Search for the work item types that must exist at minimum
-//  	toBeFound := 2
-//  	for i := 0; i < len(linkTypeCollection.Data) && toBeFound > 0; i++ {
-//  		if *linkTypeCollection.Data[i].Data.Attributes.Name == "bug-blocker" || *linkTypeCollection.Data[i].Data.Attributes.Name == "related" {
-//  			s.T().Log("Found work item link in collection: ", *linkTypeCollection.Data[i].Data.Attributes.Name)
-//  			toBeFound--
-//  		}
-//  	}
-//  	require.Exactly(s.T(), 0, toBeFound, "Not all required work item links (bug-blocker and related) where found.")
-//  }
+// TestListWorkItemLinkOK tests if we can find the work item links
+// "bug-blocker" and "related" in the list of work item links
+func (s *WorkItemLinkSuite) TestListWorkItemLinkOK() {
+	createPayload1 := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.bugBlockerLinkTypeID)
+	_, workItemLink1 := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkCtrl, createPayload1)
+	require.NotNil(s.T(), workItemLink1)
+	// Delete this work item link during cleanup
+	s.deleteWorkItemLinks = append(s.deleteWorkItemLinks, *workItemLink1.Data.ID)
+	expected1 := models.WorkItemLink{}
+	require.Nil(s.T(), models.ConvertLinkToModel(workItemLink1, &expected1))
+
+	createPayload2 := CreateWorkItemLink(s.bug2ID, s.bug3ID, s.bugBlockerLinkTypeID)
+	_, workItemLink2 := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkCtrl, createPayload2)
+	require.NotNil(s.T(), workItemLink2)
+	// Delete this work item link during cleanup
+	s.deleteWorkItemLinks = append(s.deleteWorkItemLinks, *workItemLink2.Data.ID)
+	expected2 := models.WorkItemLink{}
+	require.Nil(s.T(), models.ConvertLinkToModel(workItemLink2, &expected2))
+
+	// Fetch a single work item link
+	_, linkCollection := test.ListWorkItemLinkOK(s.T(), nil, nil, s.workItemLinkCtrl)
+	require.NotNil(s.T(), linkCollection)
+	require.Nil(s.T(), linkCollection.Validate())
+	// Check the number of found work item links
+	require.NotNil(s.T(), linkCollection.Data)
+	require.Condition(s.T(), func() bool {
+		return (len(linkCollection.Data) >= 2)
+	}, "At least two work item links must exist (%s and %s), but only %d exist.", *workItemLink1.Data.ID, *workItemLink2.Data.ID, len(linkCollection.Data))
+	// Search for the work item types that must exist at minimum
+	toBeFound := 2
+	for i := 0; i < len(linkCollection.Data) && toBeFound > 0; i++ {
+		if *linkCollection.Data[i].ID == *workItemLink1.Data.ID || *linkCollection.Data[i].ID == *workItemLink2.Data.ID {
+			s.T().Log("Found work item link in collection: ", *linkCollection.Data[i].ID)
+			toBeFound--
+		}
+	}
+	require.Exactly(s.T(), 0, toBeFound, "Not all required work item links (%s and %s) where found.", *workItemLink1.Data.ID, *workItemLink2.Data.ID)
+}
+
 //
 //  func getWorkItemLinkTestData(t *testing.T) []testSecureAPI {
 //  	privatekey, err := jwt.ParseRSAPrivateKeyFromPEM((configuration.GetTokenPrivateKey()))
