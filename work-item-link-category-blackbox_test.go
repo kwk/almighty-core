@@ -172,6 +172,10 @@ func (s *WorkItemLinkCategorySuite) TestDeleteWorkItemLinkCategoryNotFound() {
 	test.DeleteWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, "01f6c751-53f3-401f-be9b-6a9a230db8AA")
 }
 
+func (s *WorkItemLinkCategorySuite) TestDeleteWorkItemLinkCategoryNotFoundDueToBadID() {
+	_, _ = test.DeleteWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, "something that is not a UUID")
+}
+
 func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryNotFound() {
 	description := "New description for work item link category."
 	id := "88727441-4a21-4b35-aabe-007f8273cd19"

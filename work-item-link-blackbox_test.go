@@ -310,6 +310,10 @@ func (s *WorkItemLinkSuite) TestDeleteWorkItemLinkNotFound() {
 	test.DeleteWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkCtrl, "1e9a8b53-73a6-40de-b028-5177add79ffa")
 }
 
+func (s *WorkItemLinkSuite) TestDeleteWorkItemLinkNotFoundDueToBadID() {
+	_, _ = test.DeleteWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkCtrl, "something that is not a UUID")
+}
+
 func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkNotFound() {
 	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.userLinkCategoryID)
 	notExistingId := satoriuuid.FromStringOrNil("46bbce9c-8219-4364-a450-dfd1b501654e") // This ID does not exist
