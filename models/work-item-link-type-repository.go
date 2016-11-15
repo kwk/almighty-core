@@ -76,10 +76,10 @@ func (r *GormWorkItemLinkTypeRepository) List(ctx context.Context) (*app.WorkIte
 		return nil, db.Error
 	}
 	res := app.WorkItemLinkTypeArray{}
-	res.Data = make([]*app.WorkItemLinkType, len(rows))
+	res.Data = make([]*app.WorkItemLinkTypeData, len(rows))
 	for index, value := range rows {
-		cat := ConvertLinkTypeFromModel(&value)
-		res.Data[index] = &cat
+		linkType := ConvertLinkTypeFromModel(&value)
+		res.Data[index] = linkType.Data
 	}
 	// TODO: When adding pagination, this must not be len(rows) but
 	// the overall total number of elements from all pages.

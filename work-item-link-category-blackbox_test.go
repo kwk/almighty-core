@@ -258,8 +258,8 @@ func (s *WorkItemLinkCategorySuite) TestListWorkItemLinkCategoryOK() {
 	// Search for the work item types that must exist at minimum
 	toBeFound := 2
 	for i := 0; i < len(linkCatCollection.Data) && toBeFound > 0; i++ {
-		if *linkCatCollection.Data[i].Data.Attributes.Name == "system" || *linkCatCollection.Data[i].Data.Attributes.Name == "user" {
-			s.T().Log("Found work item link category in collection: ", *linkCatCollection.Data[i].Data.Attributes.Name)
+		if *linkCatCollection.Data[i].Attributes.Name == "system" || *linkCatCollection.Data[i].Attributes.Name == "user" {
+			s.T().Log("Found work item link category in collection: ", *linkCatCollection.Data[i].Attributes.Name)
 			toBeFound--
 		}
 	}

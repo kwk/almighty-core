@@ -234,8 +234,8 @@ func (s *WorkItemLinkTypeSuite) TestListWorkItemLinkTypeOK() {
 	// Search for the work item types that must exist at minimum
 	toBeFound := 2
 	for i := 0; i < len(linkTypeCollection.Data) && toBeFound > 0; i++ {
-		if *linkTypeCollection.Data[i].Data.Attributes.Name == "bug-blocker" || *linkTypeCollection.Data[i].Data.Attributes.Name == "related" {
-			s.T().Log("Found work item link type in collection: ", *linkTypeCollection.Data[i].Data.Attributes.Name)
+		if *linkTypeCollection.Data[i].Attributes.Name == "bug-blocker" || *linkTypeCollection.Data[i].Attributes.Name == "related" {
+			s.T().Log("Found work item link type in collection: ", *linkTypeCollection.Data[i].Attributes.Name)
 			toBeFound--
 		}
 	}

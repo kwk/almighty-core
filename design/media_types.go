@@ -263,7 +263,7 @@ var WorkItemLinkCategoryArray = a.MediaType("application/vnd.work-item-link-cate
 	a.Description(`An array of work item link categories`)
 	a.Attributes(func() {
 		a.Attribute("meta", WorkItemLinkCategoryArrayMeta)
-		a.Attribute("data", a.ArrayOf(WorkItemLinkCategory))
+		a.Attribute("data", a.ArrayOf(WorkItemLinkCategoryData))
 		a.Required("data")
 	})
 	a.View("default", func() {
@@ -295,7 +295,7 @@ var WorkItemLinkTypeArray = a.MediaType("application/vnd.work-item-link-type-arr
 	a.Description(`An array of work item link types`)
 	a.Attributes(func() {
 		a.Attribute("meta", WorkItemLinkTypeArrayMeta)
-		a.Attribute("data", a.ArrayOf(WorkItemLinkType))
+		a.Attribute("data", a.ArrayOf(WorkItemLinkTypeData))
 		a.Required("data")
 	})
 	a.View("default", func() {

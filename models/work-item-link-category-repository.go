@@ -84,11 +84,11 @@ func (r *GormWorkItemLinkCategoryRepository) List(ctx context.Context) (*app.Wor
 		return nil, db.Error
 	}
 	res := app.WorkItemLinkCategoryArray{}
-	res.Data = make([]*app.WorkItemLinkCategory, len(rows))
+	res.Data = make([]*app.WorkItemLinkCategoryData, len(rows))
 
 	for index, value := range rows {
 		cat := ConvertLinkCategoryFromModel(&value)
-		res.Data[index] = &cat
+		res.Data[index] = cat.Data
 	}
 
 	// TODO: When adding pagination, this must not be len(rows) but
