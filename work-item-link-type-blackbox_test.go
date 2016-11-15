@@ -207,6 +207,10 @@ func (s *WorkItemLinkTypeSuite) TestShowWorkItemLinkTypeOK() {
 	require.True(s.T(), expected.Equal(actual))
 }
 
+func (s *WorkItemLinkTypeSuite) TestShowWorkItemLinkTypeNotFoundDueToBadID() {
+	_ = test.ShowWorkItemLinkTypeNotFound(s.T(), nil, nil, s.linkTypeCtrl, "something that is not a UUID")
+}
+
 // TestShowWorkItemLinkTypeNotFound tests if we can fetch a non existing work item link type
 func (s *WorkItemLinkTypeSuite) TestShowWorkItemLinkTypeNotFound() {
 	test.ShowWorkItemLinkTypeNotFound(s.T(), nil, nil, s.linkTypeCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")

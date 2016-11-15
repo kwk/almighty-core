@@ -231,6 +231,10 @@ func (s *WorkItemLinkCategorySuite) TestShowWorkItemLinkCategoryOK() {
 	require.EqualValues(s.T(), linkCat, linkCat2)
 }
 
+func (s *WorkItemLinkCategorySuite) TestShowWorkItemLinkCategoryNotFoundDueToBadID() {
+	_ = test.ShowWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, "something that is not a UUID")
+}
+
 // TestShowWorkItemLinkCategoryNotFound tests if we can fetch a non existing work item link category
 func (s *WorkItemLinkCategorySuite) TestShowWorkItemLinkCategoryNotFound() {
 	test.ShowWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")
