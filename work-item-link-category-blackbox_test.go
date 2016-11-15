@@ -206,6 +206,49 @@ func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryNotFoundDueToB
 	test.UpdateWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, *payload.Data.ID, payload)
 }
 
+func (s *WorkItemLinkCategorySuite) UpdateWorkItemLinkCategoryBadRequestDueToBadType() {
+	description := "New description for work item link category."
+	id := "88727441-4a21-4b35-aabe-007f8273cd19"
+	payload := &app.UpdateWorkItemLinkCategoryPayload{
+		Data: &app.WorkItemLinkCategoryData{
+			ID:   &id,
+			Type: "something that is not workitemlinkcategories", // this will cause a BadParameter error
+			Attributes: &app.WorkItemLinkCategoryAttributes{
+				Description: &description,
+			},
+		},
+	}
+	_, _ = test.UpdateWorkItemLinkCategoryBadRequest(s.T(), nil, nil, s.linkCatCtrl, *payload.Data.ID, payload)
+}
+
+func (s *WorkItemLinkCategorySuite) UpdateWorkItemLinkCategoryBadRequestDueToEmptyName() {
+	name := "" // When updating the name, it must not be empty
+	id := "88727441-4a21-4b35-aabe-007f8273cd19"
+	payload := &app.UpdateWorkItemLinkCategoryPayload{
+		Data: &app.WorkItemLinkCategoryData{
+			ID:   &id,
+			Type: models.EndpointWorkItemLinkCategories,
+			Attributes: &app.WorkItemLinkCategoryAttributes{
+				Name: &name,
+			},
+		},
+	}
+	_, _ = test.UpdateWorkItemLinkCategoryBadRequest(s.T(), nil, nil, s.linkCatCtrl, *payload.Data.ID, payload)
+}
+
+func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryBadRequestDueToVersionConflictError() {
+	_, linkCatSystem := s.createWorkItemLinkCategorySystem()
+	require.NotNil(s.T(), linkCatSystem)
+
+	description := "New description for work item link category \"system\"."
+	updatePayload := &app.UpdateWorkItemLinkCategoryPayload{}
+	updatePayload.Data = linkCatSystem.Data
+	updatePayload.Data.Attributes.Description = &description
+	newVersion = *linkCatSystem.Data.Attributes.Version + 42 // This will cause a version conflict error
+
+	_, newLinkCat := test.UpdateWorkItemLinkCategoryBadRequest(s.T(), nil, nil, s.linkCatCtrl, *linkCatSystem.Data.ID, updatePayload)
+}
+
 func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryOK() {
 	_, linkCatSystem := s.createWorkItemLinkCategorySystem()
 	require.NotNil(s.T(), linkCatSystem)
