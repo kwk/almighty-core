@@ -42,6 +42,7 @@ type WorkItemLinkSuite struct {
 	// These IDs can safely be used by all tests
 	bug1ID               uint64
 	bug2ID               uint64
+	bug3ID               uint64
 	feature1ID           uint64
 	userLinkCategoryID   string
 	bugBlockerLinkTypeID string
@@ -167,8 +168,15 @@ func (s *WorkItemLinkSuite) SetupTest() {
 	s.deleteWorkItems = append(s.deleteWorkItems, bug2.ID)
 	s.bug2ID, err = strconv.ParseUint(bug2.ID, 10, 64)
 	require.Nil(s.T(), err)
-
 	fmt.Printf("Created bug2 with ID: %s\n", bug2.ID)
+
+	bug3Payload := CreateWorkItem(models.SystemBug, "bug3")
+	_, bug3 := test.CreateWorkitemCreated(s.T(), s.workItemSvc.Context, s.workItemSvc, s.workItemCtrl, bug3Payload)
+	require.NotNil(s.T(), bug3)
+	s.deleteWorkItems = append(s.deleteWorkItems, bug3.ID)
+	s.bug3ID, err = strconv.ParseUint(bug2.ID, 10, 64)
+	require.Nil(s.T(), err)
+	fmt.Printf("Created bug3 with ID: %s\n", bug3.ID)
 
 	feature1Payload := CreateWorkItem(models.SystemFeature, "feature1")
 	_, feature1 := test.CreateWorkitemCreated(s.T(), s.workItemSvc.Context, s.workItemSvc, s.workItemCtrl, feature1Payload)
@@ -310,24 +318,23 @@ func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkNotFound() {
 	test.UpdateWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkCtrl, *updateLinkPayload.Data.ID, updateLinkPayload)
 }
 
-//
-//  func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkOK() {
-//  	createPayload := s.createDemoLinkType("bug-blocker")
-//  	_, workItemLinkType := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkTypeCtrl, createPayload)
-//  	require.NotNil(s.T(), workItemLinkType)
-//  	// Specify new description for link type that we just created
-//  	// Wrap data portion in an update payload instead of a create payload
-//  	updateLinkTypePayload := &app.UpdateWorkItemLinkPayload{
-//  		Data: workItemLinkType.Data,
-//  	}
-//  	newDescription := "Lalala this is a new description for the work item type"
-//  	updateLinkTypePayload.Data.Attributes.Description = &newDescription
-//  	_, lt := test.UpdateWorkItemLinkOK(s.T(), nil, nil, s.workItemLinkTypeCtrl, *updateLinkTypePayload.Data.ID, updateLinkTypePayload)
-//  	require.NotNil(s.T(), lt.Data)
-//  	require.NotNil(s.T(), lt.Data.Attributes)
-//  	require.NotNil(s.T(), lt.Data.Attributes.Description)
-//  	require.Equal(s.T(), newDescription, *lt.Data.Attributes.Description)
-//  }
+func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkOK() {
+	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.bugBlockerLinkTypeID)
+	_, workItemLink := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
+	require.NotNil(s.T(), workItemLink)
+	// Specify new description for link type that we just created
+	// Wrap data portion in an update payload instead of a create payload
+	updateLinkPayload := &app.UpdateWorkItemLinkPayload{
+		Data: workItemLink.Data,
+	}
+	updateLinkPayload.Data.Relationships.Target.Data.ID = strconv.FormatUint(s.bug3ID, 10)
+	_, l := test.UpdateWorkItemLinkOK(s.T(), nil, nil, s.workItemLinkCtrl, *updateLinkPayload.Data.ID, updateLinkPayload)
+	require.NotNil(s.T(), l.Data)
+	require.NotNil(s.T(), l.Data.Relationships)
+	require.NotNil(s.T(), l.Data.Relationships.Target.Data)
+	require.Equal(s.T(), strconv.FormatUint(s.bug3ID, 10), l.Data.Relationships.Target.Data.ID)
+}
+
 //
 //  func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkBadRequest() {
 //  	createPayload := s.createDemoLinkType("bug-blocker")
