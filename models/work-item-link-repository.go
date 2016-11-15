@@ -111,19 +111,8 @@ func (r *GormWorkItemLinkRepository) Load(ctx context.Context, ID string) (*app.
 // TODO: Handle pagination
 func (r *GormWorkItemLinkRepository) List(ctx context.Context) (*app.WorkItemLinkArray, error) {
 	// We don't have any where clause or paging at the moment.
-	var where string
-	var parameters []interface{}
-	var start *int
-	var limit *int
 	var rows []WorkItemLink
-	db := r.db.Where(where, parameters...)
-	if start != nil {
-		db = db.Offset(*start)
-	}
-	if limit != nil {
-		db = db.Limit(*limit)
-	}
-	db = db.Find(&rows)
+	db := r.db.Find(&rows)
 	if db.Error != nil {
 		return nil, db.Error
 	}

@@ -64,39 +64,22 @@ func (r *GormWorkItemLinkCategoryRepository) Load(ctx context.Context, ID string
 // List returns all work item link categories
 // TODO: Handle pagination
 func (r *GormWorkItemLinkCategoryRepository) List(ctx context.Context) (*app.WorkItemLinkCategoryArray, error) {
-
-	// We don't have any where clause or paging at the moment.
-	var where string
-	var parameters []interface{}
-	var start *int
-	var limit *int
-
 	var rows []WorkItemLinkCategory
-	db := r.db.Where(where, parameters...)
-	if start != nil {
-		db = db.Offset(*start)
-	}
-	if limit != nil {
-		db = db.Limit(*limit)
-	}
-	db = db.Find(&rows)
+	db := r.db.Find(&rows)
 	if db.Error != nil {
 		return nil, db.Error
 	}
 	res := app.WorkItemLinkCategoryArray{}
 	res.Data = make([]*app.WorkItemLinkCategoryData, len(rows))
-
 	for index, value := range rows {
 		cat := ConvertLinkCategoryFromModel(&value)
 		res.Data[index] = cat.Data
 	}
-
 	// TODO: When adding pagination, this must not be len(rows) but
 	// the overall total number of elements from all pages.
 	res.Meta = &app.WorkItemLinkCategoryArrayMeta{
 		TotalCount: len(rows),
 	}
-
 	return &res, nil
 }
 
