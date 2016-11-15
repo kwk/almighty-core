@@ -387,3 +387,9 @@ func (s *WorkItemLinkTypeSuite) TestUnauthorizeWorkItemLinkTypeCUD() {
 		return nil
 	})
 }
+
+func TestNewWorkItemLinkTypeControllerDBNull(t *testing.T) {
+	require.Panics(t, func() {
+		NewWorkItemLinkTypeController(nil, nil)
+	})
+}
