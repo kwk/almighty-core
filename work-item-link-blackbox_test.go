@@ -322,6 +322,8 @@ func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkOK() {
 	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.bugBlockerLinkTypeID)
 	_, workItemLink := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
 	require.NotNil(s.T(), workItemLink)
+	// Delete this work item link during cleanup
+	s.deleteWorkItemLinks = append(s.deleteWorkItemLinks, *workItemLink.Data.ID)
 	// Specify new description for link type that we just created
 	// Wrap data portion in an update payload instead of a create payload
 	updateLinkPayload := &app.UpdateWorkItemLinkPayload{
@@ -335,36 +337,38 @@ func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkOK() {
 	require.Equal(s.T(), strconv.FormatUint(s.bug3ID, 10), l.Data.Relationships.Target.Data.ID)
 }
 
-//
-//  func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkBadRequest() {
-//  	createPayload := s.createDemoLinkType("bug-blocker")
-//  	updateLinkTypePayload := &app.UpdateWorkItemLinkPayload{
-//  		Data: createPayload.Data,
-//  	}
-//  	updateLinkTypePayload.Data.Type = "This should be workitemlinktypes" // Causes bad request
-//  	test.UpdateWorkItemLinkBadRequest(s.T(), nil, nil, s.workItemLinkTypeCtrl, *updateLinkTypePayload.Data.ID, updateLinkTypePayload)
-//  }
-//
-//  // TestShowWorkItemLinkOK tests if we can fetch the "system" work item link
-//  func (s *WorkItemLinkSuite) TestShowWorkItemLinkOK() {
-//  	// Create the work item link first and try to read it back in
-//  	createPayload := s.createDemoLinkType("bug-blocker")
-//  	_, workItemLinkType := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkTypeCtrl, createPayload)
-//  	require.NotNil(s.T(), workItemLinkType)
-//  	_, readIn := test.ShowWorkItemLinkOK(s.T(), nil, nil, s.workItemLinkTypeCtrl, *workItemLinkType.Data.ID)
-//  	require.NotNil(s.T(), readIn)
-//  	// Convert to model space and use equal function
-//  	expected := models.WorkItemLink{}
-//  	actual := models.WorkItemLink{}
-//  	require.Nil(s.T(), models.ConvertLinkTypeToModel(workItemLinkType, &expected))
-//  	require.Nil(s.T(), models.ConvertLinkTypeToModel(readIn, &actual))
-//  	require.True(s.T(), expected.Equal(actual))
-//  }
-//
-//  // TestShowWorkItemLinkNotFound tests if we can fetch a non existing work item link
-//  func (s *WorkItemLinkSuite) TestShowWorkItemLinkNotFound() {
-//  	test.ShowWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkTypeCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")
-//  }
+func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkBadRequest() {
+	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.bugBlockerLinkTypeID)
+	updateLinkPayload := &app.UpdateWorkItemLinkPayload{
+		Data: createPayload.Data,
+	}
+	updateLinkPayload.Data.Type = "This should be workitemlinks" // Causes bad request
+	test.UpdateWorkItemLinkBadRequest(s.T(), nil, nil, s.workItemLinkCtrl, *updateLinkPayload.Data.ID, updateLinkPayload)
+}
+
+// TestShowWorkItemLinkOK tests if we can fetch the "system" work item link
+func (s *WorkItemLinkSuite) TestShowWorkItemLinkOK() {
+	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.bugBlockerLinkTypeID)
+	_, workItemLink := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
+	require.NotNil(s.T(), workItemLink)
+	// Delete this work item link during cleanup
+	s.deleteWorkItemLinks = append(s.deleteWorkItemLinks, *workItemLink.Data.ID)
+	expected := models.WorkItemLink{}
+	require.Nil(s.T(), models.ConvertLinkToModel(workItemLink, &expected))
+
+	_, readIn := test.ShowWorkItemLinkOK(s.T(), nil, nil, s.workItemLinkCtrl, *workItemLink.Data.ID)
+	require.NotNil(s.T(), readIn)
+	// Convert to model space and use equal function
+	actual := models.WorkItemLink{}
+	require.Nil(s.T(), models.ConvertLinkToModel(readIn, &actual))
+	require.True(s.T(), expected.Equal(actual))
+}
+
+// TestShowWorkItemLinkNotFound tests if we can fetch a non existing work item link
+func (s *WorkItemLinkSuite) TestShowWorkItemLinkNotFound() {
+	test.ShowWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkCtrl, "88727441-4a21-4b35-aabe-007f8273cd19")
+}
+
 //
 //  // TestListWorkItemLinkOK tests if we can find the work item links
 //  // "bug-blocker" and "related" in the list of work item links
