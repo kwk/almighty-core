@@ -240,13 +240,12 @@ func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryBadRequestDueT
 	_, linkCatSystem := s.createWorkItemLinkCategorySystem()
 	require.NotNil(s.T(), linkCatSystem)
 
-	description := "New description for work item link category \"system\"."
-	updatePayload := &app.UpdateWorkItemLinkCategoryPayload{}
-	updatePayload.Data = linkCatSystem.Data
-	updatePayload.Data.Attributes.Description = &description
-	newVersion = *linkCatSystem.Data.Attributes.Version + 42 // This will cause a version conflict error
-
-	_, newLinkCat := test.UpdateWorkItemLinkCategoryBadRequest(s.T(), nil, nil, s.linkCatCtrl, *linkCatSystem.Data.ID, updatePayload)
+	updatePayload := &app.UpdateWorkItemLinkCategoryPayload{
+		Data: linkCatSystem.Data,
+	}
+	newVersion := *linkCatSystem.Data.Attributes.Version + 42 // This will cause a version conflict error
+	updatePayload.Data.Attributes.Version = &newVersion
+	_, _ = test.UpdateWorkItemLinkCategoryBadRequest(s.T(), nil, nil, s.linkCatCtrl, *linkCatSystem.Data.ID, updatePayload)
 }
 
 func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryOK() {

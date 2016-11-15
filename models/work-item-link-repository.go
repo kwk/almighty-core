@@ -45,7 +45,7 @@ func (r *GormWorkItemLinkRepository) Create(ctx context.Context, link *WorkItemL
 		return nil, NewInternalError(fmt.Sprintf("Failed to find work item link type: %s", db.Error.Error()))
 	}
 	if db.RecordNotFound() {
-		return nil, NewNotFoundError("work item link type", link.LinkTypeID.String())
+		return nil, NewBadParameterError("work item link type", link.LinkTypeID.String())
 	}
 
 	// Fetch the source work item
@@ -55,7 +55,7 @@ func (r *GormWorkItemLinkRepository) Create(ctx context.Context, link *WorkItemL
 		return nil, NewInternalError(fmt.Sprintf("Failed to find source work item: %s", db.Error.Error()))
 	}
 	if db.RecordNotFound() {
-		return nil, NewNotFoundError("source work item", strconv.FormatUint(link.SourceID, 10))
+		return nil, NewBadParameterError("source work item", strconv.FormatUint(link.SourceID, 10))
 	}
 
 	// Fetch the target work item
@@ -65,7 +65,7 @@ func (r *GormWorkItemLinkRepository) Create(ctx context.Context, link *WorkItemL
 		return nil, NewInternalError(fmt.Sprintf("Failed to find target work item: %s", db.Error.Error()))
 	}
 	if db.RecordNotFound() {
-		return nil, NewNotFoundError("target work item", strconv.FormatUint(link.TargetID, 10))
+		return nil, NewBadParameterError("target work item", strconv.FormatUint(link.TargetID, 10))
 	}
 
 	// Check that the work item types of the source and target match those specified in the link type

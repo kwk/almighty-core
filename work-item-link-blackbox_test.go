@@ -287,19 +287,41 @@ func TestSuiteWorkItemLink(t *testing.T) {
 	suite.Run(t, new(WorkItemLinkSuite))
 }
 
-// TestCreateWorkItemLink tests if we can create the work item link
 func (s *WorkItemLinkSuite) TestCreateAndDeleteWorkItemLink() {
 	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.bugBlockerLinkTypeID)
 	_, workItemLink := test.CreateWorkItemLinkCreated(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
 	require.NotNil(s.T(), workItemLink)
-
-	// Delete this work item link during cleanup
-	s.deleteWorkItemLinks = append(s.deleteWorkItemLinks, *workItemLink.Data.ID)
-
 	_ = test.DeleteWorkItemLinkOK(s.T(), nil, nil, s.workItemLinkCtrl, *workItemLink.Data.ID)
 }
 
-func (s *WorkItemLinkSuite) TestCreateWorkItemLinkBadRequest() {
+func (s *WorkItemLinkSuite) TestCreateWorkItemLinkBadRequestDueToInvalidLinkTypeID() {
+	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, satoriuuid.Nil.String())
+	_, _ = test.CreateWorkItemLinkBadRequest(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
+}
+
+func (s *WorkItemLinkSuite) TestCreateWorkItemLinkBadRequestDueToNotFoundLinkType() {
+	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, "11122233-871b-43a6-9166-0c4bd573e333")
+	_, _ = test.CreateWorkItemLinkBadRequest(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
+}
+
+func (s *WorkItemLinkSuite) TestCreateWorkItemLinkBadRequestDueToNotFoundSource() {
+	createPayload := CreateWorkItemLink(666666, s.bug2ID, s.bugBlockerLinkTypeID)
+	_, _ = test.CreateWorkItemLinkBadRequest(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
+}
+
+func (s *WorkItemLinkSuite) TestCreateWorkItemLinkBadRequestDueToNotFoundTarget() {
+	createPayload := CreateWorkItemLink(s.bug1ID, 666666, s.bugBlockerLinkTypeID)
+	_, _ = test.CreateWorkItemLinkBadRequest(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
+}
+
+func (s *WorkItemLinkSuite) TestCreateWorkItemLinkBadRequestDueToBadSourceType() {
+	// Linking a bug and a feature isn't allowed for the bug blocker link type,
+	// thererfore this will cause a bad parameter error (which results in a bad request error).
+	createPayload := CreateWorkItemLink(s.feature1ID, s.bug1ID, s.bugBlockerLinkTypeID)
+	_, _ = test.CreateWorkItemLinkBadRequest(s.T(), nil, nil, s.workItemLinkCtrl, createPayload)
+}
+
+func (s *WorkItemLinkSuite) TestCreateWorkItemLinkBadRequestDueToBadTargetType() {
 	// Linking a bug and a feature isn't allowed for the bug blocker link type,
 	// thererfore this will cause a bad parameter error (which results in a bad request error).
 	createPayload := CreateWorkItemLink(s.bug1ID, s.feature1ID, s.bugBlockerLinkTypeID)

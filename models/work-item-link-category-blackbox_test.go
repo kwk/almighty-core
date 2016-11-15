@@ -19,10 +19,9 @@ func TestWorkItemLinkCategory_Equal(t *testing.T) {
 	t.Parallel()
 	resource.Require(t, resource.UnitTest)
 
-	uuid, _ := satoriuuid.FromString("0e671e36-871b-43a6-9166-0c4bd573e231")
 	description := "An example description"
 	a := models.WorkItemLinkCategory{
-		ID:          uuid,
+		ID:          satoriuuid.FromStringOrNil("0e671e36-871b-43a6-9166-0c4bd573e231"),
 		Name:        "Example work item link category",
 		Description: &description,
 		Version:     0,
@@ -38,24 +37,34 @@ func TestWorkItemLinkCategory_Equal(t *testing.T) {
 	require.False(t, a.Equal(c))
 
 	// Test version
-	d := a
-	d.Version += 1
-	require.False(t, a.Equal(d))
+	c = a
+	c.Version += 1
+	require.False(t, a.Equal(c))
 
 	// Test name
-	e := a
-	e.Name = "bar"
-	require.False(t, a.Equal(e))
+	c = a
+	c.Name = "bar"
+	require.False(t, a.Equal(c))
 
 	// Test description
 	otherDescription := "bar"
-	f := a
-	f.Description = &otherDescription
-	require.False(t, a.Equal(f))
+	c = a
+	c.Description = &otherDescription
+	require.False(t, a.Equal(c))
 
 	// Test equality
-	g := a
-	require.True(t, a.Equal(g))
+	c = a
+	require.True(t, a.Equal(c))
+
+	// Test ID
+	c = a
+	c.ID = satoriuuid.FromStringOrNil("33371e36-871b-43a6-9166-0c4bd573e333")
+	require.False(t, a.Equal(c))
+
+	// Test when one Description is nil
+	c = a
+	c.Description = nil
+	require.False(t, a.Equal(c))
 }
 
 func TestWorkItemLinkCategory_ConvertLinkCategoryFromModel(t *testing.T) {
