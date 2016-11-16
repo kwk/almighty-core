@@ -1,7 +1,6 @@
 package models
 
 import (
-	"log"
 	"strconv"
 
 	"github.com/almighty/almighty-core/app"
@@ -109,7 +108,7 @@ func ConvertLinkToModel(in *app.WorkItemLink, out *WorkItemLink) error {
 	if in.Data.ID != nil {
 		id, err := satoriuuid.FromString(*in.Data.ID)
 		if err != nil {
-			log.Printf("Error when converting %s to UUID: %s", *in.Data.ID, err.Error())
+			//log.Printf("Error when converting %s to UUID: %s", *in.Data.ID, err.Error())
 			// treat as not found: clients don't know it must be a UUID
 			return NewNotFoundError("work item link", id.String())
 		}
@@ -137,7 +136,7 @@ func ConvertLinkToModel(in *app.WorkItemLink, out *WorkItemLink) error {
 			return NewBadParameterError("data.relationships.link_type.data.id", d.ID)
 		}
 		if out.LinkTypeID, err = satoriuuid.FromString(d.ID); err != nil {
-			log.Printf("Error when converting %s to UUID: %s", in.Data.ID, err.Error())
+			//log.Printf("Error when converting %s to UUID: %s", in.Data.ID, err.Error())
 			// treat as not found: clients don't know it must be a UUID
 			return NewNotFoundError("work item link type", d.ID)
 		}

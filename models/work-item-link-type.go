@@ -1,8 +1,6 @@
 package models
 
 import (
-	"log"
-
 	"github.com/almighty/almighty-core/app"
 	convert "github.com/almighty/almighty-core/convert"
 	"github.com/almighty/almighty-core/gormsupport"
@@ -152,7 +150,7 @@ func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) err
 	if in.Data.ID != nil {
 		id, err := satoriuuid.FromString(*in.Data.ID)
 		if err != nil {
-			log.Printf("Error when converting %s to UUID: %s", *in.Data.ID, err.Error())
+			//log.Printf("Error when converting %s to UUID: %s", *in.Data.ID, err.Error())
 			// treat as not found: clients don't know it must be a UUID
 			return NewNotFoundError("work item link type", id.String())
 		}
@@ -209,7 +207,7 @@ func ConvertLinkTypeToModel(in *app.WorkItemLinkType, out *WorkItemLinkType) err
 		}
 		out.LinkCategoryID, err = satoriuuid.FromString(d.ID)
 		if err != nil {
-			log.Printf("Error when converting %s to UUID: %s", in.Data.ID, err.Error())
+			//log.Printf("Error when converting %s to UUID: %s", in.Data.ID, err.Error())
 			// treat as not found: clients don't know it must be a UUID
 			return NotFoundError{entity: "work item link category", ID: d.ID}
 		}

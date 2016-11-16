@@ -191,20 +191,20 @@ func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryNotFound() {
 	test.UpdateWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, *payload.Data.ID, payload)
 }
 
-func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryNotFoundDueToBadID() {
-	description := "New description for work item link category."
-	id := "something that is not a UUID" // This will cause a Not Found error
-	payload := &app.UpdateWorkItemLinkCategoryPayload{
-		Data: &app.WorkItemLinkCategoryData{
-			ID:   &id,
-			Type: models.EndpointWorkItemLinkCategories,
-			Attributes: &app.WorkItemLinkCategoryAttributes{
-				Description: &description,
-			},
-		},
-	}
-	test.UpdateWorkItemLinkCategoryNotFound(s.T(), nil, nil, s.linkCatCtrl, *payload.Data.ID, payload)
-}
+// func (s *WorkItemLinkCategorySuite) TestUpdateWorkItemLinkCategoryBadRequestDueToBadID() {
+// 	description := "New description for work item link category."
+// 	id := "something that is not a UUID" // This will cause a Not Found error
+// 	payload := &app.UpdateWorkItemLinkCategoryPayload{
+// 		Data: &app.WorkItemLinkCategoryData{
+// 			ID:   &id,
+// 			Type: models.EndpointWorkItemLinkCategories,
+// 			Attributes: &app.WorkItemLinkCategoryAttributes{
+// 				Description: &description,
+// 			},
+// 		},
+// 	}
+// 	test.UpdateWorkItemLinkCategoryBadRequest(s.T(), nil, nil, s.linkCatCtrl, *payload.Data.ID, payload)
+// }
 
 func (s *WorkItemLinkCategorySuite) UpdateWorkItemLinkCategoryBadRequestDueToBadType() {
 	description := "New description for work item link category."

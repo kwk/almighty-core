@@ -347,16 +347,16 @@ func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkNotFound() {
 	test.UpdateWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkCtrl, *updateLinkPayload.Data.ID, updateLinkPayload)
 }
 
-func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkNotFoundDueToBadID() {
-	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.userLinkCategoryID)
-	nonUUID := "something that is not a UUID"
-	createPayload.Data.ID = &nonUUID
-	// Wrap data portion in an update payload instead of a create payload
-	updateLinkPayload := &app.UpdateWorkItemLinkPayload{
-		Data: createPayload.Data,
-	}
-	test.UpdateWorkItemLinkNotFound(s.T(), nil, nil, s.workItemLinkCtrl, *updateLinkPayload.Data.ID, updateLinkPayload)
-}
+// func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkBadRequestDueToBadID() {
+// 	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.userLinkCategoryID)
+// 	nonUUID := "something that is not a UUID"
+// 	createPayload.Data.ID = &nonUUID
+// 	// Wrap data portion in an update payload instead of a create payload
+// 	updateLinkPayload := &app.UpdateWorkItemLinkPayload{
+// 		Data: createPayload.Data,
+// 	}
+// 	test.UpdateWorkItemLinkBadRequest(s.T(), nil, nil, s.workItemLinkCtrl, *updateLinkPayload.Data.ID, updateLinkPayload)
+// }
 
 func (s *WorkItemLinkSuite) TestUpdateWorkItemLinkOK() {
 	createPayload := CreateWorkItemLink(s.bug1ID, s.bug2ID, s.bugBlockerLinkTypeID)

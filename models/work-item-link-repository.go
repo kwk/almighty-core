@@ -157,7 +157,7 @@ func (r *GormWorkItemLinkRepository) Delete(ctx context.Context, ID string) erro
 func (r *GormWorkItemLinkRepository) Save(ctx context.Context, lt app.WorkItemLink) (*app.WorkItemLink, error) {
 	res := WorkItemLink{}
 	if lt.Data.ID == nil {
-		return nil, NotFoundError{entity: "work item link", ID: "nil"}
+		return nil, NewBadParameterError("work item link", nil)
 	}
 	db := r.db.Model(&res).Where("id=?", *lt.Data.ID).First(&res)
 	if db.RecordNotFound() {

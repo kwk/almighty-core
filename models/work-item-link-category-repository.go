@@ -118,7 +118,7 @@ func (r *GormWorkItemLinkCategoryRepository) Save(ctx context.Context, linkCat a
 	}
 	id, err := satoriuuid.FromString(*linkCat.Data.ID)
 	if err != nil {
-		log.Printf("Error when converting %s to UUID: %s", *linkCat.Data.ID, err.Error())
+		//log.Printf("Error when converting %s to UUID: %s", *linkCat.Data.ID, err.Error())
 		// treat as not found: clients don't know it must be a UUID
 		return nil, NewNotFoundError("work item link category", id.String())
 	}
