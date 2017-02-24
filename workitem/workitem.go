@@ -21,7 +21,7 @@ type WorkItem struct {
 }
 
 // TableName implements gorm.tabler
-func (w WorkItem) TableName() string {
+func (wi WorkItem) TableName() string {
 	return "work_items"
 }
 
