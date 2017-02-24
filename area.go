@@ -258,13 +258,3 @@ func createAreaLinks(request *goa.RequestData, id interface{}) *app.GenericLinks
 		Self: &selfURL,
 	}
 }
-
-func convertToUUID(uuidStrings []string) []uuid.UUID {
-	var uUIDs []uuid.UUID
-
-	for i := 0; i < len(uuidStrings); i++ {
-		uuidString, _ := uuid.FromString(uuidStrings[i])
-		uUIDs = append(uUIDs, uuidString)
-	}
-	return uUIDs
-}
