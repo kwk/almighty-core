@@ -371,7 +371,7 @@ func (r *GormWorkItemRepository) GetCountsForIteration(ctx context.Context, iter
 	}
 	countsMap := map[string]WICountsPerIteration{}
 	countsMap[iterationID.String()] = WICountsPerIteration{
-		IterationId: iterationID.String(),
+		IterationID: iterationID.String(),
 		Closed:      res.Closed,
 		Total:       res.Total,
 	}
