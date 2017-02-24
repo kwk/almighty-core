@@ -125,10 +125,10 @@ func (r *UndoableWorkItemRepository) Fetch(ctx context.Context, criteria criteri
 	return r.wrapped.Fetch(ctx, criteria)
 }
 
-func (r *UndoableWorkItemRepository) GetCountsPerIteration(ctx context.Context, spaceId uuid.UUID) (map[string]WICountsPerIteration, error) {
+func (r *UndoableWorkItemRepository) GetCountsPerIteration(ctx context.Context, spaceID uuid.UUID) (map[string]WICountsPerIteration, error) {
 	return map[string]WICountsPerIteration{}, nil
 }
 
-func (r *UndoableWorkItemRepository) GetCountsForIteration(ctx context.Context, iterationId uuid.UUID) (map[string]WICountsPerIteration, error) {
+func (r *UndoableWorkItemRepository) GetCountsForIteration(ctx context.Context, iterationID uuid.UUID) (map[string]WICountsPerIteration, error) {
 	return map[string]WICountsPerIteration{}, nil
 }
