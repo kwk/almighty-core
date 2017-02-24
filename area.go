@@ -130,13 +130,13 @@ func addResolvedPath(appl application.Application, req *goa.RequestData, mArea *
 
 func getResolvePath(appl application.Application, a *area.Area) (*string, error) {
 	parentUUIDStrings := strings.Split(area.ConvertFromLtreeFormat(a.Path), pathSepInService)
-	parentUuids := convertToUUID(parentUUIDdStrings)
-	parentAreas, err := appl.Areas().LoadMultiple(context.Background(), parentUuids)
+	parentUUIDs := convertToUUID(parentUUIDStrings)
+	parentAreas, err := appl.Areas().LoadMultiple(context.Background(), parentUUIDs)
 	if err != nil {
 		return nil, err
 	}
 	pathResolved := ""
-	for _, a := range parentUuids {
+	for _, a := range parentUUIDs {
 		area := getAreaByID(a, parentAreas)
 		if area == nil {
 			continue
