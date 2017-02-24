@@ -32,7 +32,7 @@ func (st SimpleType) Equal(u convert.Equaler) bool {
 
 // GetKind implements FieldType
 func (st SimpleType) GetKind() Kind {
-	return self.Kind
+	return st.Kind
 }
 
 var timeType = reflect.TypeOf((*time.Time)(nil)).Elem()
