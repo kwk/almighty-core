@@ -58,31 +58,31 @@ var _ convert.Equaler = FieldDefinition{}
 var _ convert.Equaler = (*FieldDefinition)(nil)
 
 // Equal returns true if two FieldDefinition objects are equal; otherwise false is returned.
-func (self FieldDefinition) Equal(u convert.Equaler) bool {
+func (fd FieldDefinition) Equal(u convert.Equaler) bool {
 	other, ok := u.(FieldDefinition)
 	if !ok {
 		return false
 	}
-	if self.Required != other.Required {
+	if fd.Required != other.Required {
 		return false
 	}
-	return self.Type.Equal(other.Type)
+	return fd.Type.Equal(other.Type)
 }
 
 // ConvertToModel converts a field value for use in the persistence layer
-func (f FieldDefinition) ConvertToModel(name string, value interface{}) (interface{}, error) {
-	if f.Required && (value == nil || (f.Type.GetKind() == KindString && strings.TrimSpace(value.(string)) == "")) {
+func (fd FieldDefinition) ConvertToModel(name string, value interface{}) (interface{}, error) {
+	if fd.Required && (value == nil || (fd.Type.GetKind() == KindString && strings.TrimSpace(value.(string)) == "")) {
 		return nil, fmt.Errorf("Value %s is required", name)
 	}
-	return f.Type.ConvertToModel(value)
+	return fd.Type.ConvertToModel(value)
 }
 
 // ConvertFromModel converts a field value for use in the REST API layer
-func (f FieldDefinition) ConvertFromModel(name string, value interface{}) (interface{}, error) {
-	if f.Required && value == nil {
+func (fd FieldDefinition) ConvertFromModel(name string, value interface{}) (interface{}, error) {
+	if fd.Required && value == nil {
 		return nil, fmt.Errorf("Value %s is required", name)
 	}
-	return f.Type.ConvertFromModel(value)
+	return fd.Type.ConvertFromModel(value)
 }
 
 type rawFieldDef struct {
@@ -95,25 +95,25 @@ var _ convert.Equaler = rawFieldDef{}
 var _ convert.Equaler = (*rawFieldDef)(nil)
 
 // Equal returns true if two rawFieldDef objects are equal; otherwise false is returned.
-func (self rawFieldDef) Equal(u convert.Equaler) bool {
+func (rfd rawFieldDef) Equal(u convert.Equaler) bool {
 	other, ok := u.(rawFieldDef)
 	if !ok {
 		return false
 	}
-	if self.Required != other.Required {
+	if rfd.Required != other.Required {
 		return false
 	}
-	if self.Type == nil && other.Type == nil {
+	if rfd.Type == nil && other.Type == nil {
 		return true
 	}
-	if self.Type != nil && other.Type != nil {
-		return reflect.DeepEqual(self.Type, other.Type)
+	if rfd.Type != nil && other.Type != nil {
+		return reflect.DeepEqual(rfd.Type, other.Type)
 	}
 	return false
 }
 
 // UnmarshalJSON implements encoding/json.Unmarshaler
-func (f *FieldDefinition) UnmarshalJSON(bytes []byte) error {
+func (fd *FieldDefinition) UnmarshalJSON(bytes []byte) error {
 	temp := rawFieldDef{}
 
 	err := json.Unmarshal(bytes, &temp)
@@ -135,21 +135,21 @@ func (f *FieldDefinition) UnmarshalJSON(bytes []byte) error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		*f = FieldDefinition{Type: theType, Required: temp.Required}
+		*fd = FieldDefinition{Type: theType, Required: temp.Required}
 	case KindEnum:
 		theType := EnumType{}
 		err = json.Unmarshal(*temp.Type, &theType)
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		*f = FieldDefinition{Type: theType, Required: temp.Required}
+		*fd = FieldDefinition{Type: theType, Required: temp.Required}
 	default:
 		theType := SimpleType{}
 		err = json.Unmarshal(*temp.Type, &theType)
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		*f = FieldDefinition{Type: theType, Required: temp.Required}
+		*fd = FieldDefinition{Type: theType, Required: temp.Required}
 	}
 	return nil
 }
