@@ -18,32 +18,32 @@ var _ convert.Equaler = ListType{}
 var _ convert.Equaler = (*ListType)(nil)
 
 // Equal returns true if two ListType objects are equal; otherwise false is returned.
-func (self ListType) Equal(u convert.Equaler) bool {
+func (lt ListType) Equal(u convert.Equaler) bool {
 	other, ok := u.(ListType)
 	if !ok {
 		return false
 	}
-	if !self.SimpleType.Equal(other.SimpleType) {
+	if !lt.SimpleType.Equal(other.SimpleType) {
 		return false
 	}
-	return self.ComponentType.Equal(other.ComponentType)
+	return lt.ComponentType.Equal(other.ComponentType)
 }
 
 // ConvertToModel implements the FieldType interface
-func (fieldType ListType) ConvertToModel(value interface{}) (interface{}, error) {
+func (lt ListType) ConvertToModel(value interface{}) (interface{}, error) {
 	// the assumption is that work item types do not change over time...only new ones can be created
-	return convertList(func(fieldType FieldType, value interface{}) (interface{}, error) {
-		return fieldType.ConvertToModel(value)
-	}, fieldType.ComponentType, value)
+	return convertList(func(ft FieldType, value interface{}) (interface{}, error) {
+		return lt.ConvertToModel(value)
+	}, lt.ComponentType, value)
 
 }
 
 // ConvertFromModel implements the FieldType interface
-func (fieldType ListType) ConvertFromModel(value interface{}) (interface{}, error) {
+func (lt ListType) ConvertFromModel(value interface{}) (interface{}, error) {
 	// the assumption is that work item types do not change over time...only new ones can be created
-	return convertList(func(fieldType FieldType, value interface{}) (interface{}, error) {
-		return fieldType.ConvertFromModel(value)
-	}, fieldType.ComponentType, value)
+	return convertList(func(lt FieldType, value interface{}) (interface{}, error) {
+		return lt.ConvertFromModel(value)
+	}, lt.ComponentType, value)
 }
 
 type converter func(FieldType, interface{}) (interface{}, error)
