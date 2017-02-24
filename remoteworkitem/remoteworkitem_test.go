@@ -32,7 +32,7 @@ func provideRemoteData(dataURL string) ([]byte, error) {
 func TestWorkItemMapping(t *testing.T) {
 	// given
 	resource.Require(t, resource.UnitTest)
-	workItemMap := RemoteWorkItemMap{
+	workItemMap := Map{
 		AttributeMapper{AttributeExpression("title"), AttributeConverter(StringConverter{})}: workitem.SystemTitle,
 	}
 	jsonContent := `{"title":"abc"}`
