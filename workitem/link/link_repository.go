@@ -230,12 +230,12 @@ func (r *GormWorkItemLinkRepository) Delete(ctx context.Context, ID string) erro
 // DeleteRelatedLinks deletes all links in which the source or target equals the
 // given work item ID.
 func (r *GormWorkItemLinkRepository) DeleteRelatedLinks(ctx context.Context, wiIDStr string) error {
-	wiId, err := strconv.ParseUint(wiIDStr, 10, 64)
+	wiID, err := strconv.ParseUint(wiIDStr, 10, 64)
 	if err != nil {
 		// treat as not found: clients don't know it must be a uint64
 		return errors.NewNotFoundError("work item link", wiIDStr)
 	}
-	db := r.db.Where("? in (source_id, target_id)", wiId).Delete(&WorkItemLink{})
+	db := r.db.Where("? in (source_id, target_id)", wiID).Delete(&WorkItemLink{})
 	if db.Error != nil {
 		return errors.NewInternalError(db.Error.Error())
 	}
