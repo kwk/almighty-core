@@ -4,7 +4,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/almighty/almighty-core/account"
-	tokencontext "github.com/almighty/almighty-core/login/token_context"
+	"github.com/almighty/almighty-core/login/tokencontext"
 	"github.com/almighty/almighty-core/token"
 
 	jwt "github.com/dgrijalva/jwt-go"
