@@ -250,8 +250,8 @@ func (jira JiraRemoteWorkItem) Get(field AttributeExpression) interface{} {
 	return jira.issue[string(field)]
 }
 
-// MapToLocal maps the remote WorkItem to a local RemoteWorkItem
-func MapToLocal(remoteItem AttributeAccessor, mapping Map) (RemoteWorkItem, error) {
+// Map maps the remote WorkItem to a local RemoteWorkItem
+func Map(remoteItem AttributeAccessor, mapping Map) (RemoteWorkItem, error) {
 	remoteWorkItem := RemoteWorkItem{Fields: make(map[string]interface{})}
 	for from, to := range mapping {
 		originalValue := remoteItem.Get(from.expression)
