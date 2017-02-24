@@ -10,8 +10,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TestDataProvider defines the simple funcion for returning data from a remote provider
-type TestDataProvider func() ([]byte, error)
+// DataProvider defines the simple funcion for returning data from a remote provider
+type DataProvider func() ([]byte, error)
 
 // LoadTestData attempt to load test data from local disk unless;
 // * It does not exist or,
@@ -20,8 +20,8 @@ type TestDataProvider func() ([]byte, error)
 // Data is stored under examples/test
 // This is done to avoid always depending on remote systems, but also with an option
 // to refresh/retest against the 'current' remote system data without manual copy/paste
-func LoadTestData(filename string, provider TestDataProvider) ([]byte, error) {
-	refreshLocalData := func(path string, refresh TestDataProvider) ([]byte, error) {
+func LoadTestData(filename string, provider DataProvider) ([]byte, error) {
+	refreshLocalData := func(path string, refresh DataProvider) ([]byte, error) {
 		content, err := refresh()
 		if err != nil {
 			return nil, errors.WithStack(err)
