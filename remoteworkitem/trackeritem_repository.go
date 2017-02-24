@@ -47,7 +47,7 @@ func convert(db *gorm.DB, tID int, item TrackerItemContent, providerType string)
 	if err != nil {
 		return nil, InternalError{simpleError{message: fmt.Sprintf(" Error parsing the tracker data: %s", err.Error())}}
 	}
-	remoteWorkItem, err := Map(remoteTrackerItem, RemoteWorkItemKeyMaps[providerType])
+	remoteWorkItem, err := MapToLocal(remoteTrackerItem, RemoteWorkItemKeyMaps[providerType])
 	if err != nil {
 		return nil, ConversionError{simpleError{message: fmt.Sprintf("Error mapping to local work item: %s", err.Error())}}
 	}
