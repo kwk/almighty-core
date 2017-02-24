@@ -17,7 +17,7 @@ var _ convert.Equaler = (*Fields)(nil)
 
 // Equal returns true if two Fields objects are equal; otherwise false is returned.
 // TODO: (kwk) think about a better comparison for Fields map.
-func (f *Fields) Equal(u convert.Equaler) bool {
+func (f Fields) Equal(u convert.Equaler) bool {
 	other, ok := u.(Fields)
 	if !ok {
 		return false
