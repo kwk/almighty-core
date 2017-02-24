@@ -17,39 +17,39 @@ var _ convert.Equaler = (*Fields)(nil)
 
 // Equal returns true if two Fields objects are equal; otherwise false is returned.
 // TODO: (kwk) think about a better comparison for Fields map.
-func (self Fields) Equal(u convert.Equaler) bool {
+func (f *Fields) Equal(u convert.Equaler) bool {
 	other, ok := u.(Fields)
 	if !ok {
 		return false
 	}
-	return reflect.DeepEqual(self, other)
+	return reflect.DeepEqual(f, other)
 }
 
-func (j Fields) Value() (driver.Value, error) {
-	return toBytes(j)
+func (f *Fields) Value() (driver.Value, error) {
+	return toBytes(f)
 }
 
-func (j *Fields) Scan(src interface{}) error {
-	return fromBytes(src, j)
+func (f *Fields) Scan(src interface{}) error {
+	return fromBytes(src, f)
 }
 
 type FieldDefinitions map[string]FieldDefinition
 
-func (j FieldDefinitions) Value() (driver.Value, error) {
-	return toBytes(j)
+func (fd FieldDefinitions) Value() (driver.Value, error) {
+	return toBytes(fd)
 }
 
-func (j *FieldDefinitions) Scan(src interface{}) error {
-	return fromBytes(src, j)
+func (fd *FieldDefinitions) Scan(src interface{}) error {
+	return fromBytes(src, fd)
 }
 
-func toBytes(j interface{}) (driver.Value, error) {
-	if j == nil {
+func toBytes(f interface{}) (driver.Value, error) {
+	if f == nil {
 		// log.Trace("returning null")
 		return nil, nil
 	}
 
-	res, error := json.Marshal(j)
+	res, error := json.Marshal(f)
 	return res, error
 }
 
