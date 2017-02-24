@@ -129,8 +129,8 @@ func addResolvedPath(appl application.Application, req *goa.RequestData, mArea *
 }
 
 func getResolvePath(appl application.Application, a *area.Area) (*string, error) {
-	parentUuidStrings := strings.Split(area.ConvertFromLtreeFormat(a.Path), pathSepInService)
-	parentUuids := convertToUuid(parentUuidStrings)
+	parentUUIDStrings := strings.Split(area.ConvertFromLtreeFormat(a.Path), pathSepInService)
+	parentUuids := convertToUUID(parentUUIDdStrings)
 	parentAreas, err := appl.Areas().LoadMultiple(context.Background(), parentUuids)
 	if err != nil {
 		return nil, err
@@ -259,7 +259,7 @@ func createAreaLinks(request *goa.RequestData, id interface{}) *app.GenericLinks
 	}
 }
 
-func convertToUuid(uuidStrings []string) []uuid.UUID {
+func convertToUUID(uuidStrings []string) []uuid.UUID {
 	var uUIDs []uuid.UUID
 
 	for i := 0; i < len(uuidStrings); i++ {
