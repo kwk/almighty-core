@@ -104,18 +104,18 @@ func (r *GormWorkItemLinkTypeRepository) Load(ctx context.Context, ID string) (*
 
 // LoadTypeFromDB return work item link type for the given name in the correct link category
 // NOTE: Two link types can coexist with different categoryIDs.
-func (r *GormWorkItemLinkTypeRepository) LoadTypeFromDBByNameAndCategory(ctx context.Context, name string, categoryId satoriuuid.UUID) (*WorkItemLinkType, error) {
+func (r *GormWorkItemLinkTypeRepository) LoadTypeFromDBByNameAndCategory(ctx context.Context, name string, categoryID satoriuuid.UUID) (*WorkItemLinkType, error) {
 	log.Info(ctx, map[string]interface{}{
 		"wiltName":   name,
-		"categoryId": categoryId,
-	}, "Loading work item link type %s with category ID %s", name, categoryId.String())
+		"categoryID": categoryID,
+	}, "Loading work item link type %s with category ID %s", name, categoryID.String())
 
 	res := WorkItemLinkType{}
-	db := r.db.Model(&res).Where("name=? AND link_category_id=?", name, categoryId.String()).First(&res)
+	db := r.db.Model(&res).Where("name=? AND link_category_id=?", name, categoryID.String()).First(&res)
 	if db.RecordNotFound() {
 		log.Error(ctx, map[string]interface{}{
 			"wiltName":   name,
-			"categoryId": categoryId.String(),
+			"categoryID": categoryID.String(),
 		}, "work item link type not found")
 		return nil, errors.NewNotFoundError("work item link type", name)
 	}
