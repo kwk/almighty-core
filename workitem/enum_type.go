@@ -18,27 +18,27 @@ var _ convert.Equaler = EnumType{}
 var _ convert.Equaler = (*EnumType)(nil)
 
 // Equal returns true if two EnumType objects are equal; otherwise false is returned.
-func (self EnumType) Equal(u convert.Equaler) bool {
+func (et EnumType) Equal(u convert.Equaler) bool {
 	other, ok := u.(EnumType)
 	if !ok {
 		return false
 	}
-	if !self.SimpleType.Equal(other.SimpleType) {
+	if !et.SimpleType.Equal(other.SimpleType) {
 		return false
 	}
-	if !self.BaseType.Equal(other.BaseType) {
+	if !et.BaseType.Equal(other.BaseType) {
 		return false
 	}
-	return reflect.DeepEqual(self.Values, other.Values)
+	return reflect.DeepEqual(et.Values, other.Values)
 }
 
-func (fieldType EnumType) ConvertToModel(value interface{}) (interface{}, error) {
-	converted, err := fieldType.BaseType.ConvertToModel(value)
+func (et EnumType) ConvertToModel(value interface{}) (interface{}, error) {
+	converted, err := et.BaseType.ConvertToModel(value)
 	if err != nil {
 		return nil, fmt.Errorf("error converting enum value: %s", err.Error())
 	}
 
-	if !contains(fieldType.Values, converted) {
+	if !contains(et.Values, converted) {
 		return nil, fmt.Errorf("not an enum value: %v", value)
 	}
 	return converted, nil
@@ -53,8 +53,8 @@ func contains(a []interface{}, v interface{}) bool {
 	return false
 }
 
-func (fieldType EnumType) ConvertFromModel(value interface{}) (interface{}, error) {
-	converted, err := fieldType.BaseType.ConvertToModel(value)
+func (et EnumType) ConvertFromModel(value interface{}) (interface{}, error) {
+	converted, err := et.BaseType.ConvertToModel(value)
 	if err != nil {
 		return nil, fmt.Errorf("error converting enum value: %s", err.Error())
 	}
