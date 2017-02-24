@@ -60,7 +60,7 @@ const (
 )
 
 // RemoteWorkItemKeyMaps relate remote attribute keys to internal representation
-var RemoteWorkItemKeyMaps = map[string]Map{
+var RemoteWorkItemKeyMaps = map[string]RemoteWorkItemMap{
 	ProviderGithub: {
 		AttributeMapper{AttributeExpression(GithubTitle), StringConverter{}}:                                                               remoteTitle,
 		AttributeMapper{AttributeExpression(GithubDescription), MarkupConverter{markup: rendering.SystemMarkupMarkdown}}:                   remoteDescription,
@@ -129,7 +129,7 @@ func (converter ListConverter) Convert(value interface{}, item AttributeAccessor
 
 // Convert converts all fields from the given item that match this RegexpConverter's pattern, and returns an array of matching values as string
 func (converter PatternToListConverter) Convert(value interface{}, item AttributeAccessor) (interface{}, error) {
-	var result []string
+	result := make([]string, 0)
 	i := 0
 	for {
 		key := AttributeExpression(strings.Replace(converter.pattern, "?", strconv.Itoa(i), 1))
@@ -189,8 +189,8 @@ type AttributeMapper struct {
 	attributeConverter AttributeConverter
 }
 
-// Map will define mappings between remote<->internal attribute
-type Map map[AttributeMapper]string
+// RemoteWorkItemMap will define mappings between remote<->internal attribute
+type RemoteWorkItemMap map[AttributeMapper]string
 
 // AttributeExpression represents a commonly understood String format for a target path
 type AttributeExpression string
@@ -251,7 +251,7 @@ func (jira JiraRemoteWorkItem) Get(field AttributeExpression) interface{} {
 }
 
 // Map maps the remote WorkItem to a local RemoteWorkItem
-func Map(remoteItem AttributeAccessor, mapping Map) (RemoteWorkItem, error) {
+func Map(remoteItem AttributeAccessor, mapping RemoteWorkItemMap) (RemoteWorkItem, error) {
 	remoteWorkItem := RemoteWorkItem{Fields: make(map[string]interface{})}
 	for from, to := range mapping {
 		originalValue := remoteItem.Get(from.expression)
