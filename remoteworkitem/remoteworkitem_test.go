@@ -41,7 +41,7 @@ func TestWorkItemMapping(t *testing.T) {
 	gh, err := remoteWorkItemImpl(remoteTrackerItem)
 	require.Nil(t, err)
 	// when
-	workItem, err := MapToLocal(gh, workItemMap)
+	workItem, err := Map(gh, workItemMap)
 	// then
 	require.Nil(t, err)
 	assert.NotNil(t, workItem.Fields[workitem.SystemTitle], fmt.Sprintf("%s not mapped", workitem.SystemTitle))
@@ -103,7 +103,7 @@ func doTestIssueMapping(t *testing.T, data remoteData, provider string) {
 	issue, err := remoteWorkItemImpl(remoteTrackerItem)
 	require.Nil(t, err)
 	// when
-	workItem, err := MapToLocal(issue, workItemMap)
+	workItem, err := Map(issue, workItemMap)
 	require.Nil(t, err)
 	// then
 	for _, localWorkItemKey := range workItemMap {
@@ -317,7 +317,7 @@ func TestPatternConverter(t *testing.T) {
 	}
 	workItemMap := RemoteWorkItemKeyMaps[ProviderGithub]
 	// when
-	result, err := MapToLocal(workItem, workItemMap)
+	result, err := Map(workItem, workItemMap)
 	// then
 	require.Nil(t, err)
 	require.NotNil(t, result.Fields[remoteAssigneeLogins])
@@ -340,7 +340,7 @@ func TestPatternConverterWithNoValue(t *testing.T) {
 	}
 	workItemMap := RemoteWorkItemKeyMaps[ProviderGithub]
 	// when
-	result, err := MapToLocal(workItem, workItemMap)
+	result, err := Map(workItem, workItemMap)
 	// then
 	require.Nil(t, err)
 	require.NotNil(t, result.Fields[remoteAssigneeLogins])
@@ -369,7 +369,7 @@ func TestListConverter(t *testing.T) {
 	}
 	workItemMap := RemoteWorkItemKeyMaps[ProviderJira]
 	// when
-	result, err := MapToLocal(workItem, workItemMap)
+	result, err := Map(workItem, workItemMap)
 	// then
 	require.Nil(t, err)
 	require.NotNil(t, result.Fields[remoteAssigneeLogins])
@@ -388,7 +388,7 @@ func TestListConverterWithNoValue(t *testing.T) {
 	}
 	workItemMap := RemoteWorkItemKeyMaps[ProviderJira]
 	// when
-	result, err := MapToLocal(workItem, workItemMap)
+	result, err := Map(workItem, workItemMap)
 	// then
 	require.Nil(t, err)
 	require.NotNil(t, result.Fields[remoteAssigneeLogins])
