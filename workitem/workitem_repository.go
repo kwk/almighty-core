@@ -349,7 +349,7 @@ func (r *GormWorkItemRepository) GetCountsPerIteration(ctx context.Context, spac
 	}
 	countsMap := map[string]WICountsPerIteration{}
 	for _, iterationWithCount := range res {
-		countsMap[iterationWithCount.IterationId] = iterationWithCount
+		countsMap[iterationWithCount.IterationID] = iterationWithCount
 	}
 	return countsMap, nil
 }
