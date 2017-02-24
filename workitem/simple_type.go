@@ -22,28 +22,28 @@ var _ convert.Equaler = SimpleType{}
 var _ convert.Equaler = (*SimpleType)(nil)
 
 // Equal returns true if two SimpleType objects are equal; otherwise false is returned.
-func (self SimpleType) Equal(u convert.Equaler) bool {
+func (st SimpleType) Equal(u convert.Equaler) bool {
 	other, ok := u.(SimpleType)
 	if !ok {
 		return false
 	}
-	return self.Kind == other.Kind
+	return st.Kind == other.Kind
 }
 
 // GetKind implements FieldType
-func (self SimpleType) GetKind() Kind {
+func (st SimpleType) GetKind() Kind {
 	return self.Kind
 }
 
 var timeType = reflect.TypeOf((*time.Time)(nil)).Elem()
 
 // ConvertToModel implements the FieldType interface
-func (fieldType SimpleType) ConvertToModel(value interface{}) (interface{}, error) {
+func (st SimpleType) ConvertToModel(value interface{}) (interface{}, error) {
 	if value == nil {
 		return nil, nil
 	}
 	valueType := reflect.TypeOf(value)
-	switch fieldType.GetKind() {
+	switch st.GetKind() {
 	case KindString, KindUser, KindIteration, KindArea:
 		if valueType.Kind() != reflect.String {
 			return nil, fmt.Errorf("value %v should be %s, but is %s", value, "string", valueType.Name())
@@ -95,17 +95,17 @@ func (fieldType SimpleType) ConvertToModel(value interface{}) (interface{}, erro
 			return nil, errors.Errorf("value %v should be %s, but is %s", value, "MarkupContent", valueType)
 		}
 	default:
-		return nil, errors.Errorf("unexpected type constant: '%s'", fieldType.GetKind())
+		return nil, errors.Errorf("unexpected type constant: '%s'", st.GetKind())
 	}
 }
 
 // ConvertFromModel implements the FieldType interface
-func (fieldType SimpleType) ConvertFromModel(value interface{}) (interface{}, error) {
+func (st SimpleType) ConvertFromModel(value interface{}) (interface{}, error) {
 	if value == nil {
 		return nil, nil
 	}
 	valueType := reflect.TypeOf(value)
-	switch fieldType.GetKind() {
+	switch st.GetKind() {
 	case KindString, KindURL, KindUser, KindInteger, KindFloat, KindDuration, KindIteration, KindArea:
 		return value, nil
 	case KindInstant:
@@ -122,6 +122,6 @@ func (fieldType SimpleType) ConvertFromModel(value interface{}) (interface{}, er
 		markupContent := rendering.NewMarkupContentFromMap(value.(map[string]interface{}))
 		return markupContent, nil
 	default:
-		return nil, errors.Errorf("unexpected field type: %s", fieldType.GetKind())
+		return nil, errors.Errorf("unexpected field type: %s", st.GetKind())
 	}
 }
