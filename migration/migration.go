@@ -622,6 +622,14 @@ func loadFields(ctx context.Context, wit *workitem.WorkItemType, into workitem.F
 		// do not overwrite already defined fields in the map
 		if _, exist := into[key]; !exist {
 			into[key] = value
+		} else {
+			// If field already exist, overwrite only the label and description
+			into[key] = workitem.FieldDefinition{
+				Label:       value.Label,
+				Description: value.Description,
+				Required:    into[key].Required,
+				Type:        into[key].Type,
+			}
 		}
 	}
 
