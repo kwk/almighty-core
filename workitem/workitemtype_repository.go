@@ -122,8 +122,10 @@ func (r *GormWorkItemTypeRepository) Create(ctx context.Context, id *uuid.UUID, 
 			return nil, errs.WithStack(err)
 		}
 		converted := FieldDefinition{
-			Required: definition.Required,
-			Type:     ct,
+			Label:       definition.Label,
+			Description: definition.Description,
+			Required:    definition.Required,
+			Type:        ct,
 		}
 		if exists && !compatibleFields(existing, converted) {
 			return nil, fmt.Errorf("incompatible change for field %s", field)

@@ -151,21 +151,21 @@ func (f *FieldDefinition) UnmarshalJSON(bytes []byte) error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		*f = FieldDefinition{Type: theType, Required: temp.Required}
+		*f = FieldDefinition{Type: theType, Required: temp.Required, Label: temp.Label, Description: temp.Description}
 	case KindEnum:
 		theType := EnumType{}
 		err = json.Unmarshal(*temp.Type, &theType)
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		*f = FieldDefinition{Type: theType, Required: temp.Required}
+		*f = FieldDefinition{Type: theType, Required: temp.Required, Label: temp.Label, Description: temp.Description}
 	default:
 		theType := SimpleType{}
 		err = json.Unmarshal(*temp.Type, &theType)
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		*f = FieldDefinition{Type: theType, Required: temp.Required}
+		*f = FieldDefinition{Type: theType, Required: temp.Required, Label: temp.Label, Description: temp.Description}
 	}
 	return nil
 }

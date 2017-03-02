@@ -169,7 +169,7 @@ func TestTempConvertFieldsToModels(t *testing.T) {
 		SystemTitle:        {Type: &app.FieldType{Kind: "string"}, Required: true, Label: "l1", Description: "d1"},
 		SystemDescription:  {Type: &app.FieldType{Kind: "string"}, Required: false, Label: "l2", Description: "d2"},
 		SystemCreator:      {Type: &app.FieldType{Kind: "user"}, Required: true, Label: "l3", Description: "d3"},
-		SystemRemoteItemID: {Type: &app.FieldType{Kind: "string"}, Required: false, Label: "l4", Description: "d3"},
+		SystemRemoteItemID: {Type: &app.FieldType{Kind: "string"}, Required: false, Label: "l4", Description: "d4"},
 		SystemState: {
 			Type: &app.FieldType{
 				BaseType: &stString,
@@ -188,7 +188,7 @@ func TestTempConvertFieldsToModels(t *testing.T) {
 		},
 	}
 
-	expectedJSON := `{"system.creator":{"Required":true,"Label":"l3","Description":"d3",Type":{"Kind":"user"}},"system.description":{"Required":false,"Label":"l2","Description":"l2","Type":{"Kind":"string"}},"system.remote_item_id":{"Required":false,"Label":"l3","Description":"d4","Type":{"Kind":"string"}},"system.state":{"Required":true,"Label":"l5","Description":"d5","Type":{"Kind":"enum","BaseType":{"Kind":"string"},"Values":["new","open","in progress","resolved","closed"]}},"system.title":{"Required":true,"Label":"l1","Description":"d1","Type":{"Kind":"string"}}}`
+	expectedJSON := `{"system.creator":{"Required":true,"Label":"l3","Description":"d3","Type":{"Kind":"user"}},"system.description":{"Required":false,"Label":"l2","Description":"d2","Type":{"Kind":"string"}},"system.remote_item_id":{"Required":false,"Label":"l4","Description":"d4","Type":{"Kind":"string"}},"system.state":{"Required":true,"Label":"l5","Description":"d5","Type":{"Kind":"enum","BaseType":{"Kind":"string"},"Values":["new","open","in progress","resolved","closed"]}},"system.title":{"Required":true,"Label":"l1","Description":"d1","Type":{"Kind":"string"}}}`
 
 	convertedFields, err := TEMPConvertFieldTypesToModel(newFields)
 	jsonArray, err := json.Marshal(convertedFields)
