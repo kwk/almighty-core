@@ -540,7 +540,7 @@ func createOrUpdateSystemPlannerItemType(ctx context.Context, witr *workitem.Gor
 				Kind:          "list",
 			},
 			Required:    false,
-			Label:       "Assingees",
+			Label:       "Assignees",
 			Description: "The users that are assigned to the work item",
 		},
 		workitem.SystemState: {
