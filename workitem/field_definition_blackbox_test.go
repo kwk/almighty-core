@@ -27,7 +27,7 @@ func TestListFieldDefMarshalling(t *testing.T) {
 		return
 	}
 
-	t.Logf("bytes are ", string(bytes))
+	t.Logf("bytes are %s", string(bytes))
 	unmarshalled := FieldDefinition{}
 	json.Unmarshal(bytes, &unmarshalled)
 

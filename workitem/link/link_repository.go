@@ -32,6 +32,7 @@ const (
 type WorkItemLinkRepository interface {
 	repository.Exister
 	Create(ctx context.Context, sourceID, targetID uuid.UUID, linkTypeID uuid.UUID, creatorID uuid.UUID) (*WorkItemLink, error)
+	CreateFromModel(ctx context.Context, link *WorkItemLink, creatorID uuid.UUID) error
 	Load(ctx context.Context, ID uuid.UUID) (*WorkItemLink, error)
 	List(ctx context.Context) ([]WorkItemLink, error)
 	ListByWorkItem(ctx context.Context, wiID uuid.UUID) ([]WorkItemLink, error)
@@ -133,18 +134,24 @@ func (r *GormWorkItemLinkRepository) Create(ctx context.Context, sourceID, targe
 		TargetID:   targetID,
 		LinkTypeID: linkTypeID,
 	}
+	err := r.CreateFromModel(ctx, link, creatorID)
+	return link, err
+}
+
+func (r *GormWorkItemLinkRepository) CreateFromModel(ctx context.Context, link *WorkItemLink, creatorID uuid.UUID) error {
+	defer goa.MeasureSince([]string{"goa", "db", "workitemlink", "create_from_model"}, time.Now())
 	if err := link.CheckValidForCreation(); err != nil {
-		return nil, errs.WithStack(err)
+		return errs.WithStack(err)
 	}
 
 	// Fetch the link type
-	linkType, err := r.workItemLinkTypeRepo.Load(ctx, linkTypeID)
+	linkType, err := r.workItemLinkTypeRepo.Load(ctx, link.LinkTypeID)
 	if err != nil {
-		return nil, errs.Wrap(err, "failed to load link type")
+		return errs.Wrap(err, "failed to load link type")
 	}
 
-	if err := r.ValidateTopology(ctx, nil, targetID, *linkType); err != nil {
-		return nil, errs.WithStack(err)
+	if err := r.ValidateTopology(ctx, nil, link.TargetID, *linkType); err != nil {
+		return errs.WithStack(err)
 	}
 
 	db := r.db.Create(link)
@@ -152,23 +159,23 @@ func (r *GormWorkItemLinkRepository) Create(ctx context.Context, sourceID, targe
 		if gormsupport.IsUniqueViolation(db.Error, "work_item_links_unique_idx") {
 			log.Error(ctx, map[string]interface{}{
 				"err":       db.Error,
-				"source_id": sourceID,
+				"source_id": link.SourceID,
 			}, "unable to create work item link because a link already exists with the same source_id, target_id and type_id")
-			return nil, errors.NewDataConflictError(fmt.Sprintf("work item link already exists with data.relationships.source_id: %s; data.relationships.target_id: %s; data.relationships.link_type_id: %s ", sourceID, targetID, linkTypeID))
+			return errors.NewDataConflictError(fmt.Sprintf("work item link already exists with data.relationships.source_id: %s; data.relationships.target_id: %s; data.relationships.link_type_id: %s ", link.SourceID, link.TargetID, link.LinkTypeID))
 		}
 		if gormsupport.IsForeignKeyViolation(db.Error, "work_item_links_source_id_fkey") {
-			return nil, errors.NewNotFoundError("source", sourceID.String())
+			return errors.NewNotFoundError("source", link.SourceID.String())
 		}
 		if gormsupport.IsForeignKeyViolation(db.Error, "work_item_links_target_id_fkey") {
-			return nil, errors.NewNotFoundError("target", targetID.String())
+			return errors.NewNotFoundError("target", link.TargetID.String())
 		}
-		return nil, errors.NewInternalError(ctx, db.Error)
+		return errors.NewInternalError(ctx, db.Error)
 	}
 	// save a revision of the created work item link
 	if err := r.revisionRepo.Create(ctx, creatorID, RevisionTypeCreate, *link); err != nil {
-		return nil, errs.Wrapf(err, "error while creating work item")
+		return errs.Wrapf(err, "error while creating work item")
 	}
-	return link, nil
+	return nil
 }
 
 // Load returns the work item link for the given ID.
