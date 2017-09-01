@@ -177,7 +177,7 @@ func TestMarshalFieldDef(t *testing.T) {
 	resource.Require(t, resource.UnitTest)
 
 	et := workitem.EnumType{
-		SimpleType: workitem.SimpleType{workitem.KindEnum},
+		SimpleType: workitem.SimpleType{Kind: workitem.KindEnum},
 		Values:     []interface{}{"open", "done", "closed"},
 	}
 	expectedFieldDef := workitem.FieldDefinition{

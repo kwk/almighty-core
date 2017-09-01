@@ -43,6 +43,7 @@ type WorkItemRepository interface {
 	Reorder(ctx context.Context, spaceID uuid.UUID, direction DirectionType, targetID *uuid.UUID, wi WorkItem, modifierID uuid.UUID) (*WorkItem, error)
 	Delete(ctx context.Context, id uuid.UUID, suppressorID uuid.UUID) error
 	Create(ctx context.Context, spaceID uuid.UUID, typeID uuid.UUID, fields map[string]interface{}, creatorID uuid.UUID) (*WorkItem, error)
+	CreateFromModel(ctx context.Context, wi *WorkItem, creatorID uuid.UUID) error
 	List(ctx context.Context, spaceID uuid.UUID, criteria criteria.Expression, parentExists *bool, start *int, length *int) ([]WorkItem, int, error)
 	Fetch(ctx context.Context, spaceID uuid.UUID, criteria criteria.Expression) (*WorkItem, error)
 	GetCountsPerIteration(ctx context.Context, spaceID uuid.UUID) (map[string]WICountsPerIteration, error)
@@ -498,70 +499,92 @@ func (r *GormWorkItemRepository) Save(ctx context.Context, spaceID uuid.UUID, up
 // returns BadParameterError, ConversionError or InternalError
 func (r *GormWorkItemRepository) Create(ctx context.Context, spaceID uuid.UUID, typeID uuid.UUID, fields map[string]interface{}, creatorID uuid.UUID) (*WorkItem, error) {
 	defer goa.MeasureSince([]string{"goa", "db", "workitem", "create"}, time.Now())
-
-	wiType, err := r.witr.LoadTypeFromDB(ctx, typeID)
+	wi := WorkItem{
+		SpaceID: spaceID,
+		Type:    typeID,
+		Fields:  fields,
+	}
+	err := r.CreateFromModel(ctx, &wi, creatorID)
 	if err != nil {
-		return nil, errors.NewBadParameterError("typeID", typeID)
+		return nil, errs.WithStack(err)
+	}
+	return &wi, nil
+}
+
+// CreateFromModel creates a new work item in the repository
+// returns BadParameterError, ConversionError or InternalError
+func (r *GormWorkItemRepository) CreateFromModel(ctx context.Context, model *WorkItem, creatorID uuid.UUID) error {
+	defer goa.MeasureSince([]string{"goa", "db", "workitem", "create_from_model"}, time.Now())
+
+	if model.ID == uuid.Nil {
+		model.ID = uuid.NewV4()
+	}
+
+	wiType, err := r.witr.LoadTypeFromDB(ctx, model.Type)
+	if err != nil {
+		return errors.NewBadParameterError("typeID", model.Type)
 	}
 	// retrieve the current issue number in the given space
 	numberSequence := WorkItemNumberSequence{}
-	tx := r.db.Model(&WorkItemNumberSequence{}).Set("gorm:query_option", "FOR UPDATE").Where("space_id = ?", spaceID).First(&numberSequence)
+	tx := r.db.Model(&WorkItemNumberSequence{}).Set("gorm:query_option", "FOR UPDATE").Where("space_id = ?", model.SpaceID).First(&numberSequence)
 	if tx.RecordNotFound() {
-		numberSequence.SpaceID = spaceID
+		numberSequence.SpaceID = model.SpaceID
 		numberSequence.CurrentVal = 1
 	} else {
 		numberSequence.CurrentVal++
 	}
 	if err = r.db.Save(&numberSequence).Error; err != nil {
-		return nil, errs.Wrapf(err, "failed to create work item")
+		return errs.Wrapf(err, "failed to create work item")
 	}
 
 	// The order of workitems are spaced by a factor of 1000.
-	pos, err := r.LoadHighestOrder(ctx, spaceID)
+	pos, err := r.LoadHighestOrder(ctx, model.SpaceID)
 	if err != nil {
-		return nil, errors.NewInternalError(ctx, err)
+		return errors.NewInternalError(ctx, err)
 	}
 	pos = pos + orderValue
 	wi := WorkItemStorage{
-		Type:           typeID,
+		ID:             model.ID,
+		Type:           model.Type,
 		Fields:         Fields{},
 		ExecutionOrder: pos,
-		SpaceID:        spaceID,
+		SpaceID:        model.SpaceID,
 		Number:         numberSequence.CurrentVal,
 	}
-	fields[SystemCreator] = creatorID.String()
+	model.Fields[SystemCreator] = creatorID.String()
 	for fieldName, fieldDef := range wiType.Fields {
 		if fieldName == SystemCreatedAt || fieldName == SystemUpdatedAt || fieldName == SystemOrder {
 			continue
 		}
-		fieldValue := fields[fieldName]
+		fieldValue := model.Fields[fieldName]
 		var err error
 		wi.Fields[fieldName], err = fieldDef.ConvertToModel(fieldName, fieldValue)
 		if err != nil {
-			return nil, errors.NewBadParameterError(fieldName, fieldValue)
+			return errors.NewBadParameterError(fieldName, fieldValue)
 		}
 		if fieldName == SystemDescription && wi.Fields[fieldName] != nil {
 			description := rendering.NewMarkupContentFromMap(wi.Fields[fieldName].(map[string]interface{}))
 			if !rendering.IsMarkupSupported(description.Markup) {
-				return nil, errors.NewBadParameterError(fieldName, fieldValue)
+				return errors.NewBadParameterError(fieldName, fieldValue)
 			}
 		}
 	}
 	if err = r.db.Create(&wi).Error; err != nil {
-		return nil, errs.Wrapf(err, "failed to create work item")
+		return errs.Wrapf(err, "failed to create work item")
 	}
 
-	witem, err := ConvertWorkItemStorageToModel(wiType, &wi)
+	convertedModel, err := ConvertWorkItemStorageToModel(wiType, &wi)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	*model = *convertedModel
 	// store a revision of the created work item
 	err = r.wirr.Create(context.Background(), creatorID, RevisionTypeCreate, wi)
 	if err != nil {
-		return nil, errs.Wrapf(err, "error while creating work item")
+		return errs.Wrapf(err, "error while creating work item")
 	}
 	log.Debug(ctx, map[string]interface{}{"pkg": "workitem", "wi_id": wi.ID}, "Work item created successfully!")
-	return witem, nil
+	return nil
 }
 
 // ConvertWorkItemStorageToModel convert work item model to app WI
