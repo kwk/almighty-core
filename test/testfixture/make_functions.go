@@ -373,9 +373,27 @@ func makeWorkItemLinks(fxt *TestFixture) error {
 			fxt.WorkItemLinks[i].SourceID = fxt.WorkItems[2*i].ID
 			fxt.WorkItemLinks[i].TargetID = fxt.WorkItems[2*i+1].ID
 		}
+		// fmt.Println("BEFORE")
+		// for _, wi := range fxt.WorkItems {
+		// 	switch wi.ID {
+		// 	case fxt.WorkItemLinks[i].SourceID:
+		// 		fmt.Printf("Source=%s\n", wi.Fields[workitem.SystemTitle])
+		// 	case fxt.WorkItemLinks[i].TargetID:
+		// 		fmt.Printf("Target=%s\n", wi.Fields[workitem.SystemTitle])
+		// 	}
+		// }
 		if err := fxt.runCustomizeEntityFuncs(i, kindWorkItemLinks); err != nil {
 			return errs.WithStack(err)
 		}
+		// fmt.Println("AFTER")
+		// for _, wi := range fxt.WorkItems {
+		// 	switch wi.ID {
+		// 	case fxt.WorkItemLinks[i].SourceID:
+		// 		fmt.Printf("Source=%s\n", wi.Fields[workitem.SystemTitle])
+		// 	case fxt.WorkItemLinks[i].TargetID:
+		// 		fmt.Printf("Target=%s\n\n", wi.Fields[workitem.SystemTitle])
+		// 	}
+		// }
 		if fxt.isolatedCreation {
 			if fxt.WorkItemLinks[i].LinkTypeID == uuid.Nil {
 				return errs.New("you must specify a work item link type for each work item link")
