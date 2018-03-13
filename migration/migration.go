@@ -598,7 +598,7 @@ func PopulateCommonTypes(ctx context.Context, db *gorm.DB) error {
 	templateFunctions := []func() (*importer.ImportHelper, error){
 		importer.BaseTemplate,
 		importer.LegacyTemplate,
-		//"scrum": importer.ScrumTemplate,
+		importer.ScrumTemplate,
 		//"issue-tracking": importer.IssueTrackingTemplate,
 		//"scenario-driven-planning": importer.ScenarioDrivenPlanningTemplate,
 	}

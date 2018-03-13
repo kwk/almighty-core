@@ -14,6 +14,7 @@ var (
 	// pre-defined space templates
 	SystemLegacyTemplateID = uuid.FromStringOrNil("929c963a-174c-4c37-b487-272067e88bd4")
 	SystemBaseTemplateID   = uuid.FromStringOrNil("1f48b7bf-bc51-4823-8101-9f10039035ba")
+	SystemScrumTemplateID  = uuid.FromStringOrNil("629c963a-174c-4c37-b487-272067e88bd4")
 )
 
 // A SpaceTemplate defines is what is stored in the database. See the

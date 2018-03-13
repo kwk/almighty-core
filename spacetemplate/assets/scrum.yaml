@@ -1,0 +1,59 @@
+space_template:
+  id: "629c963a-174c-4c37-b487-272067e88bd4"
+  name: Scrum
+  description: >
+    Scrum is an agile framework for managing work with 
+    an emphasis on software development.
+work_item_types:
+- id: &epicID "7bd76da5-f5e3-4adf-b976-9f01c9a21416"
+  extends: "86af5178-9b41-469b-9096-57e5155c3f31"
+  name: Epic
+  description: TBD
+  icon: fa fa-university
+- id: &productBacklogItemID "eb0829fc-e47e-40c5-9507-a95466e113db"
+  extends: "86af5178-9b41-469b-9096-57e5155c3f31"
+  name: Product Backlog Item
+  description: TBD
+  icon: fa fa-scissors
+- id: &taskID "b8b7272e-5e1e-433d-965a-87c3e21dbed7"
+  extends: "86af5178-9b41-469b-9096-57e5155c3f31"
+  name: Task
+  description: TBD
+  icon: fa fa-tasks
+- id: &bugID "40335566-e207-4231-b95a-f8f5a3b941e6"
+  extends: "86af5178-9b41-469b-9096-57e5155c3f31"
+  name: Bug
+  description: TBD
+  icon: fa fa-bug
+  child_types:
+  - *taskID
+- id: &featureID "a661d2f7-f037-4e66-97ff-f45988791a62"
+  extends: "86af5178-9b41-469b-9096-57e5155c3f31"
+  name: Feature
+  description: TBD
+  icon: fa fa-puzzle-piece
+  child_types:
+  - *taskID
+  - *bugID
+work_item_type_groups:
+- name: Epics
+  type_list:
+  - *epicID
+  bucket: portfolio
+  icon: fa fa-bullseye
+- name: Features
+  type_list:
+  - *featureID
+  - *bugID
+  bucket: requirement
+  icon: pficon pficon-infrastructure
+- name: BacklogItems
+  type_list:
+  - *productBacklogItemID
+  bucket: requirement
+  icon: fa fa-list-ul
+- name: Execution
+  type_list:
+  - *taskID
+  bucket: iteration
+  icon: fa fa-repeat
