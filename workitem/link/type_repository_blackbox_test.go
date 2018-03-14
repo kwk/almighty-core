@@ -224,7 +224,7 @@ func (s *typeRepoBlackBoxTest) TestCreate() {
 		require.IsType(t, errors.BadParameterError{}, errs.Cause(err))
 		require.Nil(t, createdType)
 	})
-	s.T().Run("unique name violation (internal error)", func(t *testing.T) {
+	s.T().Run("unique name violation (data conflict error)", func(t *testing.T) {
 		// given
 		fxt := tf.NewTestFixture(t, s.DB, tf.WorkItemLinkTypes(1))
 		typ := *fxt.WorkItemLinkTypes[0]
@@ -303,7 +303,7 @@ func (s *typeRepoBlackBoxTest) TestSave() {
 		require.IsType(t, errors.NotFoundError{}, errs.Cause(err))
 		require.Nil(t, savedModel)
 	})
-	s.T().Run("unknown topology (internal error)", func(t *testing.T) {
+	s.T().Run("unknown topology (bad parameter error)", func(t *testing.T) {
 		// given
 		fxt := tf.NewTestFixture(t, s.DB, tf.WorkItemLinkTypes(1))
 		modelToSave := *fxt.WorkItemLinkTypes[0]
