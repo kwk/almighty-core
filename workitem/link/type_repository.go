@@ -22,7 +22,6 @@ type WorkItemLinkTypeRepository interface {
 	Create(ctx context.Context, linkType *WorkItemLinkType) (*WorkItemLinkType, error)
 	Load(ctx context.Context, ID uuid.UUID) (*WorkItemLinkType, error)
 	List(ctx context.Context, spaceTemplateID uuid.UUID) ([]WorkItemLinkType, error)
-	Delete(ctx context.Context, spaceTemplateID uuid.UUID, ID uuid.UUID) error
 	Save(ctx context.Context, linkCat WorkItemLinkType) (*WorkItemLinkType, error)
 }
 
@@ -129,7 +128,7 @@ func (r *GormWorkItemLinkTypeRepository) List(ctx context.Context, spaceTemplate
 
 	// We don't have any where clause or paging at the moment.
 	var modelLinkTypes []WorkItemLinkType
-	db := r.db.Where("space_template_id = ?", spaceTemplateID)
+	db := r.db.Where("space_template_id IN (?, ?)", spaceTemplateID, spacetemplate.SystemBaseTemplateID)
 	if err := db.Find(&modelLinkTypes).Error; err != nil {
 		log.Error(ctx, map[string]interface{}{
 			"err":               err,
@@ -138,29 +137,6 @@ func (r *GormWorkItemLinkTypeRepository) List(ctx context.Context, spaceTemplate
 		return nil, errs.Wrapf(err, "failed to find link types")
 	}
 	return modelLinkTypes, nil
-}
-
-// Delete deletes the work item link type with the given id
-// returns NotFoundError or InternalError
-func (r *GormWorkItemLinkTypeRepository) Delete(ctx context.Context, spaceTemplateID uuid.UUID, ID uuid.UUID) error {
-	defer goa.MeasureSince([]string{"goa", "db", "workitemlinktype", "delete"}, time.Now())
-	var cat = WorkItemLinkType{
-		ID:              ID,
-		SpaceTemplateID: spaceTemplateID,
-	}
-	log.Info(ctx, map[string]interface{}{
-		"wilt_id":           ID,
-		"space_template_id": spaceTemplateID,
-	}, "Work item link type to delete %v", cat)
-
-	db := r.db.Delete(&cat)
-	if db.Error != nil {
-		return errors.NewInternalError(ctx, db.Error)
-	}
-	if db.RowsAffected == 0 {
-		return errors.NewNotFoundError("work item link type", ID.String())
-	}
-	return nil
 }
 
 // Save updates the given work item link type in storage. Version must be the same as the one int the stored version.
@@ -182,10 +158,20 @@ func (r *GormWorkItemLinkTypeRepository) Save(ctx context.Context, modelToSave W
 		}, "unable to find work item link type repository")
 		return nil, errors.NewInternalError(ctx, db.Error)
 	}
+	if err := modelToSave.CheckValidForCreation(); err != nil {
+		log.Error(ctx, map[string]interface{}{
+			"wilt_id": modelToSave.ID.String(),
+			"err":     err,
+		}, "failed to validate link type to save")
+		return nil, errs.WithStack(err)
+	}
 	if existingModel.Version != modelToSave.Version {
 		return nil, errors.NewVersionConflictError("version conflict")
 	}
 	modelToSave.Version = modelToSave.Version + 1
+	if existingModel.SpaceTemplateID != modelToSave.SpaceTemplateID {
+		return nil, errors.NewForbiddenError("one must not change the space template reference in a work item link")
+	}
 	db = db.Save(&modelToSave)
 	if db.Error != nil {
 		log.Error(ctx, map[string]interface{}{
