@@ -118,6 +118,31 @@ func Test_ImportHelper_Validate(t *testing.T) {
 				delete(witsToBeFound, wit.ID)
 			}
 			require.Len(t, witsToBeFound, 0, "these work item types were not found in the scrum template: %+v", witsToBeFound)
+
+			parenting := uuid.FromStringOrNil("c2c792f5-a316-4a35-a650-b17a4617625c") // "parenting"
+			wiltsToBeFound := id.Map{
+				parenting: {},
+			}
+			for _, wilt := range templ.WILTs {
+				delete(wiltsToBeFound, wilt.ID)
+			}
+			require.Len(t, wiltsToBeFound, 0, "these work item types were not found in the scrum template: %+v", wiltsToBeFound)
+
+			epics := uuid.FromStringOrNil("14f4dc57-2a28-4936-82a2-9d2db3735de9")        // "epics"
+			features := uuid.FromStringOrNil("14f4dc57-2a28-4936-82a2-9d2db3735de9")     // "features"
+			backlogItems := uuid.FromStringOrNil("3231a8d5-15cb-4e98-a0af-8fb8c3ace915") // "backlogItems"
+			execution := uuid.FromStringOrNil("dab5e4cb-daa3-4eae-a933-b25d7fd5621b")    // "execution"
+			witgsToBeFound := id.Map{
+				epics:        {},
+				features:     {},
+				backlogItems: {},
+				execution:    {},
+			}
+			for _, witg := range templ.WITGs {
+				delete(witgsToBeFound, witg.ID)
+			}
+			require.Len(t, witgsToBeFound, 0, "these work item type groups were not found in the scrum template: %+v", witgsToBeFound)
+
 			require.NoError(t, templ.Validate())
 		})
 

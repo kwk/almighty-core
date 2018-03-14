@@ -53,24 +53,35 @@ work_item_types:
   - *featureID
   - *bugID
 work_item_type_groups:
-- name: Epics
+- id: "14f4dc57-2a28-4936-82a2-9d2db3735de9"        
+  name: Epics
   type_list:
   - *epicID
   bucket: portfolio
   icon: fa fa-bullseye
-- name: Features
+- id: "1f77c6cc-19b4-4158-aa30-986a6ede47ff"        
+  name: Features
   type_list:
   - *featureID
   - *bugID
   bucket: requirement
   icon: pficon pficon-infrastructure
-- name: BacklogItems
+- id: "3231a8d5-15cb-4e98-a0af-8fb8c3ace915"        
+  name: BacklogItems
   type_list:
   - *productBacklogItemID
   bucket: requirement
   icon: fa fa-list-ul
-- name: Execution
+- id: "dab5e4cb-daa3-4eae-a933-b25d7fd5621b"        
+  name: Execution
   type_list:
   - *taskID
   bucket: iteration
   icon: fa fa-repeat
+work_item_link_types:
+- id: "c2c792f5-a316-4a35-a650-b17a4617625c"
+  extends: "25C326A7-6D03-4F5A-B23B-86A9EE4171E9"
+  name: "Parenting"
+  forward_name: parent_of
+  reverse_name: child_of
+  topology: tree
