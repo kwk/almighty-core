@@ -60,5 +60,5 @@ func Float32(o float32) *float32 { return &o }
 // Float64 returns the pointer to the given float32.
 func Float64(o float64) *float64 { return &o }
 
-// Bool ...
+// Bool returns the pointer to the given bool
 func Bool(o bool) *bool { return &o }
