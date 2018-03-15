@@ -41,9 +41,6 @@ func (s *workItemTypeGroupSuite) SetupTest() {
 }
 
 func (s *workItemTypeGroupSuite) TestList() {
-	resetFn := s.DisableGormCallbacks()
-	defer resetFn()
-
 	s.T().Run("ok", func(t *testing.T) {
 		// given
 		fxt := tf.NewTestFixture(t, s.DB, tf.WorkItemTypeGroups(3))
@@ -67,9 +64,6 @@ func (s *workItemTypeGroupSuite) TestList() {
 }
 
 func (s *workItemTypeGroupSuite) TestShow() {
-	resetFn := s.DisableGormCallbacks()
-	defer resetFn()
-
 	s.T().Run("ok", func(t *testing.T) {
 		// given
 		fxt := tf.NewTestFixture(t, s.DB, tf.WorkItemTypeGroups(1))
