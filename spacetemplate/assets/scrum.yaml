@@ -168,6 +168,52 @@ work_item_types:
   child_types:
   - *featureID
   - *bugID
+  fields:
+    "system.state": 
+      label: State
+      description: The state of the work item
+      required: yes
+      type:
+        simple_type:
+          kind: enum
+        base_type:
+          kind: string
+        # First state in this ordered map is implicitly the default state
+        values: 
+        - new
+        - in progress
+        - done
+        - removed
+    "system.activatedDate": 
+      label: activatedDate
+      description: TBD
+      type:
+        kind: datetime
+      required: no
+    "system.activatedBy": 
+      label: activatedBy
+      description: TBD
+      type:
+        kind: string
+      required: no
+    "system.targetDate": 
+      label: taregetDate
+      description: TBD
+      type:
+        kind: datetime
+      required: no
+    "system.businessValue": 
+      label: businessValue
+      description: TBD
+      type:
+        kind: integer
+      required: no
+    "system.effort": 
+      label: effort
+      description: TBD
+      type:
+        kind: float
+      required: no
 work_item_type_groups:
 - id: "14f4dc57-2a28-4936-82a2-9d2db3735de9"        
   name: Epics
