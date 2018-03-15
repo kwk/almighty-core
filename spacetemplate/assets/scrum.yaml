@@ -5,18 +5,22 @@ space_template:
     Scrum is an agile framework for managing work with 
     an emphasis on software development.
 work_item_types:
-- id: &impedimentID "35837274-b833-4001-bee9-4d69e7f8aa0c"
+- id: &commonWorkItemTypeID "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   extends: "86af5178-9b41-469b-9096-57e5155c3f31"
+  name: Common Work Item Type
+  description: TBD
+- id: &impedimentID "35837274-b833-4001-bee9-4d69e7f8aa0c"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Impediment
   description: TBD
   icon: fa fa-tasks
 - id: &issueID "22a6f261-d982-427a-a9c6-939ea398992b"
-  extends: "86af5178-9b41-469b-9096-57e5155c3f31"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Issue
   description: TBD
   icon: fa fa-tasks
 - id: &taskID "b8b7272e-5e1e-433d-965a-87c3e21dbed7"
-  extends: "86af5178-9b41-469b-9096-57e5155c3f31"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Task
   description: TBD
   icon: fa fa-tasks
@@ -24,28 +28,111 @@ work_item_types:
   - *impedimentID
   - *issueID
 - id: &productBacklogItemID "eb0829fc-e47e-40c5-9507-a95466e113db"
-  extends: "86af5178-9b41-469b-9096-57e5155c3f31"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Product Backlog Item
   description: TBD
   icon: fa fa-scissors
   child_types:
   - *taskID
 - id: &featureID "a661d2f7-f037-4e66-97ff-f45988791a62"
-  extends: "86af5178-9b41-469b-9096-57e5155c3f31"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Feature
   description: TBD
   icon: fa fa-puzzle-piece
   child_types:
   - *productBacklogItemID
 - id: &bugID "40335566-e207-4231-b95a-f8f5a3b941e6"
-  extends: "86af5178-9b41-469b-9096-57e5155c3f31"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Bug
   description: TBD
   icon: fa fa-bug
   child_types:
   - *productBacklogItemID
+  fields:
+    "system.history": 
+      label: History
+      description: The history of changes of the workitem
+      type:
+        kind: history
+      required: no
+    "system.state": 
+      label: State
+      description: The state of the work item
+      required: yes
+      type:
+        simple_type:
+          kind: enum
+        base_type:
+          kind: string
+        # First state in this ordered map is implicitly the default state
+        values: 
+        - new
+        - approved
+        - committed
+        - done
+        - removed
+    "system.reason": 
+      label: Reason
+      description: TBD
+      type:
+        kind: string
+      required: no
+    "system.stackrank": 
+      label: StackRank
+      description: TBD
+      type:
+        kind: float
+      required: yes
+    "system.systeminfo": 
+      label: SystemInfo
+      description: TBD
+      type:
+        kind: asciidoc
+      required: no
+    "system.reprosteps": 
+      label: ReproSteps
+      description: TBD
+      type:
+        kind: asciidoc
+      required: no
+    "system.effort": 
+      label: Effort
+      description: TBD
+      type:
+        kind: float
+      required: no
+    "system.remainingwork": 
+      label: RemainingWork
+      description: TBD
+      type:
+        kind: float
+      required: no
+    "system.acceptancecriteria": 
+      label: AcceptanceCriteria
+      description: TBD
+      type:
+        kind: asciidoc
+      required: no
+    "system.priority": 
+      label: Priority
+      description: TBD
+      type:
+        kind: Integer
+      required: no
+    "system.severity": 
+      label: Severity
+      description: TBD
+      type:
+        kind: Integer
+      required: no
+    "system.foundIn": 
+      label: FoundIn
+      description: TBD
+      type:
+        kind: String
+      required: no
 - id: &epicID "7bd76da5-f5e3-4adf-b976-9f01c9a21416"
-  extends: "86af5178-9b41-469b-9096-57e5155c3f31"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Epic
   description: TBD
   icon: fa fa-university
