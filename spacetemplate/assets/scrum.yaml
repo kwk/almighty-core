@@ -9,6 +9,25 @@ work_item_types:
   extends: "86af5178-9b41-469b-9096-57e5155c3f31"
   name: Common Work Item Type
   description: TBD
+  fields:
+    "system.history": 
+      label: History
+      description: The history of changes of the workitem
+      type:
+        kind: history
+      required: no
+    "system.reason": 
+      label: Reason
+      description: TBD
+      type:
+        kind: string
+      required: no
+    "system.stackrank": 
+      label: StackRank
+      description: TBD
+      type:
+        kind: float
+      required: yes
 - id: &impedimentID "35837274-b833-4001-bee9-4d69e7f8aa0c"
   extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Impediment
@@ -27,6 +46,34 @@ work_item_types:
   child_types:
   - *impedimentID
   - *issueID
+  fields:
+    "system.state": 
+      label: State
+      description: The state of the work item
+      required: yes
+      type:
+        simple_type:
+          kind: enum
+        base_type:
+          kind: string
+        # First state in this ordered map is implicitly the default state
+        values: 
+        - todo
+        - in progress
+        - done
+        - removed
+    "system.systeminfo": 
+      label: SystemInfo
+      description: TBD
+      type:
+        kind: asciidoc
+      required: no
+    "system.remainingwork": 
+      label: RemainingWork
+      description: TBD
+      type:
+        kind: float
+      required: no
 - id: &productBacklogItemID "eb0829fc-e47e-40c5-9507-a95466e113db"
   extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Product Backlog Item
@@ -49,12 +96,6 @@ work_item_types:
   child_types:
   - *productBacklogItemID
   fields:
-    "system.history": 
-      label: History
-      description: The history of changes of the workitem
-      type:
-        kind: history
-      required: no
     "system.state": 
       label: State
       description: The state of the work item
@@ -71,18 +112,6 @@ work_item_types:
         - committed
         - done
         - removed
-    "system.reason": 
-      label: Reason
-      description: TBD
-      type:
-        kind: string
-      required: no
-    "system.stackrank": 
-      label: StackRank
-      description: TBD
-      type:
-        kind: float
-      required: yes
     "system.systeminfo": 
       label: SystemInfo
       description: TBD
