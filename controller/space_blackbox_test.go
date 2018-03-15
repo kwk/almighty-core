@@ -428,8 +428,6 @@ func (s *SpaceControllerTestSuite) TestUpdateSpace() {
 func (s *SpaceControllerTestSuite) TestShowSpace() {
 
 	// needed to valid comparison with golden files
-	resetFn := s.DisableGormCallbacks()
-	defer resetFn()
 
 	s.T().Run("ok", func(t *testing.T) {
 		// given
