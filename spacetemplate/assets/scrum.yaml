@@ -78,10 +78,3 @@ work_item_type_groups:
   - *taskID
   bucket: iteration
   icon: fa fa-repeat
-work_item_link_types:
-- id: "c2c792f5-a316-4a35-a650-b17a4617625c"
-  extends: "25C326A7-6D03-4F5A-B23B-86A9EE4171E9"
-  name: "Parenting"
-  forward_name: parent_of
-  reverse_name: child_of
-  topology: tree
