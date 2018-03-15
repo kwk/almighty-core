@@ -126,8 +126,6 @@ func (s *typeRepoBlackBoxTest) TestList() {
 }
 
 func (s *typeRepoBlackBoxTest) TestLoad() {
-	resetFn := s.DisableGormCallbacks()
-	defer resetFn()
 	s.T().Run("ok", func(t *testing.T) {
 		// given
 		fxt := tf.NewTestFixture(t, s.DB, tf.WorkItemLinkTypes(1))
@@ -151,9 +149,6 @@ func (s *typeRepoBlackBoxTest) TestLoad() {
 }
 
 func (s *typeRepoBlackBoxTest) TestCreate() {
-	resetFn := s.DisableGormCallbacks()
-	defer resetFn()
-
 	s.T().Run("ok", func(t *testing.T) {
 		// given
 		fxt := tf.NewTestFixture(t, s.DB, tf.SpaceTemplates(1))
@@ -314,5 +309,18 @@ func (s *typeRepoBlackBoxTest) TestSave() {
 		require.Error(t, err)
 		require.IsType(t, errors.BadParameterError{}, errs.Cause(err))
 		require.Nil(t, savedModel)
+	})
+	s.T().Run("unique name violation (data conflict error)", func(t *testing.T) {
+		// given
+		fxt := tf.NewTestFixture(t, s.DB, tf.WorkItemLinkTypes(2))
+		modelToSave := *fxt.WorkItemLinkTypes[1]
+		// take name from other link type to provoke error
+		modelToSave.Name = fxt.WorkItemLinkTypes[0].Name
+		// when
+		createdType, err := s.typeRepo.Save(s.Ctx, modelToSave)
+		// then
+		require.Error(t, err)
+		require.IsType(t, errors.DataConflictError{}, errs.Cause(err))
+		require.Nil(t, createdType)
 	})
 }

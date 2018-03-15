@@ -65,11 +65,11 @@ func (r *GormWorkItemLinkTypeRepository) Create(ctx context.Context, linkType *W
 	if db.Error != nil {
 		if gormsupport.IsUniqueViolation(db.Error, "work_item_link_types_name_idx") {
 			log.Error(ctx, map[string]interface{}{
-				"err":       db.Error,
-				"wilc_id":   linkType.LinkCategoryID,
-				"wilt_name": linkType.Name,
-			}, "unable to create work item link type because a link already exists with the same link_category_id and name")
-			return nil, errors.NewDataConflictError(fmt.Sprintf("work item link type already exists with the same link_category_id: %s; name: %s ", linkType.LinkCategoryID, linkType.Name))
+				"err":               db.Error,
+				"space_template_id": linkType.SpaceTemplateID,
+				"wilt_name":         linkType.Name,
+			}, "unable to create work item link type because a link already exists with the same space_template_id and name")
+			return nil, errors.NewDataConflictError(fmt.Sprintf("work item link type already exists with the same space_template_id: %s; name: %s ", linkType.SpaceTemplateID, linkType.Name))
 		}
 		log.Error(ctx, map[string]interface{}{
 			"wilt_id": linkType.ID.String(),
@@ -174,6 +174,15 @@ func (r *GormWorkItemLinkTypeRepository) Save(ctx context.Context, modelToSave W
 	}
 	db = db.Save(&modelToSave)
 	if db.Error != nil {
+		if gormsupport.IsUniqueViolation(db.Error, "work_item_link_types_name_idx") {
+			log.Error(ctx, map[string]interface{}{
+				"err":               db.Error,
+				"space_template_id": existingModel.SpaceTemplateID,
+				"wilt_name":         existingModel.Name,
+				"wilt_id":           existingModel.ID,
+			}, "unable to save work item link type because a link already exists with the same space_template_id and name")
+			return nil, errors.NewDataConflictError(fmt.Sprintf("work item link type already exists with the same space_template_id: %s; name: %s ", existingModel.SpaceTemplateID, existingModel.Name))
+		}
 		log.Error(ctx, map[string]interface{}{
 			"wilt_id": existingModel.ID,
 			"wilt":    existingModel,
