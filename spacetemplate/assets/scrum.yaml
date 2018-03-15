@@ -62,11 +62,11 @@ work_item_types:
         - in progress
         - done
         - removed
-    "system.systeminfo": 
-      label: SystemInfo
+    "system.blocked": 
+      label: Blocked
       description: TBD
       type:
-        kind: asciidoc
+        kind: bool
       required: no
     "system.remainingwork": 
       label: RemainingWork
