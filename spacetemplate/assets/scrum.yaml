@@ -29,6 +29,18 @@ work_item_types:
         - open
         - closed
         - removed
+    "priority":
+      label: Priority
+      description: The priority of impediment
+      type:
+        kind: integer
+      required: no
+    "resolution":
+      label: Resolution
+      description: The resolution of impediment
+      type:
+        kind: markup
+      required: no
 - id: &issueID "22a6f261-d982-427a-a9c6-939ea398992b"
   extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Issue
