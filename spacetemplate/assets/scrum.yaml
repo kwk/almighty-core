@@ -146,35 +146,35 @@ work_item_types:
         - in progress
         - done
         - removed
-    "system.targetDate":
-      label: taregetDate
+    "target_date":
+      label: Tareget Date
       description: TBD
       type:
         kind: datetime
       required: no
-    "system.businessValue":
-      label: businessValue
+    "business_value":
+      label: Business Value
       description: TBD
       type:
         kind: integer
       required: no
-    "system.timecriticality":
-      label: timeCriticality
+    "time_criticality":
+      label: Time Criticality
       description: TBD
       type:
         kind: float
       required: no
-    "system.effort":
-      label: effort
+    "effort":
+      label: Effort
       description: TBD
       type:
         kind: float
       required: no
-    "system.acceptancecriteria":
-      label: AcceptanceCriteria
+    "acceptance_criteria":
+      label: Acceptance Criteria
       description: TBD
       type:
-        kind: asciidoc
+        kind: markup
       required: no
 - id: &bugID "40335566-e207-4231-b95a-f8f5a3b941e6"
   extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
