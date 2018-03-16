@@ -302,13 +302,13 @@ work_item_types:
         - done
         - removed
     "activated_date":
-      label: activated Date
+      label: Activated Date
       description: TBD
       type:
         kind: datetime
       required: no
     "activated_by":
-      label: activated By
+      label: Activated By
       description: TBD
       type:
         kind: string
