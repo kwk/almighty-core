@@ -9,6 +9,13 @@ work_item_types:
   extends: "86af5178-9b41-469b-9096-57e5155c3f31"
   name: Common Work Item Type
   description: TBD
+  fields:
+    "reason":
+      label: Reason
+      description: TBD
+      type:
+        kind: markup
+      required: no
 - id: &impedimentID "35837274-b833-4001-bee9-4d69e7f8aa0c"
   extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Impediment
@@ -59,10 +66,10 @@ work_item_types:
         # First state in this ordered map is implicitly the default state
         values:
         - new
-        - in-progress
+        - in progress
         - done
         - removed
-    "repro_steps"
+        "repro_steps":
       label: Repro Steps
       description: TBD
       required: no
@@ -97,12 +104,6 @@ work_item_types:
       description: TBD
       type:
         kind: float
-      required: no
-    "reason":
-      label: Reason
-      description: TBD
-      type:
-        kind: markup
       required: no
     "priority":
       label: Priority
@@ -168,7 +169,7 @@ work_item_types:
       label: Effort
       description: TBD
       type:
-        kind: float
+        kind: integer
       required: no
     "acceptance_criteria":
       label: Acceptance Criteria
@@ -272,12 +273,6 @@ work_item_types:
         - in progress
         - done
         - removed
-    "reason":
-      label: Reason
-      description: TBD
-      type:
-        kind: markup
-      required: no
     "activated_date":
       label: activatedDate
       description: TBD
@@ -312,7 +307,7 @@ work_item_types:
       label: Effort
       description: TBD
       type:
-        kind: float
+        kind: intege
       required: no
     "time_criticality":
       label: Time Criticality
