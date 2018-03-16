@@ -272,35 +272,59 @@ work_item_types:
         - in progress
         - done
         - removed
-    "system.activatedDate":
+    "reason":
+      label: Reason
+      description: TBD
+      type:
+        kind: markup
+      required: no
+    "activated_date":
       label: activatedDate
       description: TBD
       type:
         kind: datetime
       required: no
-    "system.activatedBy":
+    "activated_by":
       label: activatedBy
       description: TBD
       type:
         kind: string
       required: no
-    "system.targetDate":
-      label: taregetDate
+    "priority":
+      label: Priority
+      description: TBD 
+      type:
+        kind: integer
+      required: no
+    "target_date":
+      label: Target Date
       description: TBD
       type:
         kind: datetime
       required: no
-    "system.businessValue":
-      label: businessValue
+    "business_value":
+      label: Business Value
       description: TBD
       type:
         kind: integer
       required: no
-    "system.effort":
-      label: effort
+    "effort":
+      label: Effort
       description: TBD
       type:
         kind: float
+      required: no
+    "time_criticality":
+      label: Time Criticality
+      description: TBD
+      type:
+        kind: float
+      required: no
+    "acceptance_criteria":
+      label: Acceptance Criteria
+      description: TBD
+      type:
+        kind: asciidoc
       required: no
 work_item_type_groups:
 - id: "14f4dc57-2a28-4936-82a2-9d2db3735de9"
