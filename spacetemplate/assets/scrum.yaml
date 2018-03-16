@@ -10,11 +10,17 @@ work_item_types:
   name: Common Work Item Type
   description: TBD
   fields:
-    "reason":
+    "reason": # Need more discussion on this
       label: Reason
       description: TBD
       type:
         kind: markup
+      required: no
+    "priority":
+      label: Priority
+      description: The priority of impediment
+      type:
+        kind: integer
       required: no
 - id: &impedimentID "35837274-b833-4001-bee9-4d69e7f8aa0c"
   extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
@@ -36,15 +42,10 @@ work_item_types:
         - open
         - closed
         - removed
-    "priority":
-      label: Priority
-      description: The priority of impediment
-      type:
-        kind: integer
-      required: no
+      required: yes
     "resolution":
       label: Resolution
-      description: The resolution of impediment
+      description: The resolution of the impediment
       type:
         kind: markup
       required: no
@@ -75,6 +76,7 @@ work_item_types:
       required: no
       type:
         kind: markup
+      required: yes
 - id: &taskID "b8b7272e-5e1e-433d-965a-87c3e21dbed7"
   extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Task
@@ -99,17 +101,12 @@ work_item_types:
         - in progress
         - done
         - removed
+      required: yes
     "remaining_work":
       label: Remaining Work
       description: TBD
       type:
         kind: float
-      required: no
-    "priority":
-      label: Priority
-      description: TBD
-      type:
-        kind: integer
       required: no
     "blocked":
       label: Blocked
@@ -124,6 +121,41 @@ work_item_types:
   icon: fa fa-scissors
   child_types:
   - *taskID
+  fields:
+    "system.state":
+      label: State
+      description: The state of the work item
+      required: yes
+      type:
+        simple_type:
+          kind: enum
+        base_type:
+          kind: string
+        # First state in this ordered map is implicitly the default state
+        values:
+        - new
+        - approved
+        - committed
+        - done
+      required: yes
+    "business_value":
+      label: Business Value
+      description: TBD
+      type:
+        kind: integer
+      required: no
+    "effort":
+      label: Effort
+      description: TBD
+      type:
+        kind: integer
+      required: no
+    "acceptance_criteria":
+      label: Acceptance Criteria
+      description: TBD
+      type:
+        kind: markup
+      required: no
 - id: &featureID "a661d2f7-f037-4e66-97ff-f45988791a62"
   extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Feature
@@ -147,6 +179,7 @@ work_item_types:
         - in progress
         - done
         - removed
+      required: yes
     "target_date":
       label: Tareget Date
       description: TBD
@@ -201,6 +234,7 @@ work_item_types:
         - committed
         - done
         - removed
+      required: yes
     "system_info":
       label: System Information
       description: TBD
@@ -230,12 +264,6 @@ work_item_types:
       description: TBD
       type:
         kind: markup
-      required: no
-    "priority":
-      label: Priority
-      description: TBD
-      type:
-        kind: Integer
       required: no
     "severity":
       label: Severity
@@ -274,22 +302,16 @@ work_item_types:
         - done
         - removed
     "activated_date":
-      label: activatedDate
+      label: activated Date
       description: TBD
       type:
         kind: datetime
       required: no
     "activated_by":
-      label: activatedBy
+      label: activated By
       description: TBD
       type:
         kind: string
-      required: no
-    "priority":
-      label: Priority
-      description: TBD 
-      type:
-        kind: integer
       required: no
     "target_date":
       label: Target Date
