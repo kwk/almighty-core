@@ -92,17 +92,29 @@ work_item_types:
         - in progress
         - done
         - removed
-    "system.blocked":
+    "remaining_work":
+      label: Remaining Work
+      description: TBD
+      type:
+        kind: float
+      required: no
+    "reason":
+      label: Reason
+      description: TBD
+      type:
+        kind: markup
+      required: no
+    "priority":
+      label: Priority
+      description: TBD
+      type:
+        kind: integer
+      required: no
+    "blocked":
       label: Blocked
       description: TBD
       type:
         kind: bool
-      required: no
-    "system.remainingwork":
-      label: RemainingWork
-      description: TBD
-      type:
-        kind: float
       required: no
 - id: &productBacklogItemID "eb0829fc-e47e-40c5-9507-a95466e113db"
   extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
@@ -189,13 +201,13 @@ work_item_types:
         - done
         - removed
     "system_info":
-      label: SystemInfo
+      label: System Information
       description: TBD
       type:
         kind: markup
       required: no
     "repro_steps":
-      label: ReproSteps
+      label: Repro Steps
       description: TBD
       type:
         kind: markup
@@ -207,13 +219,13 @@ work_item_types:
         kind: integer
       required: no
     "remaining_work":
-      label: RemainingWork
+      label: Remaining Work
       description: TBD
       type:
         kind: float
       required: no
     "acceptance_criteria":
-      label: AcceptanceCriteria
+      label: Acceptance Criteria
       description: TBD
       type:
         kind: markup
@@ -231,7 +243,7 @@ work_item_types:
         kind: Integer
       required: no
     "found_in":
-      label: FoundIn
+      label: Found In
       description: TBD
       type:
         kind: String
