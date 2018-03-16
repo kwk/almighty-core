@@ -38,6 +38,28 @@ work_item_types:
   name: Issue
   description: TBD
   icon: fa fa-tasks
+  fields:
+    "system.state":
+      label: State
+      description: The state of the work item
+      required: yes
+      type:
+        simple_type:
+          kind: enum
+        base_type:
+          kind: string
+        # First state in this ordered map is implicitly the default state
+        values:
+        - new
+        - in-progress
+        - done
+        - removed
+    "repro_steps"
+      label: Repro Steps
+      description: TBD
+      required: no
+      type:
+        kind: markup
 - id: &taskID "b8b7272e-5e1e-433d-965a-87c3e21dbed7"
   extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Task
