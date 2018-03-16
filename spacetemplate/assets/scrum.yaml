@@ -77,6 +77,18 @@ work_item_types:
       type:
         kind: markup
       required: yes
+    "activated_date":
+      label: Activated Date
+      description: TBD
+      type:
+        kind: datetime
+      required: no
+    "activated_by":
+      label: Activated By
+      description: TBD
+      type:
+        kind: string
+      required: no
 - id: &taskID "b8b7272e-5e1e-433d-965a-87c3e21dbed7"
   extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
   name: Task
