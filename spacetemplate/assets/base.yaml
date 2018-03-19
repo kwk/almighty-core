@@ -11,6 +11,7 @@ work_item_types:
   name: Planner Item
   description: Description for Planner Item
   icon: fa fa-bookmark
+  can_construct: no
   fields:
     "system.area": 
       label: Area

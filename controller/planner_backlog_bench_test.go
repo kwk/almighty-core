@@ -54,7 +54,7 @@ func (rest *BenchPlannerBacklogREST) setupPlannerBacklogWorkItems() (testSpace *
 		}
 		log.Info(nil, map[string]interface{}{"space_id": testSpace.ID}, "created space")
 		workitemTypesRepo := app.WorkItemTypes()
-		workitemType, err := workitemTypesRepo.Create(rest.Ctx, testSpace.ID, nil, &workitem.SystemPlannerItem, "foo_bar", nil, "fa-bomb", map[string]workitem.FieldDefinition{})
+		workitemType, err := workitemTypesRepo.Create(rest.Ctx, testSpace.ID, nil, &workitem.SystemPlannerItem, "foo_bar", nil, "fa-bomb", map[string]workitem.FieldDefinition{}, true)
 		if err != nil {
 			rest.B().Fail()
 		}
