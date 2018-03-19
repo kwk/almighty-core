@@ -377,13 +377,16 @@ func GetMigrations() Migrations {
 	m = append(m, steps{ExecuteSQLFile("082-iteration-related-changes.sql")})
 
 	// Version 83
-	m = append(m, steps{ExecuteSQLFile("083-space-templates.sql",
+	m = append(m, steps{ExecuteSQLFile("083-index-comments-parent.sql")})
+
+	// Version 84
+	m = append(m, steps{ExecuteSQLFile("084-space-templates.sql",
 		spacetemplate.SystemLegacyTemplateID.String(),
 		workitem.SystemPlannerItem.String(),
 	)})
 
-	// Version 84
-	m = append(m, steps{ExecuteSQLFile("084-type-groups-and-child-types.sql")})
+	// Version 85
+	m = append(m, steps{ExecuteSQLFile("085-type-groups-and-child-types.sql")})
 
 	// Version N
 	//
