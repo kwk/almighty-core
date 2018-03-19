@@ -190,3 +190,18 @@ func ScrumTemplate() (*ImportHelper, error) {
 	s.SetID(spacetemplate.SystemScrumTemplateID)
 	return s, nil
 }
+
+// IssueTrackingTemplate returns the issue tracking template as it is known to
+// the system
+func IssueTrackingTemplate() (*ImportHelper, error) {
+	bs, err := spacetemplate.Asset("issue-tracking.yaml")
+	if err != nil {
+		return nil, errs.Wrap(err, "failed to load issue-tracking template")
+	}
+	s, err := FromString(string(bs))
+	if err != nil {
+		return nil, errs.WithStack(err)
+	}
+	s.SetID(spacetemplate.SystemIssueTrackingTemplateID)
+	return s, nil
+}
