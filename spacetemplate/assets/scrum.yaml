@@ -150,11 +150,12 @@ work_item_types:
         - Low
     "found_in":
       label: Found in
-      description: TBD
+      description: >
+        Good place for both users and automated tools to indicate where they
+        found the bug (e.g. perhaps a build number).
       required: no
       type:
-        simple_type:
-          kind: string
+        kind: string
   child_types:
   - *impedimentID
 
