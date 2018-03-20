@@ -1,0 +1,383 @@
+space_template:
+  id: "629c963a-174c-4c37-b487-272067e88bd4"
+  name: Scrum
+  description: >
+    Scrum is an agile framework for managing work with
+    an emphasis on software development.
+work_item_types:
+- id: &commonWorkItemTypeID "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
+  extends: "86af5178-9b41-469b-9096-57e5155c3f31"
+  name: Common Work Item Type
+  description: TBD
+  fields:
+    "reason": # Need more discussion on this
+      label: Reason
+      description: TBD
+      type:
+        kind: markup
+      required: no
+    "priority":
+      label: Priority
+      description: The priority of impediment
+      type:
+        kind: integer
+      required: no
+- id: &impedimentID "35837274-b833-4001-bee9-4d69e7f8aa0c"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
+  name: Impediment
+  description: TBD
+  icon: fa fa-tasks
+  fields:
+    "system.state":
+      label: State
+      description: The state of the work item
+      required: yes
+      type:
+        simple_type:
+          kind: enum
+        base_type:
+          kind: string
+        # First state in this ordered map is implicitly the default state
+        values:
+        - open
+        - closed
+        - removed
+      required: yes
+    "resolution":
+      label: Resolution
+      description: The resolution of the impediment
+      type:
+        kind: markup
+      required: no
+- id: &issueID "22a6f261-d982-427a-a9c6-939ea398992b"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
+  name: Issue
+  description: TBD
+  icon: fa fa-tasks
+  fields:
+    "system.state":
+      label: State
+      description: The state of the work item
+      required: yes
+      type:
+        simple_type:
+          kind: enum
+        base_type:
+          kind: string
+        # First state in this ordered map is implicitly the default state
+        values:
+        - new
+        - in progress
+        - done
+        - removed
+        "repro_steps":
+      label: Repro Steps
+      description: TBD
+      required: no
+      type:
+        kind: markup
+      required: yes
+    "activated_date":
+      label: Activated Date
+      description: TBD
+      type:
+        kind: datetime
+      required: no
+    "activated_by":
+      label: Activated By
+      description: TBD
+      type:
+        kind: string
+      required: no
+- id: &taskID "b8b7272e-5e1e-433d-965a-87c3e21dbed7"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
+  name: Task
+  description: TBD
+  icon: fa fa-tasks
+  child_types:
+  - *impedimentID
+  - *issueID
+  fields:
+    "system.state":
+      label: State
+      description: The state of the work item
+      required: yes
+      type:
+        simple_type:
+          kind: enum
+        base_type:
+          kind: string
+        # First state in this ordered map is implicitly the default state
+        values:
+        - todo
+        - in progress
+        - done
+        - removed
+      required: yes
+    "remaining_work":
+      label: Remaining Work
+      description: TBD
+      type:
+        kind: float
+      required: no
+    "blocked":
+      label: Blocked
+      description: TBD
+      type:
+        kind: bool
+      required: no
+- id: &productBacklogItemID "eb0829fc-e47e-40c5-9507-a95466e113db"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
+  name: Product Backlog Item
+  description: TBD
+  icon: fa fa-scissors
+  child_types:
+  - *taskID
+  fields:
+    "system.state":
+      label: State
+      description: The state of the work item
+      required: yes
+      type:
+        simple_type:
+          kind: enum
+        base_type:
+          kind: string
+        # First state in this ordered map is implicitly the default state
+        values:
+        - new
+        - approved
+        - committed
+        - done
+      required: yes
+    "business_value":
+      label: Business Value
+      description: TBD
+      type:
+        kind: integer
+      required: no
+    "effort":
+      label: Effort
+      description: TBD
+      type:
+        kind: integer
+      required: no
+    "acceptance_criteria":
+      label: Acceptance Criteria
+      description: TBD
+      type:
+        kind: markup
+      required: no
+- id: &featureID "a661d2f7-f037-4e66-97ff-f45988791a62"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
+  name: Feature
+  description: TBD
+  icon: fa fa-puzzle-piece
+  child_types:
+  - *productBacklogItemID
+  fields:
+    "system.state":
+      label: State
+      description: The state of the work item
+      required: yes
+      type:
+        simple_type:
+          kind: enum
+        base_type:
+          kind: string
+        # First state in this ordered map is implicitly the default state
+        values:
+        - new
+        - in progress
+        - done
+        - removed
+      required: yes
+    "target_date":
+      label: Tareget Date
+      description: TBD
+      type:
+        kind: datetime
+      required: no
+    "business_value":
+      label: Business Value
+      description: TBD
+      type:
+        kind: integer
+      required: no
+    "time_criticality":
+      label: Time Criticality
+      description: TBD
+      type:
+        kind: float
+      required: no
+    "effort":
+      label: Effort
+      description: TBD
+      type:
+        kind: integer
+      required: no
+    "acceptance_criteria":
+      label: Acceptance Criteria
+      description: TBD
+      type:
+        kind: markup
+      required: no
+- id: &bugID "40335566-e207-4231-b95a-f8f5a3b941e6"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
+  name: Bug
+  description: TBD
+  icon: fa fa-bug
+  child_types:
+  - *productBacklogItemID
+  fields:
+    "system.state":
+      label: State
+      description: The state of the work item
+      required: yes
+      type:
+        simple_type:
+          kind: enum
+        base_type:
+          kind: string
+        # First state in this ordered map is implicitly the default state
+        values:
+        - new
+        - approved
+        - committed
+        - done
+        - removed
+      required: yes
+    "system_info":
+      label: System Information
+      description: TBD
+      type:
+        kind: markup
+      required: no
+    "repro_steps":
+      label: Repro Steps
+      description: TBD
+      type:
+        kind: markup
+      required: no
+    "effort":
+      label: Effort
+      description: TBD
+      type:
+        kind: integer
+      required: no
+    "remaining_work":
+      label: Remaining Work
+      description: TBD
+      type:
+        kind: float
+      required: no
+    "acceptance_criteria":
+      label: Acceptance Criteria
+      description: TBD
+      type:
+        kind: markup
+      required: no
+    "severity":
+      label: Severity
+      description: TBD
+      type:
+        kind: Integer
+      required: no
+    "found_in":
+      label: Found In
+      description: TBD
+      type:
+        kind: String
+      required: no
+- id: &epicID "7bd76da5-f5e3-4adf-b976-9f01c9a21416"
+  extends: "ee0fc96a-87b3-475a-9937-ae6aa22d9eb9"
+  name: Epic
+  description: TBD
+  icon: fa fa-university
+  child_types:
+  - *featureID
+  - *bugID
+  fields:
+    "system.state":
+      label: State
+      description: The state of the work item
+      required: yes
+      type:
+        simple_type:
+          kind: enum
+        base_type:
+          kind: string
+        # First state in this ordered map is implicitly the default state
+        values:
+        - new
+        - in progress
+        - done
+        - removed
+    "activated_date":
+      label: Activated Date
+      description: TBD
+      type:
+        kind: datetime
+      required: no
+    "activated_by":
+      label: Activated By
+      description: TBD
+      type:
+        kind: string
+      required: no
+    "target_date":
+      label: Target Date
+      description: TBD
+      type:
+        kind: datetime
+      required: no
+    "business_value":
+      label: Business Value
+      description: TBD
+      type:
+        kind: integer
+      required: no
+    "effort":
+      label: Effort
+      description: TBD
+      type:
+        kind: intege
+      required: no
+    "time_criticality":
+      label: Time Criticality
+      description: TBD
+      type:
+        kind: float
+      required: no
+    "acceptance_criteria":
+      label: Acceptance Criteria
+      description: TBD
+      type:
+        kind: asciidoc
+      required: no
+work_item_type_groups:
+- id: "14f4dc57-2a28-4936-82a2-9d2db3735de9"
+  name: Epics
+  type_list:
+  - *epicID
+  bucket: portfolio
+  icon: fa fa-bullseye
+- id: "1f77c6cc-19b4-4158-aa30-986a6ede47ff"
+  name: Features
+  type_list:
+  - *featureID
+  - *bugID
+  bucket: requirement
+  icon: pficon pficon-infrastructure
+- id: "3231a8d5-15cb-4e98-a0af-8fb8c3ace915"
+  name: BacklogItems
+  type_list:
+  - *productBacklogItemID
+  bucket: requirement
+  icon: fa fa-list-ul
+- id: "dab5e4cb-daa3-4eae-a933-b25d7fd5621b"
+  name: Execution
+  type_list:
+  - *taskID
+  bucket: iteration
+  icon: fa fa-repeat

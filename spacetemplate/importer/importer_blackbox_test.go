@@ -89,6 +89,53 @@ func Test_ImportHelper_Validate(t *testing.T) {
 			require.Len(t, witsToBeFound, 0, "these work item types where not found in the legacy template: %+v", witsToBeFound)
 			require.NoError(t, templ.Validate())
 		})
+		t.Run("scrum template", func(t *testing.T) {
+			t.Parallel()
+			// given
+			templ, err := importer.ScrumTemplate()
+			// then
+			require.NoError(t, err)
+			require.Equal(t, spacetemplate.SystemScrumTemplateID, templ.Template.ID)
+
+			epic := uuid.FromStringOrNil("7bd76da5-f5e3-4adf-b976-9f01c9a21416")               // "epic"
+			productBacklogItem := uuid.FromStringOrNil("eb0829fc-e47e-40c5-9507-a95466e113db") // "plannerBacklogItem"
+			task := uuid.FromStringOrNil("b8b7272e-5e1e-433d-965a-87c3e21dbed7")               // "task"
+			bug := uuid.FromStringOrNil("40335566-e207-4231-b95a-f8f5a3b941e6")                // "bug"
+			feature := uuid.FromStringOrNil("a661d2f7-f037-4e66-97ff-f45988791a62")            // "feature"
+			impediment := uuid.FromStringOrNil("35837274-b833-4001-bee9-4d69e7f8aa0c")         // "impediment"
+			issue := uuid.FromStringOrNil("22a6f261-d982-427a-a9c6-939ea398992b")              // "issue"
+
+			witsToBeFound := id.Map{
+				epic:               {},
+				productBacklogItem: {},
+				task:               {},
+				bug:                {},
+				feature:            {},
+				impediment:         {},
+				issue:              {},
+			}
+			for _, wit := range templ.WITs {
+				delete(witsToBeFound, wit.ID)
+			}
+			require.Len(t, witsToBeFound, 0, "these work item types were not found in the scrum template: %+v", witsToBeFound)
+
+			epics := uuid.FromStringOrNil("14f4dc57-2a28-4936-82a2-9d2db3735de9")        // "epics"
+			features := uuid.FromStringOrNil("14f4dc57-2a28-4936-82a2-9d2db3735de9")     // "features"
+			backlogItems := uuid.FromStringOrNil("3231a8d5-15cb-4e98-a0af-8fb8c3ace915") // "backlogItems"
+			execution := uuid.FromStringOrNil("dab5e4cb-daa3-4eae-a933-b25d7fd5621b")    // "execution"
+			witgsToBeFound := id.Map{
+				epics:        {},
+				features:     {},
+				backlogItems: {},
+				execution:    {},
+			}
+			for _, witg := range templ.WITGs {
+				delete(witgsToBeFound, witg.ID)
+			}
+			require.Len(t, witgsToBeFound, 0, "these work item type groups were not found in the scrum template: %+v", witgsToBeFound)
+
+			require.NoError(t, templ.Validate())
+		})
 
 		t.Run("test template", func(t *testing.T) {
 			t.Parallel()
