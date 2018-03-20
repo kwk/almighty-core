@@ -351,36 +351,6 @@ work_item_types:
   - *featureID
   - *impedimentID
 
-# We don't have a way to handle Issue at the moment.
-# - id: &issueID "82133347-5917-4344-9e51-c6f2fb4ef16e"
-#   extends: *scrumCommonTypeID
-#   name: Issue
-#   can_construct: yes
-#   description: TBD
-#   icon: fa fa-question
-#   fields:
-#     "system.state":
-#       label: State
-#       description: The state of the issue.
-#       required: yes
-#       type:
-#         simple_type:
-#           kind: enum
-#         base_type:
-#           kind: string
-#         values:
-#         - New
-#         - In Progress
-#         - Done
-#         - Removed
-#     "repro_steps":
-#       label: Steps to reproduce
-#       description: TBD
-#       required: no
-#       type:
-#         kind: markup
-
-
 work_item_type_groups:
 
 - name: Epics
