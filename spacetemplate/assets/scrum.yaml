@@ -115,29 +115,25 @@ work_item_types:
       description: TBD
       required: no
       type:
-        simple_type:
-          kind: markup
+        kind: markup
     "repro_steps":
       label: Steps to reproduce
       description: TBD
       required: no
       type:
-        simple_type:
-          kind: markup
+        kind: markup
     "remaining_work":
       label: Remaining work
       description: TBD
       required: no
       type:
-        simple_type:
-          kind: float
+        kind: float
     "acceptance_criteria":
       label: Acceptance criteria
       description: TBD
       required: no
       type:
-        simple_type:
-          kind: markup
+        kind: markup
     "severity":
       label: Severity
       description: TBD
@@ -154,9 +150,7 @@ work_item_types:
         - Low
     "found_in":
       label: Found in
-      description: >
-        Good place for both users and automated tools to indicate where they
-        found the bug (e.g. perhaps a build number)
+      description: TBD
       required: no
       type:
         simple_type:
@@ -190,8 +184,7 @@ work_item_types:
       description: TBD
       required: no
       type:
-        simple_type:
-          kind: float
+        kind: float
   child_types:
   - *taskID
   - *impedimentID
@@ -358,34 +351,34 @@ work_item_types:
   - *featureID
   - *impedimentID
 
-- id: &issueID "82133347-5917-4344-9e51-c6f2fb4ef16e"
-  extends: *scrumCommonTypeID
-  name: Issue
-  can_construct: yes
-  description: TBD
-  icon: fa fa-question
-  fields:
-    "system.state":
-      label: State
-      description: The state of the issue.
-      required: yes
-      type:
-        simple_type:
-          kind: enum
-        base_type:
-          kind: string
-        values:
-        - New
-        - In Progress
-        - Done
-        - Removed
-    "repro_steps":
-      label: Steps to reproduce
-      description: TBD
-      required: no
-      type:
-        simple_type:
-          kind: markup
+# We don't have a way to handle Issue at the moment.
+# - id: &issueID "82133347-5917-4344-9e51-c6f2fb4ef16e"
+#   extends: *scrumCommonTypeID
+#   name: Issue
+#   can_construct: yes
+#   description: TBD
+#   icon: fa fa-question
+#   fields:
+#     "system.state":
+#       label: State
+#       description: The state of the issue.
+#       required: yes
+#       type:
+#         simple_type:
+#           kind: enum
+#         base_type:
+#           kind: string
+#         values:
+#         - New
+#         - In Progress
+#         - Done
+#         - Removed
+#     "repro_steps":
+#       label: Steps to reproduce
+#       description: TBD
+#       required: no
+#       type:
+#         kind: markup
 
 
 work_item_type_groups:

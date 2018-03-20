@@ -213,7 +213,7 @@ func (f *FieldDefinition) UnmarshalJSON(bytes []byte) error {
 func ConvertAnyToKind(any interface{}) (*Kind, error) {
 	k, ok := any.(string)
 	if !ok {
-		return nil, fmt.Errorf("kind is not a string value %v", any)
+		return nil, errs.Errorf("kind is not a string value %v", any)
 	}
 	return ConvertStringToKind(k)
 }

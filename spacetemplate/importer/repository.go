@@ -123,7 +123,7 @@ func (r *GormRepository) createOrUpdateWITs(ctx context.Context, s *ImportHelper
 					return errs.Wrapf(err, "failed to create work item type '%s' from space template '%s'", wit.Name, s.Template.ID)
 				}
 			default:
-				log.Error(ctx, map[string]interface{}{"wit_id": wit.ID.String(), "err": err}, "failed to work item type")
+				log.Error(ctx, map[string]interface{}{"wit_id": wit.ID.String(), "err": err}, "failed to load work item type")
 				return errs.Wrapf(err, "failed to load work item type %s", wit.ID)
 			}
 		} else {
