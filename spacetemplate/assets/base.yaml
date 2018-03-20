@@ -28,7 +28,7 @@ work_item_types:
       type:
         kind: float
       required: no
-    "system.state": 
+    "system.state":
       label: State
       description: The state of the work item
       required: yes
@@ -37,7 +37,8 @@ work_item_types:
           kind: enum
         base_type:
           kind: string
-        # First state in this ordered map is implicitly the default state
+        # This will allow other WITs to overwrite the values of the state.
+        rewritable_values: yes
         values: 
         - new
         - open

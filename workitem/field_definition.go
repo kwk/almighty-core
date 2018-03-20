@@ -235,5 +235,5 @@ func compatibleFields(existing FieldDefinition, new FieldDefinition) bool {
 	if existing.Required != new.Required {
 		return false
 	}
-	return existing.Type.GetKind() == new.Type.GetKind()
+	return existing.Type.Equal(new.Type)
 }
