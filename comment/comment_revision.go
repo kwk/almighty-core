@@ -3,6 +3,8 @@ package comment
 import (
 	"time"
 
+	"github.com/fabric8-services/fabric8-wit/rendering"
+
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -36,7 +38,7 @@ type Revision struct {
 	// the body of the comment (nil when comment was deleted)
 	CommentBody *string `gorm:"column:comment_body"`
 	// the markup used to input the comment body (nil when comment was deleted)
-	CommentMarkup *string `gorm:"column:comment_markup"`
+	CommentMarkup *rendering.Markup `gorm:"column:comment_markup"`
 }
 
 const (

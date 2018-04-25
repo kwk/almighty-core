@@ -27,10 +27,11 @@ func NewRenderController(service *goa.Service) *RenderController {
 // Render runs the render action.
 func (c *RenderController) Render(ctx *app.RenderRenderContext) error {
 	content := ctx.Payload.Data.Attributes.Content
-	markup := ctx.Payload.Data.Attributes.Markup
-	if !rendering.IsMarkupSupported(markup) {
-		return jsonapi.JSONErrorResponse(ctx, errors.NewBadParameterError("Unsupported markup type", markup))
+	markup := rendering.Markup(ctx.Payload.Data.Attributes.Markup)
+	if err := markup.CheckValid(); err != nil {
+		return jsonapi.JSONErrorResponse(ctx, errors.NewBadParameterError("Unsupported markup type", markup.String()))
 	}
+	// TODO(kwk): add golden file for render endpoint and also log request: ctx.RequestData.Payload
 	htmlResult := rendering.RenderMarkupToHTML(content, markup)
 	res := &app.MarkupRenderingSingle{Data: &app.MarkupRenderingData{
 		ID:   uuid.NewV4().String(),

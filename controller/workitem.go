@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fabric8-services/fabric8-wit/workitem/link"
 
 	"github.com/fabric8-services/fabric8-wit/ptr"
@@ -117,7 +118,7 @@ func (c *WorkitemController) Update(ctx *app.UpdateWorkitemContext) error {
 		// work item was converted.
 		oldNumber := wi.Number
 		oldType := wi.Type
-		err = ConvertJSONAPIToWorkItem(ctx, ctx.Method, appl, *ctx.Payload.Data, wi, wi.SpaceID)
+		err = ConvertJSONAPIToWorkItem(ctx, ctx.Method, appl, *ctx.Payload.Data, wi, wi.Type, wi.SpaceID)
 		if err != nil {
 			return err
 		}
@@ -132,9 +133,13 @@ func (c *WorkitemController) Update(ctx *app.UpdateWorkitemContext) error {
 	if err != nil {
 		return jsonapi.JSONErrorResponse(ctx, err)
 	}
+	wit, err := c.db.WorkItemTypes().Load(ctx.Context, wi.Type)
+	if err != nil {
+		return jsonapi.JSONErrorResponse(ctx, errs.Wrapf(err, "failed to load work item type: %s", wi.Type))
+	}
 	c.notification.Send(ctx, notification.NewWorkItemUpdated(ctx.Payload.Data.ID.String()))
 	resp := &app.WorkItemSingle{
-		Data: ConvertWorkItem(ctx.Request, *wi, workItemIncludeHasChildren(ctx, c.db)),
+		Data: ConvertWorkItem(ctx.Request, *wit, *wi, workItemIncludeHasChildren(ctx, c.db)),
 		Links: &app.WorkItemLinks{
 			Self: buildAbsoluteURL(ctx.Request),
 		},
@@ -157,7 +162,11 @@ func (c *WorkitemController) Show(ctx *app.ShowWorkitemContext) error {
 	return ctx.ConditionalRequest(*wi, c.config.GetCacheControlWorkItem, func() error {
 		comments := workItemIncludeCommentsAndTotal(ctx, c.db, ctx.WiID)
 		hasChildren := workItemIncludeHasChildren(ctx, c.db)
-		wi2 := ConvertWorkItem(ctx.Request, *wi, comments, hasChildren)
+		wit, err := c.db.WorkItemTypes().Load(ctx.Context, wi.Type)
+		if err != nil {
+			return jsonapi.JSONErrorResponse(ctx, errs.Wrapf(err, "failed to load work item type: %s", wi.Type))
+		}
+		wi2 := ConvertWorkItem(ctx.Request, *wit, *wi, comments, hasChildren)
 		resp := &app.WorkItemSingle{
 			Data: wi2,
 		}
@@ -238,7 +247,13 @@ func findLastModified(wis []workitem.WorkItem) time.Time {
 
 // ConvertJSONAPIToWorkItem is responsible for converting given WorkItem model object into a
 // response resource object by jsonapi.org specifications
-func ConvertJSONAPIToWorkItem(ctx context.Context, method string, appl application.Application, source app.WorkItem, target *workitem.WorkItem, spaceID uuid.UUID) error {
+func ConvertJSONAPIToWorkItem(ctx context.Context, method string, appl application.Application, source app.WorkItem, target *workitem.WorkItem, witID uuid.UUID, spaceID uuid.UUID) error {
+	// load work item type to perform conversion according to a field type
+	wit, err := appl.WorkItemTypes().Load(ctx, witID)
+	if err != nil {
+		return errs.Wrapf(err, "failed to load work item type: %s", witID)
+	}
+
 	// construct default values from input WI
 	version, err := getVersion(source.Attributes["version"])
 	if err != nil {
@@ -360,46 +375,89 @@ func ConvertJSONAPIToWorkItem(ctx context.Context, method string, appl applicati
 		}
 	}
 
-	for key, val := range source.Attributes {
-		switch key {
-		case workitem.SystemDescription:
-			// convert legacy description to markup content
-			if m := rendering.NewMarkupContentFromValue(val); m != nil {
-				// if no description existed before, set the new one
-				if target.Fields[key] == nil {
-					target.Fields[key] = *m
-				} else {
-					// only update the 'description' field in the existing description
-					existingDescription := target.Fields[key].(rendering.MarkupContent)
-					existingDescription.Content = (*m).Content
-					target.Fields[key] = existingDescription
-				}
-			}
-		case workitem.SystemDescriptionMarkup:
-			markup := val.(string)
-			// if no description existed before, set the markup in a new one
-			if target.Fields[workitem.SystemDescription] == nil {
-				target.Fields[workitem.SystemDescription] = rendering.MarkupContent{Markup: markup}
-			} else {
-				// only update the 'description' field in the existing description
-				existingDescription := target.Fields[workitem.SystemDescription].(rendering.MarkupContent)
-				existingDescription.Markup = markup
-				target.Fields[workitem.SystemDescription] = existingDescription
-			}
-		case workitem.SystemCodebase:
+	for fieldName, val := range source.Attributes {
+		// Before doing anything else, assume we can just assign the value
+		// without further processing. We will eventually overwrite the target
+		// value below.
+		target.Fields[fieldName] = val
+
+		// Try to find the field name in the work item definition.
+		fieldDef, ok := wit.Fields[fieldName]
+		if !ok {
+			return errors.NewBadParameterError(fmt.Sprintf("field '%s'", fieldName), val).Expected(fmt.Sprintf("a field that is defined in the work item type %s", wit.ID))
+		}
+
+		// For now we only handle simple types (excluding lists and enums here)
+		simpleType, ok := fieldDef.Type.(*workitem.SimpleType)
+		if !ok || !simpleType.Kind.IsSimpleType() {
+			continue
+		}
+
+		switch simpleType.Kind {
+		case workitem.KindCodebase:
 			m, err := codebase.NewCodebaseContentFromValue(val)
 			if err != nil {
 				return errs.Wrapf(err, "failed to create new codebase from value: %+v", val)
 			}
 			setupCodebase(appl, m, spaceID)
-			target.Fields[key] = *m
-		default:
-			target.Fields[key] = val
+			target.Fields[fieldName] = *m
+		case workitem.KindMarkup:
+			// convert legacy description to markup content
+			if m := rendering.NewMarkupContentFromValue(val); m != nil {
+				// if no description existed before, set the new one
+				if target.Fields[fieldName] == nil {
+					target.Fields[fieldName] = *m
+				} else {
+					// only update the 'description' field in the existing description
+					existingDescription, ok := target.Fields[fieldName].(rendering.MarkupContent)
+					if !ok {
+						return errors.NewConversionError(fmt.Sprintf("failed to convert %+v to rendering.MarkupContent", spew.Sdump(target.Fields[fieldName])))
+					}
+					existingDescription.Content = m.Content
+					target.Fields[fieldName] = existingDescription
+				}
+			}
 		}
+
+		// switch key {
+		// case workitem.SystemDescription:
+		// 	// convert legacy description to markup content
+		// 	if m := rendering.NewMarkupContentFromValue(val); m != nil {
+		// 		// if no description existed before, set the new one
+		// 		if target.Fields[key] == nil {
+		// 			target.Fields[key] = *m
+		// 		} else {
+		// 			// only update the 'description' field in the existing description
+		// 			existingDescription := target.Fields[key].(rendering.MarkupContent)
+		// 			existingDescription.Content = (*m).Content
+		// 			target.Fields[key] = existingDescription
+		// 		}
+		// 	}
+		// case workitem.SystemDescriptionMarkup:
+		// 	markup := val.(string)
+		// 	// if no description existed before, set the markup in a new one
+		// 	if target.Fields[workitem.SystemDescription] == nil {
+		// 		target.Fields[workitem.SystemDescription] = rendering.MarkupContent{Markup: markup}
+		// 	} else {
+		// 		// only update the 'description' field in the existing description
+		// 		existingDescription := target.Fields[workitem.SystemDescription].(rendering.MarkupContent)
+		// 		existingDescription.Markup = markup
+		// 		target.Fields[workitem.SystemDescription] = existingDescription
+		// 	}
+		// case workitem.SystemCodebase:
+		// 	m, err := codebase.NewCodebaseContentFromValue(val)
+		// 	if err != nil {
+		// 		return errs.Wrapf(err, "failed to create new codebase from value: %+v", val)
+		// 	}
+		// 	setupCodebase(appl, m, spaceID)
+		// 	target.Fields[key] = *m
+		// default:
+		// 	target.Fields[key] = val
+		// }
 	}
 	if description, ok := target.Fields[workitem.SystemDescription].(rendering.MarkupContent); ok {
 		// verify the description markup
-		if !rendering.IsMarkupSupported(description.Markup) {
+		if err := description.Markup.CheckValid(); err != nil {
 			return errors.NewBadParameterError("data.relationships.attributes[system.description].markup", description.Markup)
 		}
 	}
@@ -449,17 +507,24 @@ type WorkItemConvertFunc func(*http.Request, *workitem.WorkItem, *app.WorkItem)
 
 // ConvertWorkItems is responsible for converting given []WorkItem model object into a
 // response resource object by jsonapi.org specifications
-func ConvertWorkItems(request *http.Request, wis []workitem.WorkItem, additional ...WorkItemConvertFunc) []*app.WorkItem {
+func ConvertWorkItems(request *http.Request, wits []workitem.WorkItemType, wis []workitem.WorkItem, additional ...WorkItemConvertFunc) []*app.WorkItem {
 	ops := []*app.WorkItem{}
-	for _, wi := range wis {
-		ops = append(ops, ConvertWorkItem(request, wi, additional...))
+
+	// take the smallest length as the loop length
+	l := len(wits)
+	if len(wis) < l {
+		l = len(wis)
+	}
+
+	for i := 0; i < l; i++ {
+		ops = append(ops, ConvertWorkItem(request, wits[i], wis[i], additional...))
 	}
 	return ops
 }
 
 // ConvertWorkItem is responsible for converting given WorkItem model object into a
 // response resource object by jsonapi.org specifications
-func ConvertWorkItem(request *http.Request, wi workitem.WorkItem, additional ...WorkItemConvertFunc) *app.WorkItem {
+func ConvertWorkItem(request *http.Request, wit workitem.WorkItemType, wi workitem.WorkItem, additional ...WorkItemConvertFunc) *app.WorkItem {
 	// construct default values from input WI
 	relatedURL := rest.AbsoluteURL(request, app.WorkitemHref(wi.ID))
 	labelsRelated := relatedURL + "/labels"
@@ -496,7 +561,7 @@ func ConvertWorkItem(request *http.Request, wi workitem.WorkItem, additional ...
 	}
 
 	// Move fields into Relationships or Attributes as needed
-	// TODO: Loop based on WorkItemType and match against Field.Type instead of directly to field value
+	// TODO(kwk): Loop based on WorkItemType and match against Field.Type instead of directly to field value
 	for name, val := range wi.Fields {
 		switch name {
 		case workitem.SystemAssignees:
@@ -671,11 +736,15 @@ func (c *WorkitemController) ListChildren(ctx *app.ListChildrenWorkitemContext) 
 	return ctx.ConditionalEntities(result, c.config.GetCacheControlWorkItems, func() error {
 		var response app.WorkItemList
 		application.Transactional(c.db, func(appl application.Application) error {
+			wits, err := loadWorkItemTypesFromArr(ctx.Context, appl, result)
+			if err != nil {
+				return errs.Wrapf(err, "failed to load the work item types")
+			}
 			hasChildren := workItemIncludeHasChildren(ctx, appl)
 			response = app.WorkItemList{
 				Links: &app.PagingLinks{},
 				Meta:  &app.WorkItemListResponseMeta{TotalCount: count},
-				Data:  ConvertWorkItems(ctx.Request, result, hasChildren),
+				Data:  ConvertWorkItems(ctx.Request, wits, result, hasChildren),
 			}
 			return nil
 		})
@@ -693,4 +762,28 @@ func workItemIncludeChildren(request *http.Request, wi *workitem.WorkItem, wi2 *
 	wi2.Relationships.Children.Links = &app.GenericLinks{
 		Related: &childrenRelated,
 	}
+}
+
+func loadWorkItemTypesFromArr(ctx context.Context, appl application.Application, wis []workitem.WorkItem) ([]workitem.WorkItemType, error) {
+	wits := make([]workitem.WorkItemType, len(wis))
+	for idx, wi := range wis {
+		wit, err := appl.WorkItemTypes().Load(ctx, wi.Type)
+		if err != nil {
+			return nil, errs.Wrapf(err, "failed to load the work item type: %s", wi.Type)
+		}
+		wits[idx] = *wit
+	}
+	return wits, nil
+}
+
+func loadWorkItemTypesFromPtrArr(ctx context.Context, appl application.Application, wis []*workitem.WorkItem) ([]workitem.WorkItemType, error) {
+	wits := make([]workitem.WorkItemType, len(wis))
+	for idx, wi := range wis {
+		wit, err := appl.WorkItemTypes().Load(ctx, wi.Type)
+		if err != nil {
+			return nil, errs.Wrapf(err, "failed to load the work item type: %s", wi.Type)
+		}
+		wits[idx] = *wit
+	}
+	return wits, nil
 }
