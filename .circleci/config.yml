@@ -132,8 +132,8 @@ workflows:
   version: 2
   default_workflow:
     jobs:
-      - go-code-analysis:
-      - go-code-format-check:
+      - go-code-analysis
+      - go-code-format-check
       - unit-tests:
           requires:
             - go-code-analysis
