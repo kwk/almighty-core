@@ -33,6 +33,12 @@ anchor_1: &job_defaults
     F8_POSTGRES_PASSWORD: mysecretpassword
     F8_POSTGRES_DATABASE: postgres
     F8_POSTGRES_SSLMODE: disable
+    
+# After checkout, rebase on top of master.
+# Similar to travis behavior, but not quite the same.
+# See https://discuss.circleci.com/t/1662
+anchor_2: &post_checkout
+  post: git pull --ff-only origin "refs/pull/${CIRCLE_PULL_REQUEST//*pull\//}/merge"
 
 version: 2
 jobs:
@@ -40,7 +46,8 @@ jobs:
   setup-source:
     <<: *job_defaults   
     steps:
-      - checkout
+      - checkout:
+          <<: *post_checkout
       - run: 
           name: Get Go dependencies
           command: make deps
