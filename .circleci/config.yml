@@ -61,11 +61,15 @@ jobs:
   go-code-analysis:
     <<: *job_defaults   
     steps:
+      - checkout:
+          <<: *post_checkout
       - run: make analyze-go-code
 
   go-code-format-check:
     <<: *job_defaults   
     steps:
+      - checkout:
+          <<: *post_checkout
       - run: make check-go-format
 
   run-unit-tests:
@@ -74,6 +78,8 @@ jobs:
       # primary container = first one in list
       - image: circleci/golang:1.9
     steps:
+      - checkout:
+          <<: *post_checkout
       - run:
           name: "Run unit tests (without coverage)"
           command: |
@@ -98,6 +104,8 @@ jobs:
           AUTH_WIT_URL: "http://localhost:8080"
           AUTH_DEVELOPER_MODE_ENABLED: "true"
     steps:
+      - checkout:
+          <<: *post_checkout
       - run:
           name: Waiting for Postgres to be ready
           command: |
@@ -123,6 +131,8 @@ jobs:
   build-binaries:
     <<: *job_defaults   
     steps:
+      - checkout:
+          <<: *post_checkout
       - run:
           name: Build the server and client binaries
           command: make build
@@ -132,9 +142,7 @@ workflows:
   default_workflow:
     jobs:
       - setup-source
-      - prepare-test-environment:
-          requires:
-            - setup-source
+      - prepare-test-environment
       - go-code-analysis:
           requires:
             - setup-source
@@ -143,9 +151,11 @@ workflows:
             - setup-source
       - run-unit-tests:
           requires:
+            - setup-source
             - prepare-test-environment
       - run-integration-tests:
           requires:
+            - setup-source
             - prepare-test-environment
       - build-binaries:
           requires:
