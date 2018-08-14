@@ -26,7 +26,7 @@ jobs:
     ####   /go/src/bitbucket.org/circleci/go-tool
     environment:
       TEST_RESULTS: /tmp/test-results
-    working_directory: /go/src/github.com/fabric8-services/{{REPO_NAME}}
+    working_directory: /go/src/github.com/fabric8-services/fabric8-wit
     steps:
       - checkout
       - run: make deps
