@@ -32,66 +32,63 @@ anchor_1: &job_defaults
 # See https://discuss.circleci.com/t/1662
 anchor_2: &post_checkout
   post: git pull --ff-only origin "refs/pull/${CIRCLE_PULL_REQUEST//*pull\//}/merge"
+  
+anchor_3: &common_steps
+  - checkout:
+      <<: *post_checkout
+  - run: 
+      name: Get Go dependencies
+      command: make deps
+  - run: 
+      name: Generate code from design files and package assets as go files using bindata
+      command: make generate
+      
+anchor_4: &common_test_preparation_steps
+  - run: 
+      name: Get package that converts go test output to a junit XML report
+      command: go get github.com/jstemmer/go-junit-report
+  - run:
+      name: Create test output directory
+      command: mkdir -p $TEST_RESULTS/junit
+
+anchor_5: &store_test_artifact_steps
+  - store_artifacts:
+      path: /tmp/test-results
+      destination: raw-test-output
+  - store_test_results:
+      path: /tmp/test-results
 
 version: 2
 jobs:
 
-  setup-source:
-    <<: *job_defaults   
-    steps:
-      - checkout:
-          <<: *post_checkout
-      - run: 
-          name: Get Go dependencies
-          command: make deps
-      - run: 
-          name: Generate code from design files and package assets as go files using bindata
-          command: make generate
-          
-  prepare-test-environment:
-    <<: *job_defaults
-    steps:
-      - run: 
-          name: Get package that converts go test output to a junit XML report
-          command: go get github.com/jstemmer/go-junit-report
-      - run:
-          name: Create test output directory
-          command: mkdir -p $TEST_RESULTS/junit
-
   go-code-analysis:
     <<: *job_defaults   
     steps:
-      - checkout:
-          <<: *post_checkout
+      - *common_steps
       - run: make analyze-go-code
 
   go-code-format-check:
     <<: *job_defaults   
     steps:
-      - checkout:
-          <<: *post_checkout
+      - *common_steps
       - run: make check-go-format
 
-  run-unit-tests:
+  unit-tests:
     <<: *job_defaults
     docker:
       # primary container = first one in list
       - image: circleci/golang:1.9
     steps:
-      - checkout:
-          <<: *post_checkout
+      - *common_steps
+      - *common_test_preparation_steps
       - run:
           name: "Run unit tests (without coverage)"
           command: |
             trap "go-junit-report <${TEST_RESULTS}/go-test-unit.out > ${TEST_RESULTS}/junit/go-test-unit-report.xml" EXIT
             make test-unit-no-coverage | tee ${TEST_RESULTS}/go-test-unit.out      
-      - store_artifacts:
-          path: /tmp/test-results
-          destination: raw-test-output
-      - store_test_results:
-          path: /tmp/test-results
+      - *store_test_artifact_steps
           
-  run-integration-tests:
+  integration-tests:
     <<: *job_defaults
     docker:
       # primary container = first one in list
@@ -104,8 +101,8 @@ jobs:
           AUTH_WIT_URL: "http://localhost:8080"
           AUTH_DEVELOPER_MODE_ENABLED: "true"
     steps:
-      - checkout:
-          <<: *post_checkout
+      - *common_steps
+      - *common_test_preparation_steps
       - run:
           name: Waiting for Postgres to be ready
           command: |
@@ -121,18 +118,12 @@ jobs:
           command: |
             trap "go-junit-report <${TEST_RESULTS}/go-test-integration.out > ${TEST_RESULTS}/junit/go-test-integration-report.xml" EXIT
             make test-integration-no-coverage | tee ${TEST_RESULTS}/go-test-integration.out
-      - store_artifacts:
-          path: /tmp/test-results
-          destination: raw-test-output
-
-      - store_test_results:
-          path: /tmp/test-results
+      - *store_test_artifact_steps
           
   build-binaries:
     <<: *job_defaults   
     steps:
-      - checkout:
-          <<: *post_checkout
+      - *common_steps
       - run:
           name: Build the server and client binaries
           command: make build
@@ -141,23 +132,19 @@ workflows:
   version: 2
   default_workflow:
     jobs:
-      - setup-source
-      - prepare-test-environment
       - go-code-analysis:
-          requires:
-            - setup-source
       - go-code-format-check:
+      - unit-tests:
           requires:
-            - setup-source
-      - run-unit-tests:
+            - go-code-analysis
+            - go-code-format-check
+      - integration-tests:
           requires:
-            - setup-source
-            - prepare-test-environment
-      - run-integration-tests:
-          requires:
-            - setup-source
-            - prepare-test-environment
+            - go-code-analysis
+            - go-code-format-check
       - build-binaries:
           requires:
-            - setup-source
+            - unit-tests
+            - integration-tests
+      
 
