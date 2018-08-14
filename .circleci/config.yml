@@ -5,7 +5,7 @@ version: 2
 jobs:
   build:
     docker:
-      # primary container = first one in list)
+      # primary container = first one in list
       - image: circleci/golang:1.9
       - image: registry.centos.org/postgresql/postgresql:9.6
         environment:
@@ -14,24 +14,29 @@ jobs:
         environment:
           AUTH_WIT_URL: "http://localhost:8080"
           AUTH_DEVELOPER_MODE_ENABLED: "true"
-      
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
 
-    #### TEMPLATE_NOTE: go expects specific checkout path representing url
-    #### expecting it in the form of
-    ####   /go/src/github.com/circleci/go-tool
-    ####   /go/src/bitbucket.org/circleci/go-tool
     environment:
       TEST_RESULTS: /tmp/test-results
+      # The environment variables below are not needed by all steps below
+      # but still specified on global level so we don't have to repeat them.
+      F8_POSTGRES_HOST: localhost
+      F8_POSTGRES_PORT: 5432
+      F8_POSTGRES_USER: postgres
+      F8_POSTGRES_PASSWORD: mysecretpassword
+      F8_POSTGRES_DATABASE: postgres
+      F8_POSTGRES_SSLMODE: disable
+      
+    # go expects specific checkout path representing url
     working_directory: /go/src/github.com/fabric8-services/fabric8-wit
+    
     steps:
       - checkout
-      - run: make deps
-      - run: make generate
-      - run: env
+      - run: 
+          name: Get Go dependencies
+          command: make deps
+      - run: 
+          name: Generate code from design files and package assets as go files using bindata
+          command: make generate
       - run:
           name: Waiting for Postgres to be ready
           command: |
@@ -42,22 +47,29 @@ jobs:
               sleep 1
             done
             echo Failed waiting for Postgres && exit 1
-      - run: go get github.com/jstemmer/go-junit-report
-      - run: mkdir -p $TEST_RESULTS
+      - run: 
+          name: Get package that converts go test output to an xml report
+          command: go get github.com/jstemmer/go-junit-report
       - run:
-          name: "Run integration tests (without coverage)"
-          environment:
-            F8_POSTGRES_HOST: localhost
-            F8_POSTGRES_PORT: 5432
-            F8_POSTGRES_USER: postgres
-            F8_POSTGRES_PASSWORD: mysecretpassword
-            F8_POSTGRES_DATABASE: postgres
-            F8_POSTGRES_SSLMODE: disable
-            #CONTACTS_DB_MIGRATIONS: /go/src/github.com/CircleCI-Public/circleci-demo-go/db/migrations
+          name: Create test output directory
+          command: mkdir -p $TEST_RESULTS
+      - run:
+          name: "Run unit tests (without coverage)"
           command: |
-            trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
-            make test-integration-no-coverage | tee ${TEST_RESULTS}/go-test.out
-      - run: make build
-      # specify any bash command here prefixed with `run: `
-      #- run: go get -v -t -d ./...
-      #- run: go test -v ./...
+            trap "go-junit-report <${TEST_RESULTS}/go-test-unit.out > ${TEST_RESULTS}/go-test-unit-report.xml" EXIT
+            make test-integration-no-coverage | tee ${TEST_RESULTS}/go-test-unit.out
+      #- run:
+      #    name: "Run integration tests (without coverage)"
+      #    command: |
+      #      trap "go-junit-report <${TEST_RESULTS}/go-test-integration.out > ${TEST_RESULTS}/go-test-integration-report.xml" EXIT
+      #      make test-integration-no-coverage | tee ${TEST_RESULTS}/go-test-integration.out
+      - run:
+          name: Build the server and client binaries
+          command: make build
+      
+      - store_artifacts:
+          path: /tmp/test-results
+          destination: raw-test-output
+
+      - store_test_results:
+          path: /tmp/test-results
