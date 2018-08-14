@@ -41,10 +41,10 @@ jobs:
     <<: *job_defaults
     steps:
       - checkout:
-        # After checkout, rebase on top of master.
-        # Similar to travis behavior, but not quite the same.
-        # See https://discuss.circleci.com/t/1662
-        post: git pull --ff-only origin "refs/pull/${CIRCLE_PULL_REQUEST//*pull\//}/merge"
+          # After checkout, rebase on top of master.
+          # Similar to travis behavior, but not quite the same.
+          # See https://discuss.circleci.com/t/1662
+          post: git pull --ff-only origin "refs/pull/${CIRCLE_PULL_REQUEST//*pull\//}/merge"
       - run: 
         name: Get Go dependencies
         command: make deps
