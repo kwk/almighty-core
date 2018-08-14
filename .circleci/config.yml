@@ -166,7 +166,6 @@ workflows:
       - integration-tests:
           requires:
             - prepare-test-environment
-            - unit-tests
       - build-binaries:
           requires:
             - unit-tests
