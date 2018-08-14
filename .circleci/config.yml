@@ -163,16 +163,15 @@ workflows:
       - unit-tests:
           requires:
             - prepare-test-environment
-            - go-code-analysis
-            - go-code-format-check
       - integration-tests:
           requires:
             - prepare-test-environment
-            - go-code-analysis
-            - go-code-format-check
+            - unit-tests
       - build-binaries:
           requires:
             - unit-tests
             - integration-tests
+            - go-code-analysis
+            - go-code-format-check
       
 
