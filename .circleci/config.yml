@@ -14,7 +14,6 @@ anchor_1: &job_defaults
   # go expects specific checkout path representing url
   working_directory: /go/src/github.com/fabric8-services/fabric8-wit
   docker:
-    - image: *docker_image
     # primary container = first one in list
     - image: circleci/golang:1.9
     - image: registry.centos.org/postgresql/postgresql:9.6
