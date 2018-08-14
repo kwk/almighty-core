@@ -46,11 +46,11 @@ jobs:
           # See https://discuss.circleci.com/t/1662
           post: git pull --ff-only origin "refs/pull/${CIRCLE_PULL_REQUEST//*pull\//}/merge"
       - run: 
-        name: Get Go dependencies
-        command: make deps
+          name: Get Go dependencies
+          command: make deps
       - run: 
-        name: Generate code from design files and package assets as go files using bindata
-        command: make generate
+          name: Generate code from design files and package assets as go files using bindata
+          command: make generate
         # Persist data into the workspace for use in downstream jobs.
       - persist_to_workspace:
           root: .
