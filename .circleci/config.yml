@@ -24,7 +24,7 @@ anchor_3: &job_defaults
     # primary container = first one in list
     - image: circleci/golang:1.9
   environment:
-    TEST_RESULTS: /go/src/github.com/fabric8-services/fabric8-wit/test-results-{{CIRCLE_SHA1}}
+    TEST_RESULTS: /go/src/github.com/fabric8-services/fabric8-wit/test-results
     # The environment variables below are not needed by all steps below
     # but still specified on global level so we don't have to repeat them.
     F8_POSTGRES_HOST: localhost
@@ -59,6 +59,8 @@ jobs:
   prepare-test-environment:
     <<: *job_defaults
     steps:
+      - attach_workspace:
+          at: *persist_root
       - run: 
           name: Get package that converts go test output to a junit XML report
           command: go get github.com/jstemmer/go-junit-report
@@ -98,10 +100,10 @@ jobs:
             trap "go-junit-report <${TEST_RESULTS}/go-test-unit.out > ${TEST_RESULTS}/junit/go-test-unit-report.xml" EXIT
             make test-unit-no-coverage | tee ${TEST_RESULTS}/go-test-unit.out      
       - store_artifacts:
-          path: /tmp/test-results
+          path: /go/src/github.com/fabric8-services/fabric8-wit/test-results
           destination: raw-test-output
       - store_test_results:
-          path: /tmp/test-results
+          path: /go/src/github.com/fabric8-services/fabric8-wit/test-results
           
   integration-tests:
     <<: *job_defaults
@@ -134,10 +136,10 @@ jobs:
             trap "go-junit-report <${TEST_RESULTS}/go-test-integration.out > ${TEST_RESULTS}/junit/go-test-integration-report.xml" EXIT
             make test-integration-no-coverage | tee ${TEST_RESULTS}/go-test-integration.out
       - store_artifacts:
-          path: /tmp/test-results
+          path: /go/src/github.com/fabric8-services/fabric8-wit/test-results
           destination: raw-test-output
       - store_test_results:
-          path: /tmp/test-results
+          path: /go/src/github.com/fabric8-services/fabric8-wit/test-results
           
   build-binaries:
     <<: *job_defaults   
