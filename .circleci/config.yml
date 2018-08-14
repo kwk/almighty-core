@@ -68,7 +68,7 @@ jobs:
         # Persist data into the workspace for use in downstream jobs.
       - persist_to_workspace:
           root: *persist_root
-          paths:*persist_paths
+          paths: *persist_paths
 
   go-code-analysis:
     <<: *job_defaults   
