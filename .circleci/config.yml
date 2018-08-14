@@ -48,20 +48,20 @@ jobs:
             done
             echo Failed waiting for Postgres && exit 1
       - run: 
-          name: Get package that converts go test output to an xml report
+          name: Get package that converts go test output to a junit XML report
           command: go get github.com/jstemmer/go-junit-report
       - run:
           name: Create test output directory
-          command: mkdir -p $TEST_RESULTS
+          command: mkdir -p $TEST_RESULTS/junit
       - run:
           name: "Run unit tests (without coverage)"
           command: |
-            trap "go-junit-report <${TEST_RESULTS}/go-test-unit.out > ${TEST_RESULTS}/go-test-unit-report.xml" EXIT
+            trap "go-junit-report <${TEST_RESULTS}/go-test-unit.out > ${TEST_RESULTS}/junit/go-test-unit-report.xml" EXIT
             make test-integration-no-coverage | tee ${TEST_RESULTS}/go-test-unit.out
       #- run:
       #    name: "Run integration tests (without coverage)"
       #    command: |
-      #      trap "go-junit-report <${TEST_RESULTS}/go-test-integration.out > ${TEST_RESULTS}/go-test-integration-report.xml" EXIT
+      #      trap "go-junit-report <${TEST_RESULTS}/go-test-integration.out > ${TEST_RESULTS}/junit/go-test-integration-report.xml" EXIT
       #      make test-integration-no-coverage | tee ${TEST_RESULTS}/go-test-integration.out
       - run:
           name: Build the server and client binaries
