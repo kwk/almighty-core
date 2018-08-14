@@ -9,7 +9,7 @@
 # To validate changes, use an online parser, eg.
 # http://yaml-online-parser.appspot.com/
 
-anchor_0: &persist_root /go/
+anchor_0: &persist_root /go
 anchor_1: &persist_paths
   - src/github.com/fabric8-services/fabric8-wit
   - pkg/
