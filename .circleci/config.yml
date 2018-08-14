@@ -27,22 +27,6 @@ anchor_1: &job_defaults
     F8_POSTGRES_DATABASE: postgres
     F8_POSTGRES_SSLMODE: disable
     
-# After checkout, rebase on top of master.
-# Similar to travis behavior, but not quite the same.
-# See https://discuss.circleci.com/t/1662
-anchor_2: &post_checkout
-  post: git pull --ff-only origin "refs/pull/${CIRCLE_PULL_REQUEST//*pull\//}/merge"
-  
-anchor_3: &common_steps
-  - checkout:
-      <<: *post_checkout
-  - run: 
-      name: Get Go dependencies
-      command: make deps
-  - run: 
-      name: Generate code from design files and package assets as go files using bindata
-      command: make generate
-      
 anchor_4: &common_test_preparation_steps
   - run: 
       name: Get package that converts go test output to a junit XML report
@@ -50,27 +34,52 @@ anchor_4: &common_test_preparation_steps
   - run:
       name: Create test output directory
       command: mkdir -p $TEST_RESULTS/junit
-
-anchor_5: &store_test_artifact_steps
-  - store_artifacts:
-      path: /tmp/test-results
-      destination: raw-test-output
-  - store_test_results:
-      path: /tmp/test-results
-
 version: 2
 jobs:
+
+  setup-source:
+    <<: *job_defaults
+    steps:
+      - checkout:
+        # After checkout, rebase on top of master.
+        # Similar to travis behavior, but not quite the same.
+        # See https://discuss.circleci.com/t/1662
+        post: git pull --ff-only origin "refs/pull/${CIRCLE_PULL_REQUEST//*pull\//}/merge"
+      - run: 
+        name: Get Go dependencies
+        command: make deps
+      - run: 
+        name: Generate code from design files and package assets as go files using bindata
+        command: make generate
+        # Persist data into the workspace for use in downstream jobs.
+      - persist_to_workspace:
+          root: .
+
+  prepare-test-environment:
+    <<: *job_defaults
+    steps:
+      - run: 
+          name: Get package that converts go test output to a junit XML report
+          command: go get github.com/jstemmer/go-junit-report
+      - run:
+          name: Create test output directory
+          command: mkdir -p $TEST_RESULTS/junit
+        # Persist data into the workspace for use in downstream jobs.
+      - persist_to_workspace:
+          root: .
 
   go-code-analysis:
     <<: *job_defaults   
     steps:
-      - *common_steps
+      - attach_workspace:
+          at: .
       - run: make analyze-go-code
 
   go-code-format-check:
     <<: *job_defaults   
     steps:
-      - *common_steps
+      - attach_workspace:
+          at: .
       - run: make check-go-format
 
   unit-tests:
@@ -79,14 +88,18 @@ jobs:
       # primary container = first one in list
       - image: circleci/golang:1.9
     steps:
-      - *common_steps
-      - *common_test_preparation_steps
+      - attach_workspace:
+          at: .
       - run:
           name: "Run unit tests (without coverage)"
           command: |
             trap "go-junit-report <${TEST_RESULTS}/go-test-unit.out > ${TEST_RESULTS}/junit/go-test-unit-report.xml" EXIT
             make test-unit-no-coverage | tee ${TEST_RESULTS}/go-test-unit.out      
-      - *store_test_artifact_steps
+      - store_artifacts:
+          path: /tmp/test-results
+          destination: raw-test-output
+      - store_test_results:
+          path: /tmp/test-results
           
   integration-tests:
     <<: *job_defaults
@@ -101,8 +114,8 @@ jobs:
           AUTH_WIT_URL: "http://localhost:8080"
           AUTH_DEVELOPER_MODE_ENABLED: "true"
     steps:
-      - *common_steps
-      - *common_test_preparation_steps
+      - attach_workspace:
+          at: .
       - run:
           name: Waiting for Postgres to be ready
           command: |
@@ -118,12 +131,17 @@ jobs:
           command: |
             trap "go-junit-report <${TEST_RESULTS}/go-test-integration.out > ${TEST_RESULTS}/junit/go-test-integration-report.xml" EXIT
             make test-integration-no-coverage | tee ${TEST_RESULTS}/go-test-integration.out
-      - *store_test_artifact_steps
+      - store_artifacts:
+          path: /tmp/test-results
+          destination: raw-test-output
+      - store_test_results:
+          path: /tmp/test-results
           
   build-binaries:
     <<: *job_defaults   
     steps:
-      - *common_steps
+      - attach_workspace:
+          at: .
       - run:
           name: Build the server and client binaries
           command: make build
@@ -132,14 +150,24 @@ workflows:
   version: 2
   default_workflow:
     jobs:
-      - go-code-analysis
-      - go-code-format-check
+      - setup-source
+      - prepare-test-environment:
+          requires:
+            - setup-source
+      - go-code-analysis:
+          requires:
+            - setup-source
+      - go-code-format-check:
+          requires:
+            - setup-source
       - unit-tests:
           requires:
+            - prepare-test-environment
             - go-code-analysis
             - go-code-format-check
       - integration-tests:
           requires:
+            - prepare-test-environment
             - go-code-analysis
             - go-code-format-check
       - build-binaries:
