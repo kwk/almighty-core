@@ -161,20 +161,20 @@ workflows:
       - go-code-analysis:
           requires:
             - setup-source
-      #- go-code-format-check:
-      #    requires:
-      #      - setup-source
-      #- unit-tests:
-      #    requires:
-      #      - prepare-test-environment
-      #- integration-tests:
-      #    requires:
-      #      - prepare-test-environment
-      #- build-binaries:
-      #    requires:
-      #      - unit-tests
-      #      - integration-tests
-      #      - go-code-analysis
-      #      - go-code-format-check
+      - go-code-format-check:
+          requires:
+            - setup-source
+      - unit-tests:
+          requires:
+            - prepare-test-environment
+      - integration-tests:
+          requires:
+            - prepare-test-environment
+      - build-binaries:
+          requires:
+            - unit-tests
+            - integration-tests
+            - go-code-analysis
+            - go-code-format-check
       
 
