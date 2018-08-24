@@ -9,17 +9,10 @@
 # To validate changes, use an online parser, eg.
 # http://yaml-online-parser.appspot.com/
 
-anchor_0: &persist_root /go
-anchor_1: &persist_paths
-  - src/github.com/fabric8-services/fabric8-wit
-  - pkg/
-  - bin/
-anchor_2: &working_dir /go/src/github.com/fabric8-services/fabric8-wit
-
 # Settings common to each job
 anchor_3: &job_defaults
   # go expects specific checkout path representing url
-  working_directory: *working_dir
+  working_directory: /go/src/github.com/fabric8-services/fabric8-wit
   docker:
     # primary container = first one in list
     - image: circleci/golang:1.9
@@ -53,14 +46,14 @@ jobs:
           command: make generate
         # Persist data into the workspace for use in downstream jobs.
       - persist_to_workspace:
-          root: *persist_root
-          paths: *persist_paths
+          root: /
+          paths: go
 
   prepare-test-environment:
     <<: *job_defaults
     steps:
       - attach_workspace:
-          at: *persist_root
+          at: /
       - run: 
           name: Get package that converts go test output to a junit XML report
           command: go get github.com/jstemmer/go-junit-report
@@ -69,21 +62,21 @@ jobs:
           command: mkdir -p $TEST_RESULTS/junit
         # Persist data into the workspace for use in downstream jobs.
       - persist_to_workspace:
-          root: *persist_root
-          paths: *persist_paths
+          root: /
+          paths: go
 
   go-code-analysis:
     <<: *job_defaults   
     steps:
       - attach_workspace:
-          at: *persist_root
+          at: /
       - run: make analyze-go-code
 
   go-code-format-check:
     <<: *job_defaults   
     steps:
       - attach_workspace:
-          at: *persist_root
+          at: /
       - run: make check-go-format
 
   unit-tests:
@@ -93,7 +86,7 @@ jobs:
       - image: circleci/golang:1.9
     steps:
       - attach_workspace:
-          at: *persist_root
+          at: /
       - run:
           name: "Run unit tests (without coverage)"
           command: |
@@ -119,7 +112,7 @@ jobs:
           AUTH_DEVELOPER_MODE_ENABLED: "true"
     steps:
       - attach_workspace:
-          at: *persist_root
+          at: /
       - run:
           name: Waiting for Postgres to be ready
           command: |
@@ -145,7 +138,7 @@ jobs:
     <<: *job_defaults   
     steps:
       - attach_workspace:
-          at: *persist_root
+          at: /
       - run:
           name: Build the server and client binaries
           command: make build
