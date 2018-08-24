@@ -10,22 +10,31 @@
 # http://yaml-online-parser.appspot.com/
 
 # Settings common to each job
-anchor_3: &job_defaults
-  # go expects specific checkout path representing url
-  working_directory: /go/src/github.com/fabric8-services/fabric8-wit
-  docker:
-    # primary container = first one in list
-    - image: circleci/golang:1.9
-  environment:
-    TEST_RESULTS: /go/src/github.com/fabric8-services/fabric8-wit/test-results
-    # The environment variables below are not needed by all steps below
-    # but still specified on global level so we don't have to repeat them.
-    F8_POSTGRES_HOST: localhost
-    F8_POSTGRES_PORT: 5432
-    F8_POSTGRES_USER: postgres
-    F8_POSTGRES_PASSWORD: mysecretpassword
-    F8_POSTGRES_DATABASE: postgres
-    F8_POSTGRES_SSLMODE: disable
+
+aliases:
+  attach-workspace: &attach-workspace
+    attach_workspace:
+      at: /go/src/github.com/fabric8-services
+  persist_to_workspace: &persist_to_workspace
+    persist_to_workspace:
+      root: .
+      paths: fabric8-wit
+  job_defaults: &job_defaults
+    # go expects specific checkout path representing url
+    working_directory: /go/src/github.com/fabric8-services/fabric8-wit
+    docker:
+      # primary container = first one in list
+      - image: circleci/golang:1.9
+    environment:
+      TEST_RESULTS: /go/src/github.com/fabric8-services/fabric8-wit/test-results
+      # The environment variables below are not needed by all steps below
+      # but still specified on global level so we don't have to repeat them.
+      F8_POSTGRES_HOST: localhost
+      F8_POSTGRES_PORT: 5432
+      F8_POSTGRES_USER: postgres
+      F8_POSTGRES_PASSWORD: mysecretpassword
+      F8_POSTGRES_DATABASE: postgres
+      F8_POSTGRES_SSLMODE: disable
     
 version: 2
 jobs:
@@ -38,6 +47,7 @@ jobs:
           # Similar to travis behavior, but not quite the same.
           # See https://discuss.circleci.com/t/1662
           post: git pull --ff-only origin "refs/pull/${CIRCLE_PULL_REQUEST//*pull\//}/merge"
+      - *attach_workspace
       - run: 
           name: Get Go dependencies
           command: make deps
@@ -45,15 +55,12 @@ jobs:
           name: Generate code from design files and package assets as go files using bindata
           command: make generate
         # Persist data into the workspace for use in downstream jobs.
-      - persist_to_workspace:
-          root: /
-          paths: go
+      - *persist_to_workspace
 
   prepare-test-environment:
     <<: *job_defaults
     steps:
-      - attach_workspace:
-          at: /
+      - *attach-workspace
       - run: 
           name: Get package that converts go test output to a junit XML report
           command: go get github.com/jstemmer/go-junit-report
@@ -61,22 +68,18 @@ jobs:
           name: Create test output directory
           command: mkdir -p $TEST_RESULTS/junit
         # Persist data into the workspace for use in downstream jobs.
-      - persist_to_workspace:
-          root: /
-          paths: go
+      - *persist_to_workspace
 
   go-code-analysis:
     <<: *job_defaults   
     steps:
-      - attach_workspace:
-          at: /
+      - *attach_workspace
       - run: make analyze-go-code
 
   go-code-format-check:
     <<: *job_defaults   
     steps:
-      - attach_workspace:
-          at: /
+      - *attach_workspace
       - run: make check-go-format
 
   unit-tests:
@@ -85,8 +88,7 @@ jobs:
       # primary container = first one in list
       - image: circleci/golang:1.9
     steps:
-      - attach_workspace:
-          at: /
+      - *attach_workspace
       - run:
           name: "Run unit tests (without coverage)"
           command: |
@@ -111,8 +113,7 @@ jobs:
           AUTH_WIT_URL: "http://localhost:8080"
           AUTH_DEVELOPER_MODE_ENABLED: "true"
     steps:
-      - attach_workspace:
-          at: /
+      - *attach_workspace
       - run:
           name: Waiting for Postgres to be ready
           command: |
@@ -137,8 +138,7 @@ jobs:
   build-binaries:
     <<: *job_defaults   
     steps:
-      - attach_workspace:
-          at: /
+      - *attach_workspace
       - run:
           name: Build the server and client binaries
           command: make build
