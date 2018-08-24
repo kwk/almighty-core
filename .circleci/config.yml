@@ -13,7 +13,7 @@
 
 aliases:
   attach-workspace: &attach-workspace
-    attach_workspace:
+    attach-workspace:
       at: /go/src/github.com/fabric8-services
   persist_to_workspace: &persist_to_workspace
     persist_to_workspace:
