@@ -12,8 +12,8 @@
 # Settings common to each job
 
 aliases:
-  attach-workspace: &attach-workspace
-    attach-workspace:
+  attach_workspace: &attach_workspace
+    attach_workspace:
       at: /go/src/github.com/fabric8-services
   persist_to_workspace: &persist_to_workspace
     persist_to_workspace:
