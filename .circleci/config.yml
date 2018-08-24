@@ -60,7 +60,7 @@ jobs:
   prepare-test-environment:
     <<: *job_defaults
     steps:
-      - *attach-workspace
+      - *attach_workspace
       - run: 
           name: Get package that converts go test output to a junit XML report
           command: go get github.com/jstemmer/go-junit-report
