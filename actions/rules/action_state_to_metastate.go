@@ -3,6 +3,7 @@ package rules
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/fabric8-services/fabric8-wit/actions/change"
 	"github.com/fabric8-services/fabric8-wit/id"
 
@@ -13,7 +14,8 @@ import (
 	"github.com/fabric8-services/fabric8-wit/workitem"
 )
 
-// ActionStateToMetaState implements the bidirectional mapping between state and column.
+// ActionStateToMetaState implements the bidirectional mapping between state and
+// column.
 type ActionStateToMetaState struct {
 	Db     application.DB
 	Ctx    context.Context
@@ -67,11 +69,11 @@ func (act ActionStateToMetaState) difference(old []interface{}, new []interface{
 func (act ActionStateToMetaState) loadWorkItemBoardsBySpaceID(spaceID uuid.UUID) ([]*workitem.Board, error) {
 	space, err := act.Db.Spaces().Load(act.Ctx, spaceID)
 	if err != nil {
-		return nil, errs.Wrap(err, "error loading space")
+		return nil, errs.Wrapf(err, "error loading space: %s", spaceID)
 	}
 	boards, err := act.Db.Boards().List(act.Ctx, space.SpaceTemplateID)
 	if err != nil {
-		return nil, errs.Wrap(err, "error loading work item type")
+		return nil, errs.Wrapf(err, "error loading board in space template: %s", space.SpaceTemplateID)
 	}
 	return boards, nil
 }
@@ -79,7 +81,7 @@ func (act ActionStateToMetaState) loadWorkItemBoardsBySpaceID(spaceID uuid.UUID)
 func (act ActionStateToMetaState) loadWorkItemByID(id uuid.UUID) (*workitem.WorkItem, error) {
 	wi, err := act.Db.WorkItems().LoadByID(act.Ctx, id)
 	if err != nil {
-		return nil, errs.Wrap(err, "error loading work item")
+		return nil, errs.Wrapf(err, "error loading work item: %s", id)
 	}
 	return wi, nil
 }
@@ -89,7 +91,7 @@ func (act ActionStateToMetaState) storeWorkItem(workitem *workitem.WorkItem) (*w
 		var err error
 		workitem, _, err = appl.WorkItems().Save(act.Ctx, workitem.SpaceID, *workitem, *act.UserID)
 		if err != nil {
-			return errs.Wrap(err, "error updating work item")
+			return errs.Wrapf(err, "error updating work item: %s", workitem.ID)
 		}
 		return nil
 	})
@@ -100,19 +102,18 @@ func (act ActionStateToMetaState) storeWorkItem(workitem *workitem.WorkItem) (*w
 }
 
 func (act ActionStateToMetaState) getValueListFromEnumField(wit workitem.WorkItemType, fieldName string) ([]interface{}, error) {
-	enumFieldType := wit.Fields[fieldName].Type
-	switch t := enumFieldType.(type) {
-	case workitem.EnumType:
-		return t.Values, nil
+	enumType, ok := wit.Fields[fieldName].Type.(workitem.EnumType)
+	if ok {
+		return enumType.Values, nil
 	}
-	return nil, errs.New("given field on workitemtype " + wit.ID.String() + " is not an enum field: " + fieldName)
+	return nil, errs.Errorf(`field "%s" in work item type "%s" (%1) is not an enum field`, fieldName, wit.Name, wit.ID)
 }
 
 // getStateToMetastateMap returns the mapping from state to metastate values read from the template.
 func (act ActionStateToMetaState) getStateToMetastateMap(workitemTypeID uuid.UUID) (map[string]string, error) {
 	wit, err := act.Db.WorkItemTypes().Load(act.Ctx, workitemTypeID)
 	if err != nil {
-		return nil, err
+		return nil, errs.Wrapf(err, "failed to load work item type: %s", workitemTypeID)
 	}
 	stateList, err := act.getValueListFromEnumField(*wit, workitem.SystemState)
 	if err != nil {
@@ -123,17 +124,17 @@ func (act ActionStateToMetaState) getStateToMetastateMap(workitemTypeID uuid.UUI
 		return nil, err
 	}
 	if len(stateList) != len(metastateList) {
-		return nil, errs.Errorf("inconsistent number of states and metatstates in the current work item type (must be equal): %d states != %d metastates", len(stateList), len(metastateList))
+		return nil, errs.Errorf("number of sates (%d) and metastates (%d) must be equal", len(stateList), len(metastateList))
 	}
-	stateToMetastateMap := make(map[string]string)
+	stateToMetastateMap := map[string]string{}
 	for idx := range stateList {
 		thisState, ok := stateList[idx].(string)
 		if !ok {
-			return nil, errs.New("state value in value list is not of type string")
+			return nil, errs.Errorf(`state value in value list is not of type string but "%[1]T": %[T]+v`, stateList[idx])
 		}
 		thisMetastate, ok := metastateList[idx].(string)
 		if !ok {
-			return nil, errs.New("metastate value in value list is not of type string")
+			return nil, errs.Errorf(`metastate value in value list is not of type string but "%[1]T": %[1]+v`, metastateList[idx])
 		}
 		// only the first state<->metatstate mapping needs to be taken as
 		// per definition. So we're only adding a new entry here if there
@@ -186,7 +187,7 @@ func (act ActionStateToMetaState) fuseChanges(c1 change.Set, c2 change.Set) chan
 	return c1
 }
 
-// OnChange executes the action rule. It implements rules.Action. Returns the Work Item with eventual changes applied.
+// OnChange implements Action
 func (act ActionStateToMetaState) OnChange(newContext change.Detector, contextChanges change.Set, configuration string, actionChanges change.Set) (change.Detector, change.Set, error) {
 	if act.Ctx == nil {
 		return nil, nil, errs.New("context is nil")
@@ -216,7 +217,6 @@ func (act ActionStateToMetaState) OnChange(newContext change.Detector, contextCh
 		}
 		actionChanges = act.fuseChanges(actionChanges, executionChanges)
 	}
-	// return the result
 	return newContext, actionChanges, nil
 }
 
@@ -235,13 +235,13 @@ func (act ActionStateToMetaState) onBoardColumnsChange(newContext change.Detecto
 			var oldValue []interface{}
 			oldValue, ok := change.OldValue.([]interface{})
 			if !ok && change.OldValue != nil {
-				// OldValue may be nil, so only throw error when non-nil and
-				// can not convert.
-				return nil, nil, errs.New("error converting oldValue set")
+				// OldValue may be nil, so only throw error when non-nil and can
+				// not convert.
+				return nil, nil, errs.Errorf("error converting oldValue (%[1]T) to a slice of interfaces: %+v", change.NewValue)
 			}
 			newValue, ok := change.NewValue.([]interface{})
 			if !ok {
-				return nil, nil, errs.New("error converting newValue set")
+				return nil, nil, errs.Errorf("error converting newValue (%[1]T) to a slice of interfaces: %+v", change.NewValue)
 			}
 			columnsAdded, _ = act.difference(oldValue, newValue)
 		}
@@ -350,11 +350,11 @@ func (act ActionStateToMetaState) onStateChange(newContext change.Detector, cont
 	// next, check which boards are relevant for this WI.
 	space, err := act.Db.Spaces().Load(act.Ctx, wi.SpaceID)
 	if err != nil {
-		return nil, nil, errs.Wrap(err, "error loading space")
+		return nil, nil, errs.Wrapf(err, "error loading space %s", wi.SpaceID)
 	}
 	groups, err := act.Db.WorkItemTypeGroups().List(act.Ctx, space.SpaceTemplateID)
 	if err != nil {
-		return nil, nil, errs.Wrap(err, "error loading type groups")
+		return nil, nil, errs.Wrapf(err, "error loading type groups for space template %s", space.SpaceTemplateID)
 	}
 	var relevantBoards []*workitem.Board
 	for _, board := range boards {
@@ -381,7 +381,7 @@ func (act ActionStateToMetaState) onStateChange(newContext change.Detector, cont
 	systemBoardColumns, ok = wi.Fields[workitem.SystemBoardcolumns].([]interface{})
 	if !ok && wi.Fields[workitem.SystemBoardcolumns] != nil {
 		// wi.Fields[workitem.SystemBoardcolumns] may be empty, so we do a fallback.
-		return nil, nil, errs.New("type conversion failed for boardcolumns")
+		return nil, nil, errs.Errorf(`failed to convert field "%s" to slice of interface objects: %+v`, workitem.SystemBoardcolumns, wi.Fields[workitem.SystemBoardcolumns])
 	}
 	oldColumnsConfig := make([]interface{}, len(systemBoardColumns))
 	copy(oldColumnsConfig, systemBoardColumns)
@@ -414,7 +414,7 @@ func (act ActionStateToMetaState) onStateChange(newContext change.Detector, cont
 						if !ok && wi.Fields[workitem.SystemBoardcolumns] != nil {
 							// again, wi.Fields[workitem.SystemBoardcolumns] may be empty, so we
 							// only fail here when the conversion fails AND the slice is non nil.
-							return nil, nil, errs.New("error converting SystemBoardcolumns set")
+							return nil, nil, errs.Errorf(`failed to convert field "%s" to slice of interface objects: %+v`, workitem.SystemBoardcolumns, wi.Fields[workitem.SystemBoardcolumns])
 						}
 						if !act.contains(currentSystemBoardColumn, column.ID.String()) {
 							wi.Fields[workitem.SystemBoardcolumns] = append(currentSystemBoardColumn, column.ID.String())
@@ -431,13 +431,13 @@ func (act ActionStateToMetaState) onStateChange(newContext change.Detector, cont
 						if !ok && wi.Fields[workitem.SystemBoardcolumns] != nil {
 							// again, wi.Fields[workitem.SystemBoardcolumns] may be empty, so we
 							// only fail here when the conversion fails AND the slice is non nil.
-							return nil, nil, errs.New("error converting SystemBoardcolumns set")
+							return nil, nil, errs.Errorf(`failed to convert field "%s" to slice of interface objects: %+v`, workitem.SystemBoardcolumns, wi.Fields[workitem.SystemBoardcolumns])
 						}
 						wi.Fields[workitem.SystemBoardcolumns] = act.removeElement(currentSystemBoardColumn, column.ID.String())
 						columnsChanged = true
 					}
 				} else {
-					return nil, nil, errs.New("invalid configuration for transRuleKey '" + ActionKeyStateToMetastate + "': " + columnRuleConfig)
+					return nil, nil, errs.Errorf("invalid configuration for transRuleKey: '%s':%s", ActionKeyStateToMetastate, columnRuleConfig)
 				}
 			}
 		}

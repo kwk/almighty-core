@@ -100,7 +100,6 @@ func NewFixture(db *gorm.DB, recipeFuncs ...RecipeFunction) (*TestFixture, error
 // fails the given test if the fixture could not be created correctly.
 func NewTestFixture(t testing.TB, db *gorm.DB, recipeFuncs ...RecipeFunction) *TestFixture {
 	resource.Require(t, resource.Database)
-
 	tc, err := NewFixture(db, recipeFuncs...)
 	require.NoError(t, err)
 	require.NotNil(t, tc)

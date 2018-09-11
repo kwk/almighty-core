@@ -151,6 +151,10 @@ ignored = [
   name = "github.com/dnaeon/go-vcr"
   revision= "9d71b8a6df86e00127f96bc8dabc09856ab8afdb"
 
+[[constraint]]
+  name = "github.com/jinzhu/copier"
+  revision = "7e38e58719c33e0d44d585c4ab477a30f8cb82dd"
+
 [prune]
   go-tests = true
   unused-packages = true
